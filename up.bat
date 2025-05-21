@@ -1,4 +1,4 @@
 git pull
 git add .
-git commit -m "first test"
+git commit -m "login update"
 git push
