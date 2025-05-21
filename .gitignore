@@ -40,3 +40,82 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# === Node Modules ===
+node_modules/
+
+# === Build Output ===
+dist/
+out-tsc/
+tmp/
+temp/
+
+# === Angular Cache ===
+.angular/
+.angular-cache/
+
+# === Logs ===
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# === IDEs & Editors ===
+
+# VS Code
+.vscode/
+.history/
+
+# JetBrains (WebStorm, IntelliJ)
+.idea/
+*.iml
+
+# Sublime
+*.sublime*
+
+# === Operating System ===
+
+# macOS
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+*.swp
+ehthumbs.db
+desktop.ini
+
+# Linux
+*~ 
+
+# Windows
+$RECYCLE.BIN/
+
+# === Git ===
+.git/
+.gitignore
+
+# === Env / Secrets ===
+.env
+.env.*
+.secret
+*.pem
+*.key
+*.crt
+
+# === Test Coverage ===
+coverage/
+
+# === ESLint / Prettier Cache ===
+.eslintcache
+.prettiercache
+
+# === NPM / Yarn
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+
+
