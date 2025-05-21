@@ -104,6 +104,7 @@ $RECYCLE.BIN/
 *.pem
 *.key
 *.crt
+*.crt
 
 # === Test Coverage ===
 coverage/
