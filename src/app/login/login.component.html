@@ -76,20 +76,14 @@
 
       <!-- Forgot Password -->
       <div class="forgot-password-container">
-        <a class="forgot-password" routerLink="/forgot-password" style="text-decoration: none;"
+        <a
+          class="forgot-password"
+          routerLink="/forgot-password"
+          style="text-decoration: none"
           >Passwort vergessen?</a
         >
       </div>
 
-      <!-- Login Button -->
-      <button
-        type="submit"
-        class="btn primary"
-        [disabled]="loginForm.invalid || isLoading"
-      >
-        <span *ngIf="isLoading">Laden...</span>
-        <span *ngIf="!isLoading">Anmelden</span>
-      </button>
 
       <!-- Divider -->
       <div class="divider"><span>ODER</span></div>
@@ -100,9 +94,21 @@
         Anmelden mit Google
       </button>
 
-      <!-- Guest Login -->
-      <div class="button-container">
-        <button type="button" class="btn guest-btn" (click)="loginAsGuest()">
+      <div class="button-group">
+        <button
+          type="submit"
+          class="btn primary small-btn"
+          [disabled]="loginForm.invalid || isLoading"
+        >
+          <span *ngIf="isLoading">Laden...</span>
+          <span *ngIf="!isLoading">Anmelden</span>
+        </button>
+
+        <button
+          type="button"
+          class="btn guest-btn small-btn"
+          (click)="loginAsGuest()"
+        >
           Gäste-Login
         </button>
       </div>
