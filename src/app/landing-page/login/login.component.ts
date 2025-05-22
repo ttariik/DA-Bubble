@@ -1,48 +1,58 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormControl, FormGroup, Validators } from '@angular/forms';
-
+import {
+  ReactiveFormsModule,
+  FormControl,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule
-  ],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.scss']
+  styleUrls: ['./login.component.scss'],
 })
 export class LoginComponent {
+  authService = inject(AuthService);
   isLoading = false;
   hidePassword = true;
 
   emailFormControl = new FormControl('', [
     Validators.required,
-    Validators.email
+    Validators.email,
   ]);
 
   passwordFormControl = new FormControl('', [
     Validators.required,
-    Validators.minLength(6)
+    Validators.minLength(6),
   ]);
 
   loginForm = new FormGroup({
     email: this.emailFormControl,
     password: this.passwordFormControl,
-    rememberMe: new FormControl(false)
+    rememberMe: new FormControl(false),
   });
 
-  onSubmit() {
+  async onSubmit() {
     if (this.loginForm.valid) {
       this.isLoading = true;
       const { email, password } = this.loginForm.value;
-      
-      // Fake loading
-      setTimeout(() => {
-        console.log('Login with', email, password);
-        this.isLoading = false;
-      }, 1500);
+
+      if (email != null && password != null) {
+        await this.authService
+          .signIn(email, password)
+          .then((user: any) => {
+            this.isLoading = false;
+            console.log(user);
+          })
+          .catch((errorCode) => {
+            this.isLoading = false;
+            console.warn(errorCode);
+          });
+      }
     }
   }
 
