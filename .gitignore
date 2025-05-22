@@ -121,3 +121,8 @@ pnpm-lock.yaml
 
 
 
+
+# Firebase
+.firebase
+*-debug.log
+.runtimeconfig.json
