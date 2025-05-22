@@ -1,0 +1,88 @@
+.login-card {
+  max-width: 500px;
+  height: 650px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #f0f2f5;
+  box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.1),
+    -8px -8px 16px rgba(255, 255, 255, 0.7);
+  border-radius: 20px;
+  font-family: "Nunito", sans-serif;
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+h2 {
+  color: #444df2;
+  font-weight: 700;
+  font-size: 2.5rem;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+mat-form-field {
+  width: 100%;
+  background-color: #e0e3e8;
+  border-radius: 12px;
+  padding: 0.5rem 1rem;
+  transition: box-shadow 0.3s ease;
+  box-shadow: inset 5px 5px 10px rgba(0, 0, 0, 0.05),
+    inset -5px -5px 10px rgba(255, 255, 255, 0.7);
+}
+
+.mat-form-field:hover {
+  all: unset;
+}
+
+mat-form-field.mat-focused {
+  box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.1),
+    inset -2px -2px 5px rgba(255, 255, 255, 0.9),
+    0 0 0 4px rgba(68, 77, 242, 0.2);
+}
+
+.input-icon {
+  width: 24px;
+  height: 24px;
+  margin-right: 0.5rem;
+  filter: invert(30%);
+}
+
+input.mat-input-element {
+  background: transparent;
+  padding: 1rem 0;
+  font-size: 1rem;
+  font-family: "Nunito", sans-serif;
+}
+
+button.mat-raised-button {
+  height: 3.5rem;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.1),
+    -4px -4px 8px rgba(255, 255, 255, 0.7);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+button.mat-raised-button:hover:not([disabled]) {
+  transform: translateY(-2px);
+  box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.15),
+    -6px -6px 12px rgba(255, 255, 255, 0.8);
+}
+
+::ng-deep
+  .mat-form-field-appearance-fill.mat-form-field:hover
+  .mat-form-field-flex {
+  background-color: #e0e3e8 !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+}
+
+::ng-deep .mat-form-field-appearance-fill .mat-form-field-flex {
+  background-color: #e0e3e8 !important;
+  box-shadow: none !important;
+  transition: none !important;
+}
