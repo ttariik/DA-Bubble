@@ -2,59 +2,73 @@
   <mat-card-content>
     <h2>Login</h2>
     <p>We recommend using the email address you use at work.</p>
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-      <mat-form-field appearance="fill" class="full-width">
-        <span matPrefix>
-          <img src="assets/icons/mail.svg" alt="Mail icon" class="input-icon" />
-        </span>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+      <!-- Email -->
+      <mat-form-field appearance="outline" class="full-width">
         <mat-label>Email</mat-label>
-        <input
-          matInput
-          type="email"
-          formControlName="email"
-          placeholder="e.g. example@mail.com"
-        />
-        <mat-error *ngIf="email.hasError('required')">
-          Email is <strong>required</strong>
-        </mat-error>
-        <mat-error
-          *ngIf="email.hasError('email') && !email.hasError('required')"
-        >
-          Please enter a valid email address
-        </mat-error>
+        <input matInput type="email" formControlName="email" placeholder="e.g. name@mail.com" />
+        @if (email.hasError('email') && !email.hasError('required')) {
+          <mat-error>Please enter a valid email address</mat-error>
+        }
+        @if (email.hasError('required')) {
+          <mat-error>Email is <strong>required</strong></mat-error>
+        }
       </mat-form-field>
 
-      <mat-form-field appearance="fill" class="full-width">
-        <span matPrefix>
-          <img src="assets/icons/lock.svg" alt="Lock icon" class="input-icon" />
-        </span>
+      <!-- Password -->
+      <mat-form-field appearance="outline" class="full-width">
         <mat-label>Password</mat-label>
-        <input
-          matInput
-          type="password"
-          formControlName="password"
-          placeholder="Password"
-        />
-        <mat-error *ngIf="password.hasError('required')">
-          Password is <strong>required</strong>
-        </mat-error>
-        <mat-error
-          *ngIf="
-            password.hasError('minlength') && !password.hasError('required')
-          "
+        <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password" placeholder="Password" />
+        <button
+          mat-icon-button
+          matSuffix
+          type="button"
+          (click)="togglePasswordVisibility()"
+          [attr.aria-label]="'Toggle password visibility'"
+          [attr.aria-pressed]="!hidePassword"
         >
-          Minimum {{ password.errors?.['minlength'].requiredLength }} characters
-        </mat-error>
+          <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+        @if (password.hasError('required')) {
+          <mat-error>Password is <strong>required</strong></mat-error>
+        }
+        @if (password.hasError('minlength') && !password.hasError('required')) {
+          <mat-error>Minimum {{ password.errors?.['minlength'].requiredLength }} characters</mat-error>
+        }
       </mat-form-field>
 
-      <button
-        mat-raised-button
-        color="primary"
-        class="full-width"
-        [disabled]="loginForm.invalid"
-      >
-        Log In
+      <!-- Remember me & Forgot -->
+      <div class="form-options">
+        <mat-checkbox formControlName="rememberMe">Remember me</mat-checkbox>
+        <a class="forgot-password" routerLink="/forgot-password">Forgot password?</a>
+      </div>
+
+      <!-- Login Button -->
+      <button mat-raised-button color="primary" class="full-width" [disabled]="loginForm.invalid || isLoading">
+        <mat-progress-spinner
+          *ngIf="isLoading"
+          diameter="24"
+          mode="indeterminate"
+          color="accent"
+        ></mat-progress-spinner>
+        <span *ngIf="!isLoading">Log In</span>
       </button>
+
+      <!-- Divider -->
+      <div class="divider"><span>or continue with</span></div>
+
+      <!-- Social Buttons -->
+      <div class="social-buttons">
+        <button mat-stroked-button class="social-btn google">
+          <img src="assets/icons/google.svg" alt="Google" />
+          Google
+        </button>
+        <button mat-stroked-button class="social-btn github">
+          <img src="assets/icons/github.svg" alt="GitHub" />
+          GitHub
+        </button>
+      </div>
     </form>
   </mat-card-content>
 </mat-card>
