@@ -126,3 +126,5 @@ pnpm-lock.yaml
 .firebase
 *-debug.log
 .runtimeconfig.json
+
+*.bat
