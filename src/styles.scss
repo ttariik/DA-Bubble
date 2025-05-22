@@ -35,3 +35,16 @@ body {
   .mdc-line-ripple::before {
   display: none;
 }
+
+.flex-box {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
