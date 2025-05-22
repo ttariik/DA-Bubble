@@ -1,97 +1,109 @@
 <div class="login-card">
   <div class="login-content">
-    <h2>Login</h2>
-    <p>We recommend using the email address you use at work.</p>
+    <h2>Anmeldung</h2>
+    <p>
+      Wir empfehlen dir, die E-Mail-Adresse zu nutzen, die du bei der Arbeit
+      verwendest.
+    </p>
 
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
-
       <!-- Email -->
-      <div class="form-group floating" [class.filled]="email.value">
-        <input
-          type="email"
-          id="email"
-          formControlName="email"
-          class="form-control"
-          required
-        />
-        <label for="email">Email</label>
-        <div class="error" *ngIf="email.hasError('required')">
-          Email is <strong>required</strong>
+      <div class="input-container">
+        <div class="icon-input">
+          <img
+            class="input-icon"
+            src="assets/icons/mail.svg"
+            alt="Email Icon"
+          />
+          <input
+            type="email"
+            id="email"
+            formControlName="email"
+            class="form-control"
+            placeholder="beispielname@email.com"
+            required
+          />
+        </div>
+        <div
+          class="error"
+          *ngIf="email.hasError('required') && (email.touched || email.dirty)"
+        >
+          Email is <strong>erforderlich</strong>
         </div>
         <div
           class="error"
           *ngIf="email.hasError('email') && !email.hasError('required')"
         >
-          Please enter a valid email address
+          Bitte gib eine gültige E-Mail-Adresse ein
         </div>
       </div>
-    
+
       <!-- Password -->
-      <div class="form-group floating" [class.filled]="password.value">
-        <div class="password-wrapper">
+      <div class="input-container">
+        <div class="icon-input">
+          <img
+            class="input-icon"
+            src="assets/icons/lock.svg"
+            alt="Passwort Icon"
+          />
           <input
             [type]="hidePassword ? 'password' : 'text'"
             id="password"
             formControlName="password"
             class="form-control"
+            placeholder="Passwort"
             required
           />
-          <label for="password">Password</label>
-          <button
-            type="button"
-            class="toggle-password"
-            (click)="togglePasswordVisibility()"
-          >
-            {{ hidePassword ? "👁️" : "🙈" }}
-          </button>
-        </div>
-        <div class="error" *ngIf="password.hasError('required')">
-          Password is <strong>required</strong>
         </div>
         <div
           class="error"
-          *ngIf="password.hasError('minlength') && !password.hasError('required')"
+          *ngIf="
+            password.hasError('required') &&
+            (password.touched || password.dirty)
+          "
         >
-          Minimum {{ password.errors?.['minlength'].requiredLength }} characters
+          Passwort ist <strong>erforderlich</strong>
+        </div>
+        <div
+          class="error"
+          *ngIf="
+            password.hasError('minlength') && !password.hasError('required')
+          "
+        >
+          Minimum {{ password.errors?.['minlength'].requiredLength }} Zeichen
         </div>
       </div>
-    
-    
 
-
-      <!-- Remember Me & Forgot Password -->
-      <div class="form-options">
-        <label class="checkbox">
-          <input type="checkbox" formControlName="rememberMe" />
-          Remember me
-        </label>
-        <a class="forgot-password" routerLink="/forgot-password"
-          >Forgot password?</a
+      <!-- Forgot Password -->
+      <div class="forgot-password-container">
+        <a class="forgot-password" routerLink="/forgot-password" style="text-decoration: none;"
+          >Passwort vergessen?</a
         >
       </div>
 
       <!-- Login Button -->
       <button
         type="submit"
-        class="btn primary full-width"
+        class="btn primary"
         [disabled]="loginForm.invalid || isLoading"
       >
-        <span *ngIf="isLoading">Loading...</span>
-        <span *ngIf="!isLoading">Log In</span>
+        <span *ngIf="isLoading">Laden...</span>
+        <span *ngIf="!isLoading">Anmelden</span>
       </button>
 
       <!-- Divider -->
-      <div class="divider"><span>or continue with</span></div>
+      <div class="divider"><span>ODER</span></div>
 
-      <!-- Social Buttons -->
-      <div class="social-buttons">
-        <button type="button" class="social-btn google">
-          <img src="assets/icons/google.svg" alt="Google" />
-          Google
-        </button>
-        <button type="button" class="social-btn github">
-          <img src="assets/icons/github.svg" alt="GitHub" />
-          GitHub
+      <!-- Google Login -->
+      <button type="button" class="btn google-btn">
+        <img src="assets/icons/google.svg" alt="Google" />
+        Anmelden mit Google
+      </button>
+
+      <!-- Guest Login -->
+      <div class="button-container">
+        <button type="button" class="btn guest-btn" (click)="loginAsGuest()">
+          Gäste-Login
         </button>
       </div>
     </form>

@@ -57,4 +57,9 @@ export class LoginComponent {
   get password() {
     return this.passwordFormControl;
   }
+
+  loginAsGuest() {
+    console.log('Gäste-Login wurde ausgewählt'); //bsp
+    // Hier könnte eine Weiterleitung erfolgen oder ein automatischer Login mit einem Gästekonto
+  }
 }
