@@ -10,6 +10,7 @@ import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { FooterComponent, HeaderComponent } from '../shared';
 import { User } from '../models/user.class';
+import { FirestoreService } from '../services/firestore.service';
 
 @Component({
   selector: 'app-signup',
@@ -24,8 +25,9 @@ import { User } from '../models/user.class';
   styleUrl: './signup.component.scss',
 })
 export class SignupComponent {
-  authService = inject(AuthService);
+  private authService = inject(AuthService);
   private router = inject(Router);
+  private firestoreService = inject(FirestoreService);
   isLoading = false;
   hidePassword = true;
 
@@ -93,7 +95,7 @@ export class SignupComponent {
     return this.passwordFormControl;
   }
 
-  createUser(user: any, name: string) {
+  async createUser(user: any, name: string) {
     const newName = name.split(' ');
     const newUser = new User({
       firstName: newName[0],
@@ -101,8 +103,14 @@ export class SignupComponent {
       email: user.reloadUserInfo.email,
       userId: user.uid,
     });
-    console.log(newUser);
-    //push newUser in die Datenbank
+    try {
+      await this.firestoreService.createUserWithId(
+        newUser.getUserId(),
+        newUser.toJson()
+      );
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   saveSignedUser(
