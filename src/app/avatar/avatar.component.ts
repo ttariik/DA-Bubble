@@ -1,11 +1,55 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { FooterComponent, HeaderComponent } from '../shared';
+import { CommonModule } from '@angular/common';
+import { FirestoreService } from '../services/firestore.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-avatar',
-  imports: [],
+  imports: [HeaderComponent, FooterComponent, CommonModule],
   templateUrl: './avatar.component.html',
-  styleUrl: './avatar.component.scss'
+  styleUrl: './avatar.component.scss',
 })
 export class AvatarComponent {
+  private firestoreService = inject(FirestoreService);
+  private router = inject(Router);
+  userName = '';
+  userId = '';
+  activeImage = 'noProfile.svg';
+  isLoading = false;
+  listOfProfileImages = [
+    'user1.svg',
+    'user2.svg',
+    'user3.svg',
+    'user4.svg',
+    'user5.svg',
+    'user6.svg',
+  ];
 
+  ngOnInit(): void {
+    this.loadData();
+  }
+
+  loadData() {
+    const userData = JSON.parse(localStorage.getItem('signedUser') || 'null');
+    this.userName = userData.userName;
+    this.userId = userData.userId;
+  }
+
+  changeImage(newImage: string) {
+    this.activeImage = newImage;
+  }
+
+  async changeUserData() {
+    try {
+      this.isLoading = true;
+      await this.firestoreService.updateUser(this.userId, {
+        avatar: this.activeImage,
+      });
+      this.router.navigate(['/dashboard']);
+    } catch (error) {
+      this.isLoading = false;
+      console.error(error);
+    }
+  }
 }
