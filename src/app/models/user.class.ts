@@ -6,11 +6,11 @@ export class User {
   avatar: string;
 
   constructor(obj?: any) {
-    this.firstName = obj ? obj.firstName : '';
-    this.lastName = obj ? obj.lastName : '';
-    this.email = obj ? obj.email : '';
-    this.userId = obj ? obj.userId : '';
-    this.avatar = obj ? obj.avatar : '';
+    this.firstName = obj.firstName ? obj.firstName : '';
+    this.lastName = obj.lastName ? obj.lastName : '';
+    this.email = obj.email ? obj.email : '';
+    this.userId = obj.userId ? obj.userId : '';
+    this.avatar = obj.avatar ? obj.avatar : 'noProfile.svg';
   }
 
   public toJson() {
@@ -20,5 +20,9 @@ export class User {
       email: this.email,
       avatar: this.avatar,
     };
+  }
+
+  public getUserId() {
+    return this.userId;
   }
 }
