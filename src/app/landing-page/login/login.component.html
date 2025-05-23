@@ -25,18 +25,16 @@
             required
           />
         </div>
-        <div
-          class="error"
-          *ngIf="email.hasError('required') && (email.touched || email.dirty)"
-        >
-          Email ist <strong>erforderlich</strong>
-        </div>
-        <div
-          class="error"
-          *ngIf="email.hasError('email') && !email.hasError('required')"
-        >
-          Bitte gib eine gültige E-Mail-Adresse ein
-        </div>
+        @if (email.hasError('required') && (email.touched || email.dirty)) {
+          <div class="error">
+            Email ist <strong>erforderlich</strong>
+          </div>
+        }
+        @if (email.hasError('email') && !email.hasError('required')) {
+          <div class="error">
+            Bitte gib eine gültige E-Mail-Adresse ein
+          </div>
+        }
       </div>
 
       <!-- Password -->
@@ -56,23 +54,16 @@
             required
           />
         </div>
-        <div
-          class="error"
-          *ngIf="
-            password.hasError('required') &&
-            (password.touched || password.dirty)
-          "
-        >
-          Passwort ist <strong>erforderlich</strong>
-        </div>
-        <div
-          class="error"
-          *ngIf="
-            password.hasError('minlength') && !password.hasError('required')
-          "
-        >
-          Minimum {{ password.errors?.['minlength'].requiredLength }} Zeichen
-        </div>
+        @if (password.hasError('required') && (password.touched || password.dirty)) {
+          <div class="error">
+            Passwort ist <strong>erforderlich</strong>
+          </div>
+        }
+        @if (password.hasError('minlength') && !password.hasError('required')) {
+          <div class="error">
+            Minimum {{ password.errors?.['minlength'].requiredLength }} Zeichen
+          </div>
+        }
       </div>
 
       <!-- Forgot Password -->
@@ -98,8 +89,11 @@
           class="btn primary small-btn"
           [disabled]="loginForm.invalid || isLoading"
         >
-          <span *ngIf="isLoading">Laden...</span>
-          <span *ngIf="!isLoading">Anmelden</span>
+          @if (isLoading) {
+            <span>Laden...</span>
+          } @else {
+            <span>Anmelden</span>
+          }
         </button>
 
         <button
@@ -113,4 +107,6 @@
     </form>
   </div>
 </div>
+
+<app-footer></app-footer>
 

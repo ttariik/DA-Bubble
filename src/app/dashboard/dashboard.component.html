@@ -1,1 +1,66 @@
-<p>dashboard works!</p>
+<div class="app-container">
+  <!-- Header -->
+  <header class="main-header">
+    <div class="logo-container" (click)="navigateHome()">
+      <div class="logo">
+        <img class="logo" src="assets/svg/DABubble.svg" alt="Logo">
+      </div>
+    </div>
+    
+    <div class="search-container">
+      <input type="text" class="search-input" placeholder="Devspace durchsuchen">
+      <div class="search-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20">
+          <path fill="none" stroke="currentColor" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+    </div>
+    
+    <div class="profile-container" (click)="toggleProfileModal()">
+      <div class="user-name">Frederik Beck</div>
+      <div class="user-avatar">
+        <img [src]="userProfile.imageUrl" [alt]="userProfile.name">
+        <div class="status-indicator" [class.active]="userProfile.isActive"></div>
+      </div>
+      <div class="dropdown-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20">
+          <path fill="none" stroke="currentColor" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <div class="dashboard-container">
+    <div class="sidebar">
+      <app-sidebar></app-sidebar>
+    </div>
+    
+    <div class="chat-area">
+      <app-chat-area></app-chat-area>
+    </div>
+    
+    <div class="thread-section" *ngIf="showThreadView">
+      <div class="thread-header">
+        <div class="thread-title">Thread <span class="thread-channel"># Entwicklerteam</span></div>
+        <button class="close-button" (click)="toggleThreadView()">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+            <path fill="none" stroke="currentColor" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      
+      <app-thread-view (closeThread)="toggleThreadView()"></app-thread-view>
+    </div>
+  </div>
+  
+  <app-profile-modal
+    *ngIf="showProfileModal"
+    [userName]="userProfile.name"
+    [userEmail]="userProfile.email"
+    [userImageUrl]="userProfile.imageUrl"
+    [isActive]="userProfile.isActive"
+    (closeModal)="toggleProfileModal()"
+    (logoutUser)="handleLogout()"
+  ></app-profile-modal>
+</div>

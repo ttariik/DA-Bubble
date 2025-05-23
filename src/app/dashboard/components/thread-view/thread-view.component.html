@@ -1,0 +1,64 @@
+<div class="thread-container">
+  <!-- Original Message -->
+  <div class="original-message">
+    <div class="message-item">
+      <div class="message-avatar">
+        <img [src]="originalMessage.userAvatar" [alt]="originalMessage.userName">
+      </div>
+      <div class="message-content">
+        <div class="message-header">
+          <div class="message-sender">{{ originalMessage.userName }}</div>
+          <div class="message-time">{{ originalMessage.timestamp | date:'HH:mm' }} Uhr</div>
+        </div>
+        <div class="message-text">{{ originalMessage.content }}</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Replies Count -->
+  <div class="replies-count">
+    {{ replies.length }} Antworten
+  </div>
+  
+  <!-- Replies -->
+  <div class="replies-container">
+    <div *ngFor="let reply of replies" class="message-item">
+      <div class="message-avatar">
+        <img [src]="reply.userAvatar" [alt]="reply.userName">
+      </div>
+      <div class="message-content">
+        <div class="message-header">
+          <div class="message-sender">{{ reply.userName }}</div>
+          <div class="message-time">{{ reply.timestamp | date:'HH:mm' }} Uhr</div>
+        </div>
+        <div class="message-text">{{ reply.content }}</div>
+        
+        <!-- Message Actions -->
+        <div class="message-actions" *ngIf="reply.reactions?.length">
+          <div class="reactions">
+            <div *ngFor="let reaction of reply.reactions" class="reaction-badge">
+              {{ reaction.emoji }} {{ reaction.count }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Reply Input -->
+  <div class="reply-input-container">
+    <div class="reply-input-wrapper">
+      <textarea 
+        class="reply-input" 
+        placeholder="Antworten..."
+        [(ngModel)]="replyInput"
+        (keydown.enter)="$event.preventDefault(); sendReply()"
+      ></textarea>
+      <div class="input-actions">
+        <button class="send-button" [disabled]="!replyInput.trim()" (click)="sendReply()">
+          <img src="assets/svg/send.svg" alt="Senden" class="send-icon">
+        </button>
+      </div>
+    </div>
+  </div>
+</div> 

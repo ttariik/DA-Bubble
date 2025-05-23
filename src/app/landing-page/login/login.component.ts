@@ -9,13 +9,12 @@ import {
 import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { HeaderComponent } from '../../shared';
-
-
+import { FooterComponent } from '../../shared/footer/footer.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, HeaderComponent, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, HeaderComponent, RouterModule, FooterComponent],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
 })
@@ -52,6 +51,7 @@ export class LoginComponent {
           .then((user: any) => {
             this.isLoading = false;
             console.log(user);
+            this.router.navigate(['/dashboard']);
           })
           .catch((errorCode) => {
             this.isLoading = false;
@@ -78,7 +78,7 @@ export class LoginComponent {
   }
 
   loginAsGuest() {
-    console.log('Gäste-Login wurde ausgewählt'); //bsp
-    // Hier könnte eine Weiterleitung erfolgen oder ein automatischer Login mit einem Gästekonto
+    console.log('Gäste-Login wurde ausgewählt');
+    this.router.navigate(['/dashboard']);
   }
 }

@@ -1,0 +1,230 @@
+.thread-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.thread-header {
+  height: 64px;
+  padding: 0 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e0e0e0;
+  background-color: #fff;
+}
+
+.thread-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.thread-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #323232;
+}
+
+.channel-reference {
+  font-size: 13px;
+  color: #666;
+}
+
+.thread-actions {
+  display: flex;
+  align-items: center;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  font-size: 16px;
+  color: #666;
+  
+  &:hover {
+    background-color: #f5f5f5;
+    color: #333;
+  }
+}
+
+.original-message {
+  padding: 16px;
+  border-bottom: 1px solid #e0e0e0;
+  background-color: #f8f8f8;
+}
+
+.replies-count {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #666;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.replies-container {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.message-item {
+  display: flex;
+  margin-bottom: 16px;
+}
+
+.message-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-right: 12px;
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.message-content {
+  flex: 1;
+}
+
+.message-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.message-sender {
+  font-weight: 700;
+  font-size: 15px;
+  color: #333;
+}
+
+.message-time {
+  margin-left: 8px;
+  font-size: 12px;
+  color: #666;
+}
+
+.message-text {
+  font-size: 15px;
+  line-height: 1.4;
+  color: #333;
+  word-break: break-word;
+}
+
+.message-actions {
+  display: flex;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.reactions {
+  display: flex;
+  align-items: center;
+}
+
+.reaction-badge {
+  display: flex;
+  align-items: center;
+  padding: 2px 6px;
+  background-color: #f8f8f8;
+  border-radius: 12px;
+  margin-right: 4px;
+  font-size: 12px;
+  border: 1px solid #e0e0e0;
+  cursor: pointer;
+  
+  &:hover {
+    background-color: #ECEEFE;
+    border-color: #444df2;
+  }
+}
+
+.reply-input-container {
+  padding: 16px;
+  border-top: 1px solid #e0e0e0;
+  background-color: #fff;
+  margin-top: auto;
+}
+
+.reply-input-wrapper {
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 8px;
+  background-color: #fff;
+}
+
+.reply-input {
+  width: 100%;
+  min-height: 40px;
+  max-height: 120px;
+  border: none;
+  resize: none;
+  outline: none;
+  font-size: 15px;
+  font-family: inherit;
+  padding: 8px;
+  
+  &::placeholder {
+    color: #999;
+  }
+}
+
+.input-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.send-button {
+  background-color: #444df2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+  
+  .send-icon {
+    width: 20px;
+    height: 20px;
+    filter: brightness(0) invert(1); /* Macht das Icon weiß */
+    transition: transform 0.2s ease;
+  }
+  
+  &:disabled {
+    background-color: #e0e0e0;
+    color: #999;
+    cursor: not-allowed;
+    
+    .send-icon {
+      opacity: 0.5;
+    }
+  }
+  
+  &:not(:disabled):hover {
+    background-color: #3b43d8;
+    
+    .send-icon {
+      transform: translateX(2px);
+    }
+  }
+} 
