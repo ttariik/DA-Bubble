@@ -28,9 +28,10 @@
         </div>
         @if (name.hasError('required') && (name.touched || name.dirty)) {
         <div class="error">Name ist <strong>erforderlich</strong></div>
-        }@else if (name.hasError('minlength') && !name.hasError('required')) {
+        }@else if (name.hasError('pattern') && !name.hasError('required')) {
         <div class="error">
-          Minimum {{ name.errors?.['minlength'].requiredLength }} Zeichen
+          Muss <strong>Vorname und Nachname</strong> enthalten.(z.B. Max
+          Mustermann)
         </div>
         }
       </div>

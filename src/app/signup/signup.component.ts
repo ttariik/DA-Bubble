@@ -9,6 +9,7 @@ import {
 import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { FooterComponent, HeaderComponent } from '../shared';
+import { User } from '../models/user.class';
 
 @Component({
   selector: 'app-signup',
@@ -30,7 +31,9 @@ export class SignupComponent {
 
   nameFormControl = new FormControl('', [
     Validators.required,
-    Validators.minLength(3),
+    Validators.pattern(
+      "^[A-ZÄÖÜ][a-zäöüß]+(?:[-'][A-ZÄÖÜ][a-zäöüß]+)?\\s[A-ZÄÖÜ][a-zäöüß]+(?:[-'][A-ZÄÖÜ][a-zäöüß]+)?$"
+    ),
   ]);
 
   emailFormControl = new FormControl('', [
@@ -56,13 +59,19 @@ export class SignupComponent {
     if (this.registerForm.valid) {
       this.isLoading = true;
       const { email, password, name } = this.registerForm.value;
-
       if (email != null && password != null && name != null) {
         await this.authService
           .signUp(email, password)
           .then((user: any) => {
             this.isLoading = false;
-            console.log(user);
+            this.createUser(user, name);
+            this.saveSignedUser(
+              user.uid,
+              user.stsTokenManager.accessToken,
+              user.stsTokenManager.expirationTime,
+              name
+            );
+            this.router.navigate(['/avatar']);
           })
           .catch((errorCode) => {
             this.isLoading = false;
@@ -84,7 +93,32 @@ export class SignupComponent {
     return this.passwordFormControl;
   }
 
-  togglePasswordVisibility(): void {
-    this.hidePassword = !this.hidePassword;
+  createUser(user: any, name: string) {
+    const newName = name.split(' ');
+    const newUser = new User({
+      firstName: newName[0],
+      lastName: newName[1],
+      email: user.reloadUserInfo.email,
+      userId: user.uid,
+    });
+    console.log(newUser);
+    //push newUser in die Datenbank
+  }
+
+  saveSignedUser(
+    userId: string,
+    acessToken: string,
+    expirationTime: number,
+    name: string
+  ) {
+    localStorage.setItem(
+      'signedUser',
+      JSON.stringify({
+        userId: userId,
+        acessToken: acessToken,
+        expirationTime: expirationTime,
+        userName: name,
+      })
+    );
   }
 }
