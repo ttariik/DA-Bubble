@@ -7,14 +7,20 @@ import {
   Validators,
 } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
-import { HeaderComponent } from '../../shared';
-import { FooterComponent } from '../../shared/footer/footer.component';
+import { AuthService } from '../services/auth.service';
+import { HeaderComponent } from '../shared';
+import { FooterComponent } from '../shared/footer/footer.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, HeaderComponent, RouterModule, FooterComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    HeaderComponent,
+    RouterModule,
+    FooterComponent,
+  ],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
 })
