@@ -1,1 +1,107 @@
-<p>signup works!</p>
+<app-header></app-header>
+<div class="login-card">
+  <div class="login-content">
+    <div class="title-container">
+      <h2>Konto erstellen</h2>
+      <div class="back-button" routerLink="/login">
+        <img src="assets/icons/arrow_back.svg" />
+      </div>
+    </div>
+    <p>
+      Mit deinem Namen und deiner E-Mail-Adresse hast du dein neues
+      DABubble-Konto.
+    </p>
+
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="login-form">
+      <!-- Name -->
+      <div class="input-container">
+        <div class="icon-input">
+          <img class="input-icon" src="assets/icons/user.svg" alt="User Icon" />
+          <input
+            type="text"
+            id="name"
+            formControlName="name"
+            class="form-control"
+            placeholder="Name und Nachname"
+            required
+          />
+        </div>
+        @if (name.hasError('required') && (name.touched || name.dirty)) {
+        <div class="error">Name ist <strong>erforderlich</strong></div>
+        }@else if (name.hasError('minlength') && !name.hasError('required')) {
+        <div class="error">
+          Minimum {{ name.errors?.['minlength'].requiredLength }} Zeichen
+        </div>
+        }
+      </div>
+      <!-- Email -->
+      <div class="input-container">
+        <div class="icon-input">
+          <img
+            class="input-icon"
+            src="assets/icons/mail.svg"
+            alt="Email Icon"
+          />
+          <input
+            type="email"
+            id="email"
+            formControlName="email"
+            class="form-control"
+            placeholder="beispielname@email.com"
+            required
+          />
+        </div>
+        @if (email.hasError('required') && (email.touched || email.dirty)) {
+        <div class="error">Email ist <strong>erforderlich</strong></div>
+        } @else if (email.hasError('email') && !email.hasError('required')) {
+        <div class="error">Bitte gib eine gültige E-Mail-Adresse ein</div>
+        }
+      </div>
+
+      <!-- Password -->
+      <div class="input-container">
+        <div class="icon-input">
+          <img
+            class="input-icon"
+            src="assets/icons/lock.svg"
+            alt="Passwort Icon"
+          />
+          <input
+            [type]="hidePassword ? 'password' : 'text'"
+            id="password"
+            formControlName="password"
+            class="form-control"
+            placeholder="Passwort"
+            required
+          />
+        </div>
+        @if (password.hasError('required') && (password.touched ||
+        password.dirty)) {
+        <div class="error">Passwort ist <strong>erforderlich</strong></div>
+        }@else if (password.hasError('minlength') &&
+        !password.hasError('required')) {
+        <div class="error">
+          Minimum {{ password.errors?.['minlength'].requiredLength }} Zeichen
+        </div>
+        }
+      </div>
+      <div class="form-options">
+        <label class="checkbox">
+          <input type="checkbox" formControlName="privacyPolicy" />
+          <div class="chekbox-box"></div>
+          <span> Ich stimme der <a href="#">Datenschutzerklärung</a> zu. </span>
+        </label>
+      </div>
+      <div class="button-group">
+        <button
+          type="submit"
+          class="btn primary small-btn"
+          [disabled]="registerForm.invalid || isLoading"
+        >
+          @if (isLoading) {<span>Laden...</span> }@else {<span>Weiter</span>}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+<app-footer></app-footer>
