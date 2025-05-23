@@ -4,6 +4,7 @@ import { AvatarComponent } from "./avatar/avatar.component";
 
 @Component({
   selector: 'app-landing-page',
+  standalone: true,
   imports: [
     LoginComponent, 
     // AvatarComponent

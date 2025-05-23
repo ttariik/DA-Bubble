@@ -77,12 +77,9 @@
 
       <!-- Forgot Password -->
       <div class="forgot-password-container">
-        <a
-          class="forgot-password"
-          routerLink="/forgot-password"
-          style="text-decoration: none"
-          >Passwort vergessen?</a
-        >
+        <div class="forgot-password-link" (click)="navigateToForgotPassword()">
+          <span>Passwort vergessen?</span>
+        </div>
       </div>
 
 
@@ -91,7 +88,7 @@
 
       <!-- Google Login -->
       <button type="button" class="btn google-btn">
-        <img src="assets/icons/google.svg" alt="Google" />
+        <img src="assets/svg/Google.svg" alt="Google" />
         Anmelden mit Google
       </button>
 
@@ -116,3 +113,4 @@
     </form>
   </div>
 </div>
+

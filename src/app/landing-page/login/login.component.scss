@@ -40,7 +40,8 @@ p {
   border-radius: 23px;
   overflow: hidden;
   transition: all 0.3s ease;
-  border: 2px solid transparent;
+  border: 2.1px solid transparent;
+
 
   &:hover {
     background-color: #e8eaf6;
@@ -126,18 +127,72 @@ p {
 .forgot-password-container {
   text-align: center;
   margin: 1rem 0;
-  cursor: pointer;
+  display: flex;
+  justify-content: center;
 }
 
-.forgot-password {
+.forgot-password-link {
   color: #444df2;
-  text-decoration: none;
   font-size: 0.9rem;
-  transition: all 0.2s ease;
-
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: 50px;
+  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 150%;
+    height: 150%;
+    background: radial-gradient(circle, rgba(68, 77, 242, 0.1) 0%, rgba(68, 77, 242, 0) 70%);
+    transform: translate(-50%, -50%) scale(0);
+    transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+    pointer-events: none;
+  }
+  
   &:hover {
-    text-decoration: underline;
-    color: #3b43d8;
+    background-color: rgba(0, 0, 0, 0.05);
+    transform: translateY(-2px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+    
+    &::before {
+      transform: translate(-50%, -50%) scale(1);
+    }
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+  
+  span {
+    display: inline-block;
+    position: relative;
+    z-index: 1;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 2px;
+      bottom: -2px;
+      left: 0;
+      background-color: #444df2;
+      transform: scaleX(0);
+      transform-origin: right;
+      transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+  }
+  
+  &:hover span::after {
+    transform: scaleX(1);
+    transform-origin: left;
   }
 }
 

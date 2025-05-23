@@ -6,19 +6,22 @@ import {
   FormGroup,
   Validators,
 } from '@angular/forms';
+import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { HeaderComponent } from '../../shared';
+
 
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, HeaderComponent],
+  imports: [CommonModule, ReactiveFormsModule, HeaderComponent, RouterModule],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
 })
 export class LoginComponent {
   authService = inject(AuthService);
+  private router = inject(Router);
   isLoading = false;
   hidePassword = true;
 
@@ -60,6 +63,10 @@ export class LoginComponent {
 
   togglePasswordVisibility(): void {
     this.hidePassword = !this.hidePassword;
+  }
+
+  navigateToForgotPassword(): void {
+    this.router.navigate(['/forgot-password']);
   }
 
   get email() {
