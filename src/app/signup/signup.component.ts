@@ -43,7 +43,7 @@ export class SignupComponent {
     Validators.minLength(6),
   ]);
 
-  privacyPolicyFormControl = new FormControl(false, [Validators.required]);
+  privacyPolicyFormControl = new FormControl(false, [Validators.requiredTrue]);
 
   registerForm = new FormGroup({
     name: this.nameFormControl,
@@ -55,11 +55,11 @@ export class SignupComponent {
   async onSubmit() {
     if (this.registerForm.valid) {
       this.isLoading = true;
-      const { email, password } = this.registerForm.value;
+      const { email, password, name } = this.registerForm.value;
 
-      if (email != null && password != null) {
+      if (email != null && password != null && name != null) {
         await this.authService
-          .signIn(email, password)
+          .signUp(email, password)
           .then((user: any) => {
             this.isLoading = false;
             console.log(user);
@@ -86,9 +86,5 @@ export class SignupComponent {
 
   togglePasswordVisibility(): void {
     this.hidePassword = !this.hidePassword;
-  }
-
-  navigateToForgotPassword(): void {
-    this.router.navigate(['/forgot-password']);
   }
 }
