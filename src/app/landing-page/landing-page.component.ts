@@ -6,9 +6,9 @@ import { AvatarComponent } from "./avatar/avatar.component";
   selector: 'app-landing-page',
   standalone: true,
   imports: [
-    LoginComponent, 
+    LoginComponent,
     // AvatarComponent
-  ],
+],
   templateUrl: './landing-page.component.html',
   styleUrl: './landing-page.component.scss'
 })
