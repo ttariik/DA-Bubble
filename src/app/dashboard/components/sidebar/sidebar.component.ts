@@ -33,7 +33,7 @@ export class SidebarComponent {
   ];
   
   directMessages: DirectMessage[] = [
-    { id: '1', name: 'Frederik Beck (Du)', avatar: 'assets/avatars/user1.png', online: true, unread: 0 },
+    { id: '1', name: 'Frederik Beck (Du)', avatar: 'assets/avatars/noProfile.svg', online: true, unread: 0 },
     { id: '2', name: 'Sofia Müller', avatar: 'assets/avatars/user2.png', online: true, unread: 0 },
     { id: '3', name: 'Noah Braun', avatar: 'assets/avatars/user3.png', online: true, unread: 0 },
     { id: '4', name: 'Elise Roth', avatar: 'assets/avatars/user1.png', online: false, unread: 0 },

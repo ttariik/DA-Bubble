@@ -30,9 +30,9 @@ export class ChatAreaComponent {
   channelName: string = 'Entwicklerteam';
   messageInput: string = '';
   channelMembers: {id: string, name: string, avatar: string}[] = [
-    { id: '1', name: 'Frederik Beck', avatar: 'assets/avatars/user1.png' },
-    { id: '2', name: 'Sofia Müller', avatar: 'assets/avatars/user2.png' },
-    { id: '3', name: 'Noah Braun', avatar: 'assets/avatars/user3.png' }
+    { id: '1', name: 'Frederik Beck', avatar: 'assets/avatars/user1.svg' },
+    { id: '2', name: 'Sofia Müller', avatar: 'assets/avatars/user2.svg' },
+    { id: '3', name: 'Noah Braun', avatar: 'assets/avatars/user3.svg' }
   ];
   
   messages: Message[] = [
