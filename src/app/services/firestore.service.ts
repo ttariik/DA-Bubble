@@ -16,7 +16,7 @@ export class FirestoreService {
    */
   async createUserWithId(id: string, data: any): Promise<void> {
     const userRef = doc(this.firestore, 'users', id);
-    await setDoc(userRef, data);
+    return await setDoc(userRef, data);
   }
 
   /**
@@ -28,6 +28,6 @@ export class FirestoreService {
    */
   async updateUser(id: string, data: any): Promise<void> {
     const userRef = doc(this.firestore, 'users', id);
-    await updateDoc(userRef, data);
+    return await updateDoc(userRef, data);
   }
 }
