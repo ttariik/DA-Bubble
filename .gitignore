@@ -80,7 +80,7 @@ lerna-debug.log*
 # macOS
 .AppleDouble
 .LSOverride
-Icon?
+# Icon?
 ._*
 .Spotlight-V100
 .Trashes
