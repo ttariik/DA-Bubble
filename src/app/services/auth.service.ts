@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
 import {
   Auth,
+  confirmPasswordReset,
   createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
 } from '@angular/fire/auth';
 
@@ -43,5 +45,17 @@ export class AuthService {
       .catch((error) => {
         return Promise.reject(error.code);
       });
+  }
+
+  resetPassword(email: string): Promise<void> {
+    const actionCodeSettings = {
+      url: 'http://localhost:4200/reset-password',
+      handleCodeInApp: true,
+    };
+    return sendPasswordResetEmail(this.auth, email, actionCodeSettings);
+  }
+
+  changePassword(newPassword: string, oobCode: string) {
+    return confirmPasswordReset(this.auth, oobCode, newPassword);
   }
 }
