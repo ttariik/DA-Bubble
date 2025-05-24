@@ -10,7 +10,16 @@
           <div class="message-sender">{{ originalMessage.userName }}</div>
           <div class="message-time">{{ originalMessage.timestamp | date:'HH:mm' }} Uhr</div>
         </div>
-        <div class="message-text">{{ originalMessage.content }}</div>
+        <div class="message-bubble">{{ originalMessage.content }}</div>
+        
+        <!-- Reaktions-Button für die ursprüngliche Nachricht -->
+        <div class="message-actions">
+          <div class="action-buttons">
+            <button class="action-button emoji-button" (click)="addReaction(originalMessage)">
+              <span>😊</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -22,25 +31,38 @@
   
   <!-- Replies -->
   <div class="replies-container">
-    <div *ngFor="let reply of replies" class="message-item">
-      <div class="message-avatar">
+    <div *ngFor="let reply of replies" class="message-item" [class.own-message]="reply.userId === currentUserId">
+      <div class="message-avatar" *ngIf="reply.userId !== currentUserId">
         <img [src]="reply.userAvatar" [alt]="reply.userName">
       </div>
-      <div class="message-content">
+      
+      <div class="message-content" [class.own-message-content]="reply.userId === currentUserId">
         <div class="message-header">
           <div class="message-sender">{{ reply.userName }}</div>
           <div class="message-time">{{ reply.timestamp | date:'HH:mm' }} Uhr</div>
         </div>
-        <div class="message-text">{{ reply.content }}</div>
+        <!-- <div class="message-bubble">{{ reply.content }}</div> -->
         
         <!-- Message Actions -->
-        <div class="message-actions" *ngIf="reply.reactions?.length">
-          <div class="reactions">
-            <div *ngFor="let reaction of reply.reactions" class="reaction-badge">
+        <div class="message-actions">
+          <div class="reactions" *ngIf="reply.reactions?.length">
+            <div
+              *ngFor="let reaction of reply.reactions"
+              class="reaction-badge"
+            >
               {{ reaction.emoji }} {{ reaction.count }}
             </div>
           </div>
+          <div class="action-buttons">
+            <button class="action-button emoji-button" (click)="addReaction(reply)">
+              <span>😊</span>
+            </button>
+          </div>
         </div>
+      </div>
+      
+      <div class="message-avatar" *ngIf="reply.userId === currentUserId">
+        <img [src]="reply.userAvatar" [alt]="reply.userName">
       </div>
     </div>
   </div>
@@ -55,9 +77,76 @@
         (keydown.enter)="$event.preventDefault(); sendReply()"
       ></textarea>
       <div class="input-actions">
+        <div class="input-tools">
+          <button class="tool-button mention-button" (click)="insertMention()">
+            <span>&#64;</span>
+          </button>
+          <button class="tool-button emoji-button" (click)="openEmojiPicker()">
+            <span>😊</span>
+          </button>
+        </div>
         <button class="send-button" [disabled]="!replyInput.trim()" (click)="sendReply()">
           <img src="assets/svg/send.svg" alt="Senden" class="send-icon">
         </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Emoji Picker -->
+  <div *ngIf="showEmojiPicker" class="emoji-picker-container">
+    <div class="custom-emoji-picker">
+      <div class="emoji-picker-header">
+        <div class="emoji-search">
+          <input type="text" placeholder="Suchen" class="emoji-search-input">
+          <button class="emoji-search-button">
+            <span>🔍</span>
+          </button>
+        </div>
+        <div class="emoji-picker-close" (click)="openEmojiPicker()">
+          <span>×</span>
+        </div>
+      </div>
+      
+      <div class="emoji-picker-content">
+        <div class="emoji-categories">
+          <button class="emoji-category-btn active">😀</button>
+          <button class="emoji-category-btn">🙂</button>
+          <button class="emoji-category-btn">🚗</button>
+          <button class="emoji-category-btn">🏀</button>
+          <button class="emoji-category-btn">🏳️</button>
+          <button class="emoji-category-btn">🔣</button>
+          <button class="emoji-category-btn">🏁</button>
+        </div>
+        
+        <div class="emoji-list">
+          <div class="emoji-section">
+            <div class="emoji-section-title">Kürzlich verwendet</div>
+            <div class="emoji-grid">
+              <button class="emoji-btn" (click)="addEmoji({emoji: '👍'})">👍</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: '😀'})">😀</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: '😉'})">😉</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: '😍'})">😍</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: '😜'})">😜</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: '😂'})">😂</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: '🤣'})">🤣</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: '😱'})">😱</button>
+            </div>
+          </div>
+          
+          <div class="emoji-section">
+            <div class="emoji-section-title">Smileys & Personen</div>
+            <div class="emoji-grid">
+              <button class="emoji-btn" (click)="addEmoji({emoji: '😀'})">😀</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: '😃'})">😃</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: '😄'})">😄</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: '😁'})">😁</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: '😆'})">😆</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: '😅'})">😅</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: '🤣'})">🤣</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: '😂'})">😂</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
