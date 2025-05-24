@@ -15,13 +15,16 @@
     </div>
     <div class="channel-actions">
       <div class="members-avatars">
-        <div *ngFor="let member of channelMembers.slice(0, 3)" class="member-avatar">
-          <img [src]="member.avatar" [alt]="member.name">
+        <div
+          *ngFor="let member of channelMembers.slice(0, 3)"
+          class="member-avatar"
+        >
+          <img [src]="member.avatar" [alt]="member.name" />
         </div>
       </div>
     </div>
   </div>
-  
+
   <!-- Messages Area -->
   <div class="messages-container">
     <div *ngFor="let date of dates" class="date-separator">
@@ -29,22 +32,27 @@
       <div class="date-text">{{ date.label }}</div>
       <div class="date-line"></div>
     </div>
-    
+
     <div *ngFor="let message of messages" class="message-item">
       <div class="message-avatar">
-        <img [src]="message.userAvatar" [alt]="message.userName">
+        <img [src]="message.userAvatar" [alt]="message.userName" />
       </div>
       <div class="message-content">
         <div class="message-header">
           <div class="message-sender">{{ message.userName }}</div>
-          <div class="message-time">{{ message.timestamp | date:'HH:mm' }} Uhr</div>
+          <div class="message-time">
+            {{ message.timestamp | date : "HH:mm" }} Uhr
+          </div>
         </div>
         <div class="message-text">{{ message.content }}</div>
-        
+
         <!-- Message Actions -->
         <div class="message-actions">
           <div class="reactions" *ngIf="message.reactions?.length">
-            <div *ngFor="let reaction of message.reactions" class="reaction-badge">
+            <div
+              *ngFor="let reaction of message.reactions"
+              class="reaction-badge"
+            >
               {{ reaction.emoji }} {{ reaction.count }}
             </div>
           </div>
@@ -54,28 +62,43 @@
             </button>
             <button class="action-button" (click)="openThread(message)">
               <span>💬</span>
-              <span *ngIf="message.threadCount" class="thread-count">{{ message.threadCount }}</span>
+              <span *ngIf="message.threadCount" class="thread-count">{{
+                message.threadCount
+              }}</span>
             </button>
           </div>
         </div>
       </div>
     </div>
   </div>
-  
+
   <!-- Message Input -->
   <div class="message-input-container">
     <div class="message-input-wrapper">
-      <textarea 
-        class="message-input" 
+      <textarea
+        class="message-input"
         placeholder="Nachricht an #{{ channelName }} senden"
         [(ngModel)]="messageInput"
         (keydown.enter)="$event.preventDefault(); sendMessage()"
       ></textarea>
       <div class="input-actions">
-        <button class="send-button" [disabled]="!messageInput.trim()" (click)="sendMessage()">
-          <img src="" alt="">
+        <div>
+          <button class="react-button">
+            <img src="./assets/icons/dashboard/reaction.svg" alt="" />
+          </button>
+          <button class="react-button">
+            <img src="./assets/icons/dashboard/mark.svg" alt="" />
+          </button>
+        </div>
+
+        <button
+          class="send-button"
+          [disabled]="!messageInput.trim()"
+          (click)="sendMessage()"
+        >
+          <img src="./assets/icons/dashboard/send.svg" alt="" />
         </button>
       </div>
     </div>
   </div>
-</div> 
+</div>

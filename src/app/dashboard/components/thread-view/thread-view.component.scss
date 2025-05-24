@@ -1,9 +1,9 @@
 .thread-container {
-  height: 100%;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  border-radius: 16px;
+  height: 100%;
+  padding: 0;
+  overflow-y: auto;
 }
 
 .thread-header {
@@ -59,21 +59,6 @@
 .original-message {
   padding: 16px;
   border-bottom: 1px solid #e0e0e0;
-  background-color: #f8f8f8;
-}
-
-.replies-count {
-  padding: 8px 16px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #666;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.replies-container {
-  flex: 1;
-  padding: 16px;
-  overflow-y: auto;
 }
 
 .message-item {
@@ -82,11 +67,12 @@
 }
 
 .message-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 4px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   overflow: hidden;
   margin-right: 12px;
+  flex-shrink: 0;
   
   img {
     width: 100%;
@@ -106,49 +92,57 @@
 }
 
 .message-sender {
-  font-weight: 700;
-  font-size: 15px;
-  color: #333;
+  font-weight: 600;
+  margin-right: 8px;
 }
 
 .message-time {
-  margin-left: 8px;
   font-size: 12px;
   color: #666;
 }
 
 .message-text {
-  font-size: 15px;
-  line-height: 1.4;
-  color: #333;
-  word-break: break-word;
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.replies-count {
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #444;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.replies-container {
+  padding: 16px;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .message-actions {
   display: flex;
-  align-items: center;
   margin-top: 4px;
 }
 
 .reactions {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 
 .reaction-badge {
   display: flex;
   align-items: center;
   padding: 2px 6px;
-  background-color: #f8f8f8;
+  background-color: #f0f0f0;
   border-radius: 12px;
-  margin-right: 4px;
   font-size: 12px;
-  border: 1px solid #e0e0e0;
   cursor: pointer;
   
   &:hover {
-    background-color: #ECEEFE;
-    border-color: #444df2;
+    background-color: #e0e0e0;
   }
 }
 

@@ -30,9 +30,9 @@ export class ChatAreaComponent {
   channelName: string = 'Entwicklerteam';
   messageInput: string = '';
   channelMembers: {id: string, name: string, avatar: string}[] = [
-    { id: '1', name: 'Frederik Beck', avatar: 'assets/avatars/user1.svg' },
-    { id: '2', name: 'Sofia Müller', avatar: 'assets/avatars/user2.svg' },
-    { id: '3', name: 'Noah Braun', avatar: 'assets/avatars/user3.svg' }
+    { id: '1', name: 'Frederik Beck', avatar: 'assets/icons/avatars/user1.svg' },
+    { id: '2', name: 'Sofia Müller', avatar: 'assets/icons/avatars/user1.svg' },
+    { id: '3', name: 'Noah Braun', avatar: 'assets/icons/avatars/user1.svg' }
   ];
   
   messages: Message[] = [
@@ -40,7 +40,7 @@ export class ChatAreaComponent {
       id: '1',
       userId: '3',
       userName: 'Noah Braun',
-      userAvatar: 'assets/avatars/user3.png',
+      userAvatar: 'assets/icons/avatars/user1.svg',
       content: 'Welche Version ist aktuell von Angular?',
       timestamp: new Date('2023-01-14T14:25:00'),
       threadCount: 2
@@ -49,7 +49,7 @@ export class ChatAreaComponent {
       id: '2',
       userId: '1',
       userName: 'Frederik Beck',
-      userAvatar: 'assets/avatars/user1.png',
+      userAvatar: 'assets/icons/avatars/user1.svg',
       content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque blandit odio efficitur lectus vestibulum, quis accumsan ante vulputate. Quisque tristique iaculis erat, eu faucibus lacus iaculis ac.',
       timestamp: new Date('2023-01-14T15:06:00'),
       reactions: [

@@ -3,7 +3,7 @@
   <div class="workspace-header">
     <div class="workspace-info">
       <div class="workspace-icon">
-        <img src="assets/svg/workspace-icon.svg" alt="Workspace Icon">
+        <img src="assets/img/workspace-icon.svg" alt="Workspace Icon">
       </div>
       <div class="workspace-name">{{ workspaceName }}
         
@@ -39,7 +39,7 @@
           <div class="channel-name"><span class="channel-icon">#</span>{{ channel.name }}</div>
           <div class="unread-badge" *ngIf="channel.unread > 0">{{ channel.unread }}</div>
         </div>
-        <div class="add-channel-button">
+        <div class="add-channel-button" (click)="addChannel()">
           <img src="assets/icons/add_circle.svg" alt="Add Channel" class="add-channel-icon">
           <div class="add-channel-text">Channel hinzufügen</div>
         </div>
@@ -82,4 +82,11 @@
       <div class="menu-text">Workspace-Menü schließen</div>
     </div>
   </div>
+  
+  <!-- Add Channel Modal -->
+  <app-add-channel-modal 
+    [isVisible]="showAddChannelModal" 
+    (close)="closeAddChannelModal()" 
+    (channelCreated)="handleChannelCreated($event)">
+  </app-add-channel-modal>
 </div> 

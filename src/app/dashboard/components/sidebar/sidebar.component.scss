@@ -50,60 +50,48 @@
   justify-content: center;
   align-items: center;
   cursor: pointer;
+  transition: all 0.2s ease;
   
   &:hover {
     background-color: rgba(0, 0, 0, 0.05);
+    
+    .edit-icon {
+      transform: scale(1.125);
+      filter: invert(32%) sepia(59%) saturate(3714%) hue-rotate(229deg) brightness(95%) contrast(95%);
+    }
   }
   
   .edit-icon {
-    width: 14px;
-    height: 14px;
-    position: relative;
-    
-    &:before {
-      content: '';
-      position: absolute;
-      width: 10px;
-      height: 2px;
-      background: #666;
-      top: 6px;
-      left: 2px;
-      transform: rotate(-45deg);
-    }
-    
-    &:after {
-      content: '';
-      position: absolute;
-      width: 2px;
-      height: 10px;
-      background: #666;
-      top: 2px;
-      left: 6px;
-      transform: rotate(-45deg);
-    }
+    width: 18px;
+    height: 18px;
+    transition: transform 0.2s ease, filter 0.2s ease;
   }
 }
 
-/* Basisstruktur für alle Listenelemente */
 .section {
   margin-bottom: 24px;
   width: 100%;
 }
 
-/* Header-Elemente mit Icons */
 .section-header {
   display: flex;
   align-items: center;
-  padding: 6px 16px;
+  padding: 8px 32px;
   cursor: pointer;
-  height: 28px;
+  height: 36px;
   
   &:hover {
-    background-color: rgba(0, 0, 0, 0.05);
+    .section-icon {
+      transform: scale(1.125);
+      filter: invert(32%) sepia(59%) saturate(3714%) hue-rotate(229deg) brightness(95%) contrast(95%);
+    }
+    
+    .section-title {
+      color: #444df2;
+    }
   }
 }
 
-/* Die Toggle-Pfeile */
 .section-toggle {
   width: 24px;
   min-width: 24px;
@@ -127,22 +115,23 @@
   }
 }
 
+.section-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  opacity: 0.7;
+  transition: transform 0.2s ease, filter 0.2s ease, opacity 0.2s ease;
+}
+
 .section-title {
   display: flex;
   align-items: center;
   font-size: 14px;
   font-weight: 600;
   color: #666;
-  margin-left: 0;
+  margin-left: 8px;
   flex: 1;
-  margin: 0 20px;
-  
-  .section-icon {
-    width: 16px;
-    height: 16px;
-    margin-right: 8px;
-    opacity: 0.7;
-  }
+  transition: color 0.2s ease;
 }
 
 .section-content {
@@ -155,16 +144,18 @@
   flex-direction: column;
   align-items: center;
   width: 100%;
+  padding-top: 5px;
 }
 
 .channel-item, .dm-item {
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  justify-content: flex-start;
   cursor: pointer;
-  padding: 6px 16px 6px 48px;
-  margin: 2px 0;
-  width: 90%;
-  border-radius: 20px;
+  padding: 6px 20px 6px 25px;
+  width: fit-content;
+  border-radius: 30px;
+  margin: 0 auto;
   
   &:hover {
     background-color: rgba(0, 0, 0, 0.05);
@@ -184,17 +175,27 @@
   }
 }
 
-/* "Channel hinzufügen" Button */
 .add-channel-button {
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  justify-content: flex-start;
   cursor: pointer;
-  padding: 6px 16px 6px 48px;
-  margin: 2px 0;
-  width: 90%;
+  padding: 28px 36px 6px 48px;
+  width: fit-content;
+  margin: 0 auto;
+  border-radius: 30px;
   
   &:hover {
-    background-color: rgba(0, 0, 0, 0.05);
+    
+    .add-channel-icon {
+      transform: scale(1.125);
+      margin-right: 8px;
+      filter: invert(32%) sepia(59%) saturate(3714%) hue-rotate(229deg) brightness(95%) contrast(95%);
+    }
+    
+    .add-channel-text {
+      color: #444df2;
+    }
   }
 }
 
@@ -202,6 +203,13 @@
   width: 16px;
   height: 16px;
   margin-right: 8px;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.add-channel-text {
+  font-size: 14px;
+  color: #666;
+  transition: all 0.2s ease;
 }
 
 .channel-name, .user-name {
@@ -209,16 +217,14 @@
   color: #333;
   display: flex;
   align-items: center;
-}
-
-.add-channel-text {
-  font-size: 14px;
-  color: #666;
+  white-space: nowrap;
 }
 
 .channel-icon {
   margin-right: 12px;
   color: #4169E1;
+  font-size: 18px;
+  font-weight: bold;
 }
 
 /* Avatar Styling */
@@ -229,6 +235,9 @@
   overflow: hidden;
   margin-right: 12px;
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   
   img {
     width: 100%;
@@ -273,9 +282,19 @@
   padding: 8px;
   border-radius: 4px;
   cursor: pointer;
+  transition: all 0.2s ease;
   
   &:hover {
     background-color: rgba(0, 0, 0, 0.05);
+    
+    .toggle-sidebar-icon {
+      transform: scale(1.125);
+      filter: invert(32%) sepia(59%) saturate(3714%) hue-rotate(229deg) brightness(95%) contrast(95%);
+    }
+    
+    .menu-text {
+      color: #444df2;
+    }
   }
 }
 
@@ -286,27 +305,12 @@
   justify-content: center;
   align-items: center;
   margin-right: 8px;
-  
-  .menu-workspace-icon {
-    width: 14px;
-    height: 14px;
-    position: relative;
-    
-    &:before {
-      content: '';
-      position: absolute;
-      width: 10px;
-      height: 2px;
-      background: #666;
-      top: 6px;
-      left: 2px;
-    }
-  }
 }
 
 .menu-text {
   font-size: 14px;
   color: #666;
+  transition: color 0.2s ease;
 }
 
 .section-actions {
@@ -323,6 +327,7 @@
   justify-content: center;
   align-items: center;
   cursor: pointer;
+  margin: 0 0 0 4rem;
   
   &:hover {
     background-color: rgba(0, 0, 0, 0.05);
@@ -332,4 +337,60 @@
 .add-icon {
   width: 10px;
   height: 10px;
+}
+
+.sidebar-wrapper {
+  height: 100%;
+  width: 280px;
+  transition: width 0.3s ease;
+  overflow: hidden;
+  position: relative;
+  
+  &.collapsed {
+    width: 0;
+  }
+}
+
+.toggle-sidebar-icon {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.3s ease;
+  
+  &.rotated {
+    transform: rotate(180deg);
+  }
+}
+
+.sidebar-toggle-button {
+  position: fixed;
+  top: 50%;
+  left: 16px;
+  transform: translateY(-50%);
+  background-color: white;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  
+  &.visible {
+    opacity: 1;
+    visibility: visible;
+  }
+  
+  &:hover {
+    background-color: #f5f5f5;
+    
+    img {
+      filter: invert(32%) sepia(59%) saturate(3714%) hue-rotate(229deg) brightness(95%) contrast(95%);
+    }
+  }
 } 

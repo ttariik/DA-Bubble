@@ -6,7 +6,7 @@ import {
   FormGroup,
   Validators,
 } from '@angular/forms';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { FooterComponent, HeaderComponent } from '../shared';
 import { User } from '../models/user.class';
@@ -20,6 +20,7 @@ import { FirestoreService } from '../services/firestore.service';
     HeaderComponent,
     RouterModule,
     FooterComponent,
+    RouterLink
   ],
   templateUrl: './signup.component.html',
   styleUrl: './signup.component.scss',

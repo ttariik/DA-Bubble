@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { AddChannelModalComponent } from '../add-channel-modal/add-channel-modal.component';
 
 interface Channel {
   id: string;
@@ -19,7 +20,7 @@ interface DirectMessage {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, AddChannelModalComponent],
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.scss']
 })
@@ -27,6 +28,8 @@ export class SidebarComponent {
   workspaceName: string = 'Devspace';
   showChannels: boolean = true;
   showDirectMessages: boolean = true;
+  showAddChannelModal: boolean = false;
+  sidebarCollapsed: boolean = false;
   
   channels: Channel[] = [
     { id: '1', name: 'Entwicklerteam', unread: 0 }
@@ -50,6 +53,27 @@ export class SidebarComponent {
   }
   
   addChannel() {
-    console.log('Add channel');
+    this.showAddChannelModal = true;
+  }
+  
+  closeAddChannelModal() {
+    this.showAddChannelModal = false;
+  }
+  
+  handleChannelCreated(channelData: {name: string, description: string}) {
+    const newChannel: Channel = {
+      id: (this.channels.length + 1).toString(),
+      name: channelData.name,
+      unread: 0
+    };
+    this.channels.push(newChannel);
+  }
+  
+  editWorkspace() {
+    console.log('Edit workspace clicked');
+  }
+  
+  toggleSidebar() {
+    this.sidebarCollapsed = !this.sidebarCollapsed;
   }
 } 
