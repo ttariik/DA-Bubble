@@ -130,28 +130,41 @@
   display: flex;
   flex: 1;
   overflow: hidden;
-  padding: 16px;
-  gap: 16px;
+  padding: 20px;
+  gap: 20px;
+  height: calc(100vh - 110px); 
+  max-height: calc(100vh - 110px);
 }
 
 .sidebar {
-  min-width: 0;
-  transition: min-width 0.3s ease;
-  background-color: white;
-  border-radius: 30px;
+  width: 260px;
+  min-width: 260px;
+  height: 100%;
+  max-height: 100%;
+  color: #000;
+  overflow-y: auto;
+  border: 1px solid #e1e1e1;
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  background-color: white;
+  transition: min-width 0.3s ease;
 }
 
 .chat-area {
   flex: 1;
-  transition: margin-left 0.3s ease;
+  height: 100%;
+  max-height: 100%;
+  background-color: #ffffff;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  background-color: white;
-  border-radius: 30px;
-  overflow: hidden;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e1e1e1;
+  border-radius: 16px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  transition: margin-left 0.3s ease;
   
   &.expanded {
     margin-left: 24px; /* Platz für den ausgeblendeten Toggle-Button */
@@ -159,20 +172,25 @@
 }
 
 .thread-section {
-  width: 350px;
+  width: 400px;
+  min-width: 400px;
+  height: 100%;
+  max-height: 100%;
+  background-color: #ffffff;
   display: flex;
   flex-direction: column;
-  background-color: white;
-  border-radius: 30px;
+  border: 1px solid #e1e1e1;
+  border-radius: 16px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
   overflow: hidden;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   
   .thread-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
     padding: 15px 20px;
     border-bottom: 1px solid #e1e1e1;
+    background-color: white;
     
     .thread-title {
       font-size: 16px;
@@ -190,15 +208,10 @@
       border: none;
       color: #666;
       cursor: pointer;
-      width: 32px;
-      height: 32px;
-      border-radius: 4px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      padding: 5px;
+      line-height: 0;
       
       &:hover {
-        background-color: rgba(0, 0, 0, 0.05);
         color: #333;
       }
     }
@@ -213,6 +226,7 @@
   justify-content: flex-end;
   padding: 0 20px;
   border-bottom: 1px solid #e0e0e0;
+  border-left: 1px solid #e0e0e0;
 }
 
 .profile-image {
@@ -253,4 +267,5 @@
 .thread-view {
   flex: 1;
   overflow-y: auto;
+  border-left: 1px solid #e0e0e0;
 }
