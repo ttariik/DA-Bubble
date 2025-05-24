@@ -1,7 +1,9 @@
 <app-header></app-header>
 <div class="login-card">
-  <div class="login-content">
-    <h2>Anmeldung</h2>
+  <div>
+    <div class="title-container">
+      <h2>Anmeldung</h2>
+    </div>
     <p>
       Wir empfehlen dir, die E-Mail-Adresse zu nutzen, die du bei der Arbeit
       verwendest.
@@ -25,16 +27,13 @@
             required
           />
         </div>
-        @if (email.hasError('required') && (email.touched || email.dirty)) {
-          <div class="error">
-            Email ist <strong>erforderlich</strong>
-          </div>
-        }
-        @if (email.hasError('email') && !email.hasError('required')) {
-          <div class="error">
-            Bitte gib eine gültige E-Mail-Adresse ein
-          </div>
-        }
+        <div class="error-box">
+          @if (email.hasError('required') && (email.touched || email.dirty)) {
+          <div class="error">Email ist <strong>erforderlich</strong></div>
+          } @if (email.hasError('email') && !email.hasError('required')) {
+          <div class="error">Bitte gib eine gültige E-Mail-Adresse ein</div>
+          }
+        </div>
       </div>
 
       <!-- Password -->
@@ -54,16 +53,17 @@
             required
           />
         </div>
-        @if (password.hasError('required') && (password.touched || password.dirty)) {
-          <div class="error">
-            Passwort ist <strong>erforderlich</strong>
-          </div>
-        }
-        @if (password.hasError('minlength') && !password.hasError('required')) {
+        <div class="error-box">
+          @if (password.hasError('required') && (password.touched ||
+          password.dirty)) {
+          <div class="error">Passwort ist <strong>erforderlich</strong></div>
+          } @if (password.hasError('minlength') &&
+          !password.hasError('required')) {
           <div class="error">
             Minimum {{ password.errors?.['minlength'].requiredLength }} Zeichen
           </div>
-        }
+          }
+        </div>
       </div>
 
       <!-- Forgot Password -->
@@ -72,7 +72,6 @@
           <span>Passwort vergessen?</span>
         </div>
       </div>
-
 
       <!-- Divider -->
       <div class="divider"><span>ODER</span></div>
@@ -90,9 +89,9 @@
           [disabled]="loginForm.invalid || isLoading"
         >
           @if (isLoading) {
-            <span>Laden...</span>
+          <span>Laden...</span>
           } @else {
-            <span>Anmelden</span>
+          <span>Anmelden</span>
           }
         </button>
 
@@ -109,4 +108,3 @@
 </div>
 
 <app-footer></app-footer>
-

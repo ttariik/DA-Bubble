@@ -20,7 +20,7 @@ import { FirestoreService } from '../services/firestore.service';
     HeaderComponent,
     RouterModule,
     FooterComponent,
-    RouterLink
+    RouterLink,
   ],
   templateUrl: './signup.component.html',
   styleUrl: './signup.component.scss',

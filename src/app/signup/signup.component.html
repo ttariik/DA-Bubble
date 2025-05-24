@@ -1,10 +1,12 @@
 <app-header></app-header>
 <div class="login-card">
-  <div class="login-content">
+  <div>
     <div class="title-container">
       <h2>Konto erstellen</h2>
       <div class="back-button" routerLink="/login">
-        <img src="assets/icons/arrow_back.svg" />
+        <div class="hover">
+          <img src="assets/icons/arrow_back.svg" />
+        </div>
       </div>
     </div>
     <p>
@@ -26,15 +28,18 @@
             required
           />
         </div>
-        @if (name.hasError('required') && (name.touched || name.dirty)) {
-        <div class="error">Name ist <strong>erforderlich</strong></div>
-        }@else if (name.hasError('pattern') && !name.hasError('required')) {
-        <div class="error">
-          Muss <strong>Vorname und Nachname</strong> enthalten.(z.B. Max
-          Mustermann)
+        <div class="error-box">
+          @if (name.hasError('required') && (name.touched || name.dirty)) {
+          <div class="error">Name ist <strong>erforderlich</strong></div>
+          }@else if (name.hasError('pattern') && !name.hasError('required')) {
+          <div class="error">
+            Muss <strong>Vorname und Nachname</strong> enthalten.(z.B. Max
+            Mustermann)
+          </div>
+          }
         </div>
-        }
       </div>
+
       <!-- Email -->
       <div class="input-container">
         <div class="icon-input">
@@ -52,11 +57,13 @@
             required
           />
         </div>
-        @if (email.hasError('required') && (email.touched || email.dirty)) {
-        <div class="error">Email ist <strong>erforderlich</strong></div>
-        } @else if (email.hasError('email') && !email.hasError('required')) {
-        <div class="error">Bitte gib eine gültige E-Mail-Adresse ein</div>
-        }
+        <div class="error-box">
+          @if (email.hasError('required') && (email.touched || email.dirty)) {
+          <div class="error">Email ist <strong>erforderlich</strong></div>
+          } @else if (email.hasError('email') && !email.hasError('required')) {
+          <div class="error">Bitte gib eine gültige E-Mail-Adresse ein</div>
+          }
+        </div>
       </div>
 
       <!-- Password -->
@@ -76,16 +83,20 @@
             required
           />
         </div>
-        @if (password.hasError('required') && (password.touched ||
-        password.dirty)) {
-        <div class="error">Passwort ist <strong>erforderlich</strong></div>
-        }@else if (password.hasError('minlength') &&
-        !password.hasError('required')) {
-        <div class="error">
-          Minimum {{ password.errors?.['minlength'].requiredLength }} Zeichen
+        <div class="error-box">
+          @if (password.hasError('required') && (password.touched ||
+          password.dirty)) {
+          <div class="error">Passwort ist <strong>erforderlich</strong></div>
+          }@else if (password.hasError('minlength') &&
+          !password.hasError('required')) {
+          <div class="error">
+            Minimum {{ password.errors?.['minlength'].requiredLength }} Zeichen
+          </div>
+          }
         </div>
-        }
       </div>
+
+      <!-- Datenschutz -->
       <div class="form-options">
         <label class="checkbox">
           <input type="checkbox" formControlName="privacyPolicy" />
@@ -93,7 +104,9 @@
           <span> Ich stimme der <a href="#">Datenschutzerklärung</a> zu. </span>
         </label>
       </div>
-      <div class="button-group">
+
+      <!-- Button -->
+      <div class="button-group button-group-right">
         <button
           type="submit"
           class="btn primary small-btn"

@@ -2,18 +2,18 @@ import { Component, inject } from '@angular/core';
 import { FooterComponent, HeaderComponent } from '../shared';
 import { CommonModule } from '@angular/common';
 import { FirestoreService } from '../services/firestore.service';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-avatar',
-  imports: [HeaderComponent, FooterComponent, CommonModule],
+  imports: [HeaderComponent, FooterComponent, CommonModule, RouterModule],
   templateUrl: './avatar.component.html',
   styleUrl: './avatar.component.scss',
 })
 export class AvatarComponent {
   private firestoreService = inject(FirestoreService);
   private router = inject(Router);
-  userName = '';
+  userName = 'Max Mustermann';
   userId = '';
   activeImage = 'noProfile.svg';
   isLoading = false;
@@ -31,9 +31,12 @@ export class AvatarComponent {
   }
 
   loadData() {
-    const userData = JSON.parse(localStorage.getItem('signedUser') || 'null');
-    this.userName = userData.userName;
-    this.userId = userData.userId;
+    const data = localStorage.getItem('signedUser');
+    if (data != null) {
+      const userData = JSON.parse(data);
+      this.userName = userData.userName;
+      this.userId = userData.userId;
+    }
   }
 
   changeImage(newImage: string) {
