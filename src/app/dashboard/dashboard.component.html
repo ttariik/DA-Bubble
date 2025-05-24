@@ -59,7 +59,7 @@
 
   <!-- Main Content -->
   <div class="dashboard-container">
-    <div class="sidebar">
+    <div class="sidebar" [class.collapsed]="sidebar.sidebarCollapsed">
       <app-sidebar #sidebar></app-sidebar>
     </div>
     
@@ -67,14 +67,14 @@
     <button class="sidebar-toggle-button" 
             [class.visible]="sidebar.sidebarCollapsed"
             (click)="sidebar.toggleSidebar()">
-      <img src="assets/icons/toggle_sidebar.svg" alt="Toggle Sidebar" class="toggle-sidebar-icon rotated">
+      <img src="assets/icons/toggle_sidebar.svg" alt="Toggle Sidebar" class="toggle-sidebar-icon">
     </button>
     
     <div class="chat-area" [class.expanded]="sidebar.sidebarCollapsed">
       <app-chat-area></app-chat-area>
     </div>
     
-    <div class="thread-section" *ngIf="showThreadView">
+    <div class="thread-section" [class.hidden]="!showThreadView">
       <div class="thread-header">
         <div class="thread-title">
           Thread <span class="thread-channel"># Entwicklerteam</span>

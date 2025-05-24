@@ -150,7 +150,16 @@
   flex-direction: column;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
   background-color: white;
-  transition: min-width 0.3s ease;
+  transition: width 0.3s ease, min-width 0.3s ease, opacity 0.3s ease, margin-left 0.3s ease;
+  
+  &.collapsed {
+    width: 0;
+    min-width: 0;
+    margin-left: -20px;
+    opacity: 0;
+    border: none;
+    box-shadow: none;
+  }
 }
 
 .chat-area {
@@ -167,7 +176,7 @@
   transition: margin-left 0.3s ease;
   
   &.expanded {
-    margin-left: 24px; /* Platz für den ausgeblendeten Toggle-Button */
+    margin-left: 0; /* Kein Abstand mehr zur Sidebar, da sie verschwunden ist */
   }
 }
 
@@ -183,6 +192,17 @@
   border-radius: 16px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
   overflow: hidden;
+  transition: transform 0.3s ease, opacity 0.3s ease, width 0.3s ease, min-width 0.3s ease;
+  
+  &.hidden {
+    transform: translateX(50px);
+    opacity: 0;
+    width: 0;
+    min-width: 0;
+    margin-left: -20px;
+    border: none;
+    box-shadow: none;
+  }
   
   .thread-header {
     display: flex;
@@ -273,18 +293,18 @@
 .sidebar-toggle-button {
   position: fixed;
   top: 50%;
-  left: 0;
+  left: 20px;
   transform: translateY(-50%);
   background-color: white;
   border: none;
-  border-radius: 0 4px 4px 0;
-  width: 24px;
+  border-radius: 4px;
+  width: 28px;
   height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   z-index: 10;
   opacity: 0;
   visibility: hidden;

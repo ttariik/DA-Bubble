@@ -22,6 +22,7 @@ import { Router } from '@angular/router';
 export class DashboardComponent {
   showThreadView: boolean = true;
   showProfileModal: boolean = false;
+  threadVisible: boolean = true; // Für die Animation
   
   userProfile = {
     name: 'Frederik Beck',
