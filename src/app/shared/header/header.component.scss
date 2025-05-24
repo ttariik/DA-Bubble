@@ -61,7 +61,7 @@
     left: 0;
     background-color: #444df2;
     transform: scaleX(0);
-    transform-origin: right;
+    transform-origin: center;
     transition: transform 0.3s ease;
   }
   
@@ -70,7 +70,6 @@
     
     &::after {
       transform: scaleX(1);
-      transform-origin: left;
     }
   }
 } 

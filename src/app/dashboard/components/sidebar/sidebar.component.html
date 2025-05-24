@@ -3,9 +3,11 @@
   <div class="workspace-header">
     <div class="workspace-info">
       <div class="workspace-icon">
-        <img src="assets/icons/workspace-icon.svg" alt="Workspace Icon">
+        <img src="assets/svg/workspace-icon.svg" alt="Workspace Icon">
       </div>
-      <div class="workspace-name">{{ workspaceName }}</div>
+      <div class="workspace-name">{{ workspaceName }}
+        
+      </div>
     </div>
     <div class="workspace-actions">
       <button class="edit-button">
@@ -20,10 +22,13 @@
       <div class="section-toggle" [class.open]="showChannels">
         <i class="toggle-icon"></i>
       </div>
-      <div class="section-title">Channels</div>
+      <div class="section-title">
+        <img src="assets/icons/workspaces.svg" alt="Channels Icon" class="section-icon">
+        Channels
+      </div>
       <div class="section-actions">
         <button class="add-button" (click)="addChannel(); $event.stopPropagation()">
-          <i class="add-icon">+</i>
+          <img src="assets/icons/add.svg" alt="Add" class="add-icon">
         </button>
       </div>
     </div>
@@ -31,12 +36,11 @@
     <div class="section-content" *ngIf="showChannels">
       <div class="channel-list">
         <div *ngFor="let channel of channels" class="channel-item" [class.active]="channel.name === 'Entwicklerteam'">
-          <div class="channel-icon">#</div>
-          <div class="channel-name">{{ channel.name }}</div>
+          <div class="channel-name"><span class="channel-icon">#</span>{{ channel.name }}</div>
           <div class="unread-badge" *ngIf="channel.unread > 0">{{ channel.unread }}</div>
         </div>
         <div class="add-channel-button">
-          <div class="add-channel-icon">+</div>
+          <img src="assets/icons/add_circle.svg" alt="Add Channel" class="add-channel-icon">
           <div class="add-channel-text">Channel hinzufügen</div>
         </div>
       </div>
@@ -49,7 +53,10 @@
       <div class="section-toggle" [class.open]="showDirectMessages">
         <i class="toggle-icon"></i>
       </div>
-      <div class="section-title">Direktnachrichten</div>
+      <div class="section-title">
+        <img src="assets/icons/account_circle.svg" alt="Direct Messages Icon" class="section-icon">
+        Direktnachrichten
+      </div>
     </div>
     
     <div class="section-content" *ngIf="showDirectMessages">

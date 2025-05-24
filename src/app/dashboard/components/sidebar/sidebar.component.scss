@@ -19,10 +19,6 @@
 }
 
 .workspace-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  background-color: #333;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -30,8 +26,8 @@
   overflow: hidden;
   
   img {
-    width: 24px;
-    height: 24px;
+    width: 36px;
+    height: 36px;
   }
 }
 
@@ -88,28 +84,33 @@
   }
 }
 
+/* Basisstruktur für alle Listenelemente */
 .section {
   margin-bottom: 24px;
+  width: 100%;
 }
 
+/* Header-Elemente mit Icons */
 .section-header {
   display: flex;
   align-items: center;
-  padding: 4px 16px;
+  padding: 6px 16px;
   cursor: pointer;
+  height: 28px;
   
   &:hover {
     background-color: rgba(0, 0, 0, 0.05);
   }
 }
 
+/* Die Toggle-Pfeile */
 .section-toggle {
-  width: 16px;
-  height: 16px;
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-right: 8px;
   
   .toggle-icon {
     width: 0;
@@ -127,49 +128,43 @@
 }
 
 .section-title {
-  flex: 1;
+  display: flex;
+  align-items: center;
   font-size: 14px;
   font-weight: 600;
   color: #666;
-}
-
-.section-actions {
-  display: flex;
-}
-
-.add-button {
-  width: 20px;
-  height: 20px;
-  border-radius: 4px;
-  background-color: transparent;
-  border: none;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  font-size: 16px;
-  color: #666;
+  margin-left: 0;
+  flex: 1;
+  margin: 0 20px;
   
-  &:hover {
-    background-color: rgba(0, 0, 0, 0.05);
-    color: #333;
+  .section-icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    opacity: 0.7;
   }
 }
 
 .section-content {
   margin-top: 8px;
+  width: 100%;
 }
 
-.channel-list {
+.channel-list, .dm-list {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  width: 100%;
 }
 
-.channel-item {
+.channel-item, .dm-item {
   display: flex;
   align-items: center;
-  padding: 6px 16px 6px 40px;
   cursor: pointer;
+  padding: 6px 16px 6px 48px;
+  margin: 2px 0;
+  width: 90%;
+  border-radius: 20px;
   
   &:hover {
     background-color: rgba(0, 0, 0, 0.05);
@@ -189,24 +184,14 @@
   }
 }
 
-.channel-icon {
-  font-size: 16px;
-  font-weight: 400;
-  color: #333;
-  margin-right: 8px;
-}
-
-.channel-name {
-  flex: 1;
-  font-size: 14px;
-  color: #333;
-}
-
+/* "Channel hinzufügen" Button */
 .add-channel-button {
   display: flex;
   align-items: center;
-  padding: 6px 16px 6px 40px;
   cursor: pointer;
+  padding: 6px 16px 6px 48px;
+  margin: 2px 0;
+  width: 90%;
   
   &:hover {
     background-color: rgba(0, 0, 0, 0.05);
@@ -214,9 +199,16 @@
 }
 
 .add-channel-icon {
-  font-size: 14px;
-  color: #666;
+  width: 16px;
+  height: 16px;
   margin-right: 8px;
+}
+
+.channel-name, .user-name {
+  font-size: 14px;
+  color: #333;
+  display: flex;
+  align-items: center;
 }
 
 .add-channel-text {
@@ -224,37 +216,18 @@
   color: #666;
 }
 
-.dm-list {
-  display: flex;
-  flex-direction: column;
+.channel-icon {
+  margin-right: 12px;
+  color: #4169E1;
 }
 
-.dm-item {
-  display: flex;
-  align-items: center;
-  padding: 6px 16px 6px 40px;
-  cursor: pointer;
-  
-  &:hover {
-    background-color: rgba(0, 0, 0, 0.05);
-  }
-  
-  &.active {
-    background-color: #EBF5FF;
-    
-    .user-name {
-      font-weight: 600;
-      color: #1264A3;
-    }
-  }
-}
-
+/* Avatar Styling */
 .user-avatar {
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   overflow: hidden;
-  margin-right: 8px;
+  margin-right: 12px;
   position: relative;
   
   img {
@@ -271,18 +244,12 @@
     height: 8px;
     border-radius: 50%;
     background-color: #ccc;
-    border: 1px solid #F5F5FA;
+    border: 1px solid #FFF;
     
     &.online {
       background-color: #76C068;
     }
   }
-}
-
-.user-name {
-  flex: 1;
-  font-size: 14px;
-  color: #333;
 }
 
 .unread-badge {
@@ -340,4 +307,29 @@
 .menu-text {
   font-size: 14px;
   color: #666;
+}
+
+.section-actions {
+  display: flex;
+}
+
+.add-button {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background-color: transparent;
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+}
+
+.add-icon {
+  width: 10px;
+  height: 10px;
 } 

@@ -6,7 +6,7 @@
   overflow: hidden;
   padding: 0 0 20px 0;
   box-sizing: border-box;
-  background-color: #F0F2F5;
+  background-color: #ECEEFE;
 }
 
 .main-header {
@@ -132,7 +132,7 @@
   overflow: hidden;
   padding: 20px;
   gap: 20px;
-  height: calc(100vh - 110px); /* Header height + padding */
+  height: calc(100vh - 110px); 
   max-height: calc(100vh - 110px);
 }
 

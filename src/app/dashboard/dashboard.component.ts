@@ -23,7 +23,6 @@ export class DashboardComponent {
   showThreadView: boolean = true;
   showProfileModal: boolean = false;
   
-  // Mockdaten für das Profil
   userProfile = {
     name: 'Frederik Beck',
     email: 'fred.beck@email.com',
@@ -43,15 +42,10 @@ export class DashboardComponent {
   
   handleLogout() {
     console.log('User logged out');
-    // Hier würde normalerweise der AuthService aufgerufen werden, um den Benutzer abzumelden
-    // und dann zur Login-Seite zu navigieren
-    // this.authService.logout();
     this.router.navigate(['/login']);
   }
   
   navigateHome() {
     console.log('Navigating to home/dashboard');
-    // Du könntest hier auch this.router.navigate(['/dashboard']) verwenden,
-    // aber da wir bereits im Dashboard sind, machen wir nur ein Log
   }
 }
