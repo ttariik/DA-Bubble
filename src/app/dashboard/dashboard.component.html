@@ -33,10 +33,10 @@
   <!-- Main Content -->
   <div class="dashboard-container">
     <div class="sidebar">
-      <app-sidebar></app-sidebar>
+      <app-sidebar #sidebar></app-sidebar>
     </div>
     
-    <div class="chat-area">
+    <div class="chat-area" [class.expanded]="sidebar.sidebarCollapsed">
       <app-chat-area></app-chat-area>
     </div>
     
