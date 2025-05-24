@@ -63,6 +63,13 @@
       <app-sidebar #sidebar></app-sidebar>
     </div>
     
+    <!-- Sidebar Toggle Button (erscheint, wenn die Sidebar eingeklappt ist) -->
+    <button class="sidebar-toggle-button" 
+            [class.visible]="sidebar.sidebarCollapsed"
+            (click)="sidebar.toggleSidebar()">
+      <img src="assets/icons/toggle_sidebar.svg" alt="Toggle Sidebar" class="toggle-sidebar-icon rotated">
+    </button>
+    
     <div class="chat-area" [class.expanded]="sidebar.sidebarCollapsed">
       <app-chat-area></app-chat-area>
     </div>

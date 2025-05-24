@@ -1,92 +1,92 @@
-<div class="sidebar-inner">
-  <!-- Workspace Header -->
-  <div class="workspace-header">
-    <div class="workspace-info">
-      <div class="workspace-icon">
-        <img src="assets/img/workspace-icon.svg" alt="Workspace Icon">
+<div class="sidebar-wrapper" [class.collapsed]="sidebarCollapsed">
+  <div class="sidebar-inner">
+    <!-- Workspace Header -->
+    <div class="workspace-header">
+      <div class="workspace-info">
+        <div class="workspace-icon">
+          <img src="assets/img/workspace-icon.svg" alt="Workspace Icon">
+        </div>
+        <div class="workspace-name">{{ workspaceName }}</div>
       </div>
-      <div class="workspace-name">{{ workspaceName }}
-        
-      </div>
-    </div>
-    <div class="workspace-actions">
-      <button class="edit-button">
-        <i class="edit-icon"></i>
-      </button>
-    </div>
-  </div>
-  
-  <!-- Channels Section -->
-  <div class="section">
-    <div class="section-header" (click)="toggleChannels()">
-      <div class="section-toggle" [class.open]="showChannels">
-        <i class="toggle-icon"></i>
-      </div>
-      <div class="section-title">
-        <img src="assets/icons/workspaces.svg" alt="Channels Icon" class="section-icon">
-        Channels
-      </div>
-      <div class="section-actions">
-        <button class="add-button" (click)="addChannel(); $event.stopPropagation()">
-          <img src="assets/icons/add.svg" alt="Add" class="add-icon">
+      <div class="workspace-actions">
+        <button class="edit-button">
+          <i class="edit-icon"></i>
         </button>
       </div>
     </div>
     
-    <div class="section-content" *ngIf="showChannels">
-      <div class="channel-list">
-        <div *ngFor="let channel of channels" class="channel-item" [class.active]="channel.name === 'Entwicklerteam'">
-          <div class="channel-name"><span class="channel-icon">#</span>{{ channel.name }}</div>
-          <div class="unread-badge" *ngIf="channel.unread > 0">{{ channel.unread }}</div>
+    <!-- Channels Section -->
+    <div class="section">
+      <div class="section-header" (click)="toggleChannels()">
+        <div class="section-toggle" [class.open]="showChannels">
+          <i class="toggle-icon"></i>
         </div>
-        <div class="add-channel-button" (click)="addChannel()">
-          <img src="assets/icons/add_circle.svg" alt="Add Channel" class="add-channel-icon">
-          <div class="add-channel-text">Channel hinzufügen</div>
+        <div class="section-title">
+          <img src="assets/icons/workspaces.svg" alt="Channels Icon" class="section-icon">
+          Channels
+        </div>
+        <div class="section-actions">
+          <button class="add-button" (click)="addChannel(); $event.stopPropagation()">
+            <img src="assets/icons/add.svg" alt="Add" class="add-icon">
+          </button>
         </div>
       </div>
-    </div>
-  </div>
-  
-  <!-- Direct Messages Section -->
-  <div class="section">
-    <div class="section-header" (click)="toggleDirectMessages()">
-      <div class="section-toggle" [class.open]="showDirectMessages">
-        <i class="toggle-icon"></i>
-      </div>
-      <div class="section-title">
-        <img src="assets/icons/account_circle.svg" alt="Direct Messages Icon" class="section-icon">
-        Direktnachrichten
+      
+      <div class="section-content" *ngIf="showChannels">
+        <div class="channel-list">
+          <div *ngFor="let channel of channels" class="channel-item" [class.active]="channel.name === 'Entwicklerteam'">
+            <div class="channel-name"><span class="channel-icon">#</span>{{ channel.name }}</div>
+            <div class="unread-badge" *ngIf="channel.unread > 0">{{ channel.unread }}</div>
+          </div>
+          <div class="add-channel-button" (click)="addChannel()">
+            <img src="assets/icons/add_circle.svg" alt="Add Channel" class="add-channel-icon">
+            <div class="add-channel-text">Channel hinzufügen</div>
+          </div>
+        </div>
       </div>
     </div>
     
-    <div class="section-content" *ngIf="showDirectMessages">
-      <div class="dm-list">
-        <div *ngFor="let dm of directMessages" class="dm-item" 
-            [class.active]="dm.name === 'Frederik Beck (Du)'">
-          <div class="user-avatar">
-            <img [src]="dm.avatar" [alt]="dm.name">
-            <div class="status-indicator" [class.online]="dm.online"></div>
+    <!-- Direct Messages Section -->
+    <div class="section">
+      <div class="section-header" (click)="toggleDirectMessages()">
+        <div class="section-toggle" [class.open]="showDirectMessages">
+          <i class="toggle-icon"></i>
+        </div>
+        <div class="section-title">
+          <img src="assets/icons/account_circle.svg" alt="Direct Messages Icon" class="section-icon">
+          Direktnachrichten
+        </div>
+      </div>
+      
+      <div class="section-content" *ngIf="showDirectMessages">
+        <div class="dm-list">
+          <div *ngFor="let dm of directMessages" class="dm-item" 
+              [class.active]="dm.name === 'Frederik Beck (Du)'">
+            <div class="user-avatar">
+              <img [src]="dm.avatar" [alt]="dm.name">
+              <div class="status-indicator" [class.online]="dm.online"></div>
+            </div>
+            <div class="user-name">{{ dm.name }}</div>
+            <div class="unread-badge" *ngIf="dm.unread > 0">{{ dm.unread }}</div>
           </div>
-          <div class="user-name">{{ dm.name }}</div>
-          <div class="unread-badge" *ngIf="dm.unread > 0">{{ dm.unread }}</div>
         </div>
       </div>
     </div>
-  </div>
-  
-  <div class="workspace-menu">
-    <div class="menu-item">
-      <div class="menu-icon">
-        <i class="menu-workspace-icon"></i>
+    
+    <div class="workspace-menu">
+      <div class="menu-item" (click)="toggleSidebar()">
+        <div class="menu-icon">
+          <img src="assets/icons/toggle_sidebar.svg" alt="Toggle Sidebar" class="toggle-sidebar-icon">
+        </div>
+        <div class="menu-text">Workspace-Menü schließen</div>
       </div>
-      <div class="menu-text">Workspace-Menü schließen</div>
     </div>
+    
+    <!-- Add Channel Modal -->
+    <app-add-channel-modal 
+      [isVisible]="showAddChannelModal" 
+      (close)="closeAddChannelModal()" 
+      (channelCreated)="handleChannelCreated($event)">
+    </app-add-channel-modal>
   </div>
-  
-  <!-- Add Channel Modal -->
-  <app-add-channel-modal 
-    [isVisible]="showAddChannelModal" 
-    (close)="closeAddChannelModal()" 
-    (channelCreated)="handleChannelCreated($event)">
-  </app-add-channel-modal>
 </div> 

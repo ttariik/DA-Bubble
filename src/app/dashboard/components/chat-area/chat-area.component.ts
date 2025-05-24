@@ -29,6 +29,7 @@ interface Reaction {
 export class ChatAreaComponent {
   channelName: string = 'Entwicklerteam';
   messageInput: string = '';
+  showEmojiPicker: boolean = false;
   channelMembers: {id: string, name: string, avatar: string}[] = [
     { id: '1', name: 'Frederik Beck', avatar: 'assets/icons/avatars/user1.svg' },
     { id: '2', name: 'Sofia Müller', avatar: 'assets/icons/avatars/user1.svg' },
@@ -63,6 +64,21 @@ export class ChatAreaComponent {
     { date: new Date('2023-01-14'), label: 'Dienstag, 14 Januar' }
   ];
   
+  openEmojiPicker() {
+    this.showEmojiPicker = !this.showEmojiPicker;
+    console.log('Emoji picker toggled:', this.showEmojiPicker);
+  }
+  
+  addEmoji(event: any, message?: Message) {
+    if (message) {
+      console.log('Emoji zu Nachricht hinzufügen:', event.emoji, message);
+    } else {
+      this.messageInput += event.emoji;
+      console.log('Emoji zur Eingabe hinzugefügt:', event.emoji);
+    }
+    this.showEmojiPicker = false;
+  }
+  
   sendMessage() {
     if (this.messageInput.trim()) {
       const newMessage: Message = {
@@ -84,6 +100,7 @@ export class ChatAreaComponent {
   }
   
   addReaction(message: Message) {
+    this.openEmojiPicker();
     console.log('Add reaction to message:', message);
   }
 } 

@@ -57,7 +57,7 @@
             </div>
           </div>
           <div class="action-buttons">
-            <button class="action-button" (click)="addReaction(message)">
+            <button class="action-button emoji-button" (click)="addReaction(message)">
               <span>😊</span>
             </button>
             <button class="action-button" (click)="openThread(message)">
@@ -83,8 +83,8 @@
       ></textarea>
       <div class="input-actions">
         <div>
-          <button class="react-button">
-            <img src="./assets/icons/dashboard/reaction.svg" alt="" />
+          <button class="react-button emoji-button" (click)="openEmojiPicker()">
+            <img src="./assets/icons/dashboard/reaction.svg" alt="Emoji" />
           </button>
           <button class="react-button">
             <img src="./assets/icons/dashboard/mark.svg" alt="" />
@@ -98,6 +98,28 @@
         >
           <img src="./assets/icons/dashboard/send.svg" alt="" />
         </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Emoji Picker (wird angezeigt, wenn showEmojiPicker true ist) -->
+  <div *ngIf="showEmojiPicker" class="emoji-picker-container">
+    <!-- Hier könnte später eine Emoji-Tastatur-Komponente eingebunden werden -->
+    <div class="emoji-picker">
+      <div class="emoji-picker-header">
+        <span>Emojis</span>
+        <button class="close-button" (click)="openEmojiPicker()">✕</button>
+      </div>
+      <div class="emoji-grid">
+        <!-- Beispiel-Emojis -->
+        <button class="emoji-item" (click)="addEmoji({emoji: '😊'})">😊</button>
+        <button class="emoji-item" (click)="addEmoji({emoji: '👍'})">👍</button>
+        <button class="emoji-item" (click)="addEmoji({emoji: '❤️'})">❤️</button>
+        <button class="emoji-item" (click)="addEmoji({emoji: '😂'})">😂</button>
+        <button class="emoji-item" (click)="addEmoji({emoji: '🎉'})">🎉</button>
+        <button class="emoji-item" (click)="addEmoji({emoji: '🔥'})">🔥</button>
+        <button class="emoji-item" (click)="addEmoji({emoji: '✅'})">✅</button>
+        <button class="emoji-item" (click)="addEmoji({emoji: '👏'})">👏</button>
       </div>
     </div>
   </div>
