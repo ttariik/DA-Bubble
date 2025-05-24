@@ -217,7 +217,7 @@
 
 .message-input-wrapper {
   border: 1px solid #e0e0e0;
-  border-radius: 4px;
+  border-radius: 20px;
   padding: 8px;
   background-color: #fff;
 }
@@ -240,12 +240,12 @@
 
 .input-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   margin-top: 8px;
 }
 
 .send-button {
-  background-color: #444df2;
+  // background-color: #444df2;
   color: white;
   border: none;
   border-radius: 4px;
@@ -267,7 +267,7 @@
   }
   
   &:disabled {
-    background-color: #e0e0e0;
+    // background-color: #e0e0e0;
     color: #999;
     cursor: not-allowed;
     
@@ -284,3 +284,8 @@
     }
   }
 } 
+.react-button {
+  border: none;
+  background-color: unset;
+  cursor: pointer;
+}
