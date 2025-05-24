@@ -33,18 +33,23 @@
       <div class="date-line"></div>
     </div>
 
-    <div *ngFor="let message of messages" class="message-item">
-      <div class="message-avatar">
+    <div *ngFor="let message of messages" 
+         class="message-item" 
+         [class.own-message]="message.userId === currentUserId">
+      
+      <!-- Avatar wird nur für Nachrichten von anderen angezeigt -->
+      <div class="message-avatar" *ngIf="message.userId !== currentUserId">
         <img [src]="message.userAvatar" [alt]="message.userName" />
       </div>
-      <div class="message-content">
+      
+      <div class="message-content" [class.own-message-content]="message.userId === currentUserId">
         <div class="message-header">
           <div class="message-sender">{{ message.userName }}</div>
           <div class="message-time">
             {{ message.timestamp | date : "HH:mm" }} Uhr
           </div>
         </div>
-        <div class="message-text">{{ message.content }}</div>
+        <div class="message-bubble">{{ message.content }}</div>
 
         <!-- Message Actions -->
         <div class="message-actions">
@@ -68,6 +73,11 @@
             </button>
           </div>
         </div>
+      </div>
+      
+      <!-- Avatar wird rechts für eigene Nachrichten angezeigt -->
+      <div class="message-avatar" *ngIf="message.userId === currentUserId">
+        <img [src]="message.userAvatar" [alt]="message.userName" />
       </div>
     </div>
   </div>
@@ -102,24 +112,68 @@
     </div>
   </div>
   
-  <!-- Emoji Picker (wird angezeigt, wenn showEmojiPicker true ist) -->
   <div *ngIf="showEmojiPicker" class="emoji-picker-container">
-    <!-- Hier könnte später eine Emoji-Tastatur-Komponente eingebunden werden -->
-    <div class="emoji-picker">
+    <div class="custom-emoji-picker">
       <div class="emoji-picker-header">
-        <span>Emojis</span>
-        <button class="close-button" (click)="openEmojiPicker()">✕</button>
+        <div class="emoji-search">
+          <input type="text" placeholder="Suchen" class="emoji-search-input">
+          <button class="emoji-search-button">
+            <span>🔍</span>
+          </button>
+        </div>
+        <div class="emoji-picker-close" (click)="openEmojiPicker()">
+          <span>×</span>
+        </div>
       </div>
-      <div class="emoji-grid">
-        <!-- Beispiel-Emojis -->
-        <button class="emoji-item" (click)="addEmoji({emoji: '😊'})">😊</button>
-        <button class="emoji-item" (click)="addEmoji({emoji: '👍'})">👍</button>
-        <button class="emoji-item" (click)="addEmoji({emoji: '❤️'})">❤️</button>
-        <button class="emoji-item" (click)="addEmoji({emoji: '😂'})">😂</button>
-        <button class="emoji-item" (click)="addEmoji({emoji: '🎉'})">🎉</button>
-        <button class="emoji-item" (click)="addEmoji({emoji: '🔥'})">🔥</button>
-        <button class="emoji-item" (click)="addEmoji({emoji: '✅'})">✅</button>
-        <button class="emoji-item" (click)="addEmoji({emoji: '👏'})">👏</button>
+      
+      <div class="emoji-picker-content">
+        <div class="emoji-categories">
+          <button class="emoji-category-btn active">😀</button>
+          <button class="emoji-category-btn">🙂</button>
+          <button class="emoji-category-btn">🚗</button>
+          <button class="emoji-category-btn">🏀</button>
+          <button class="emoji-category-btn">🏳️</button>
+          <button class="emoji-category-btn">🔣</button>
+          <button class="emoji-category-btn">🏁</button>
+        </div>
+        
+        <div class="emoji-list">
+          <div class="emoji-section">
+            <div class="emoji-section-title">Kürzlich verwendet</div>
+            <div class="emoji-grid">
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '👍'}})">👍</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😀'}})">😀</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😉'}})">😉</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😍'}})">😍</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😜'}})">😜</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😂'}})">😂</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '🤣'}})">🤣</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😱'}})">😱</button>
+            </div>
+          </div>
+          
+          <div class="emoji-section">
+            <div class="emoji-section-title">Smileys & Personen</div>
+            <div class="emoji-grid">
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😀'}})">😀</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😃'}})">😃</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😄'}})">😄</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😁'}})">😁</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😆'}})">😆</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😅'}})">😅</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '🤣'}})">🤣</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😂'}})">😂</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '🙂'}})">🙂</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '🙃'}})">🙃</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😉'}})">😉</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😊'}})">😊</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😇'}})">😇</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '🥰'}})">🥰</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😍'}})">😍</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '🤩'}})">🤩</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

@@ -176,7 +176,7 @@
   transition: margin-left 0.3s ease;
   
   &.expanded {
-    margin-left: 0; /* Kein Abstand mehr zur Sidebar, da sie verschwunden ist */
+    margin-left: 0; 
   }
 }
 

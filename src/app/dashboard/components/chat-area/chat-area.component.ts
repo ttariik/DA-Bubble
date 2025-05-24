@@ -1,6 +1,8 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { PickerModule } from '@ctrl/ngx-emoji-mart';
+import { EmojiEvent } from '@ctrl/ngx-emoji-mart/ngx-emoji';
 
 interface Message {
   id: string;
@@ -22,7 +24,7 @@ interface Reaction {
 @Component({
   selector: 'app-chat-area',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PickerModule],
   templateUrl: './chat-area.component.html',
   styleUrls: ['./chat-area.component.scss']
 })
@@ -30,6 +32,37 @@ export class ChatAreaComponent {
   channelName: string = 'Entwicklerteam';
   messageInput: string = '';
   showEmojiPicker: boolean = false;
+  currentUserId: string = '1'; 
+  emojiPickerTargetMessage: Message | null = null;
+  
+  emojiPickerOptions = {
+    set: 'apple',
+    enableSearch: true,
+    enableFrequentEmojiSort: true,
+    enableWindow: false,
+    emojiSize: 24,
+    emojiTooltip: true,
+    style: {
+      width: '320px',
+      height: '320px',
+    },
+    i18n: {
+      search: 'Suchen',
+      categories: {
+        search: 'Suchergebnisse',
+        recent: 'Kürzlich verwendet',
+        people: 'Smileys & Personen',
+        nature: 'Tiere & Natur',
+        foods: 'Essen & Trinken',
+        activity: 'Aktivitäten',
+        places: 'Reisen & Orte',
+        objects: 'Objekte',
+        symbols: 'Symbole',
+        flags: 'Flaggen',
+      },
+    },
+  };
+  
   channelMembers: {id: string, name: string, avatar: string}[] = [
     { id: '1', name: 'Frederik Beck', avatar: 'assets/icons/avatars/user1.svg' },
     { id: '2', name: 'Sofia Müller', avatar: 'assets/icons/avatars/user1.svg' },
@@ -64,28 +97,59 @@ export class ChatAreaComponent {
     { date: new Date('2023-01-14'), label: 'Dienstag, 14 Januar' }
   ];
   
-  openEmojiPicker() {
+  openEmojiPicker(message?: Message) {
+    this.emojiPickerTargetMessage = message || null;
     this.showEmojiPicker = !this.showEmojiPicker;
-    console.log('Emoji picker toggled:', this.showEmojiPicker);
   }
   
-  addEmoji(event: any, message?: Message) {
-    if (message) {
-      console.log('Emoji zu Nachricht hinzufügen:', event.emoji, message);
+  addEmoji(event: any) {
+    const emoji = event.emoji?.native || event.emoji || '';
+    
+    if (this.emojiPickerTargetMessage) {
+      const message = this.emojiPickerTargetMessage;
+      
+      if (!message.reactions) {
+        message.reactions = [];
+      }
+      
+      const existingReaction = message.reactions.find(r => r.emoji === emoji);
+      
+      if (existingReaction) {
+        if (existingReaction.userIds.includes(this.currentUserId)) {
+          existingReaction.count -= 1;
+          existingReaction.userIds = existingReaction.userIds.filter(id => id !== this.currentUserId);
+          
+          if (existingReaction.count === 0) {
+            message.reactions = message.reactions.filter(r => r.emoji !== emoji);
+          }
+        } else {
+          existingReaction.count += 1;
+          existingReaction.userIds.push(this.currentUserId);
+        }
+      } else {
+        message.reactions.push({
+          emoji: emoji,
+          count: 1,
+          userIds: [this.currentUserId]
+        });
+      }
+      
+      console.log('Emoji zu Nachricht hinzugefügt:', emoji, message);
     } else {
-      this.messageInput += event.emoji;
-      console.log('Emoji zur Eingabe hinzugefügt:', event.emoji);
+      this.messageInput += emoji;
+      console.log('Emoji zur Eingabe hinzugefügt:', emoji);
     }
     this.showEmojiPicker = false;
+    this.emojiPickerTargetMessage = null;
   }
   
   sendMessage() {
     if (this.messageInput.trim()) {
       const newMessage: Message = {
         id: (this.messages.length + 1).toString(),
-        userId: '1',
+        userId: this.currentUserId,
         userName: 'Frederik Beck',
-        userAvatar: 'assets/avatars/user1.png',
+        userAvatar: 'assets/icons/avatars/user1.svg', 
         content: this.messageInput.trim(),
         timestamp: new Date()
       };
@@ -100,7 +164,6 @@ export class ChatAreaComponent {
   }
   
   addReaction(message: Message) {
-    this.openEmojiPicker();
-    console.log('Add reaction to message:', message);
+    this.openEmojiPicker(message);
   }
 } 
