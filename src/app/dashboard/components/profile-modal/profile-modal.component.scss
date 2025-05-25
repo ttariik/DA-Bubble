@@ -18,8 +18,25 @@
   max-width: 420px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   overflow: hidden;
-  animation: fadeIn 0.3s ease;
   padding: 20px;
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(90deg, #4785FF 0%, #6da5ff 100%);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease-out;
+  }
+  
+  &:hover::before {
+    transform: scaleX(1);
+  }
 }
 
 .profile-header {
@@ -27,11 +44,13 @@
   justify-content: space-between;
   align-items: center;
   padding: 0 0 15px 0;
+  position: relative;
 
   h2 {
     font-size: 28px;
     font-weight: 600;
     margin: 0;
+    font-family: "Nunito";
   }
 
   .close-btn {
@@ -40,11 +59,18 @@
     font-size: 24px;
     cursor: pointer;
     color: #333;
-    transition: color 0.2s;
+    transition: all 0.2s ease;
     padding: 5px;
-
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    
     &:hover {
       color: #000;
+      background-color: rgba(0, 0, 0, 0.05);
     }
   }
 }
@@ -60,6 +86,28 @@
   display: flex;
   justify-content: center;
   margin-bottom: 30px;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle, rgba(71, 133, 255, 0) 70%, rgba(71, 133, 255, 0.2) 100%);
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  &:hover {
+    &::after {
+      opacity: 1;
+    }
+  }
 
   img {
     width: 150px;
@@ -67,6 +115,12 @@
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid #f0f0f0;
+    transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    
+    &:hover {
+      border-color: #4785FF;
+      box-shadow: 0 0 0 5px rgba(71, 133, 255, 0.1);
+    }
   }
 }
 
@@ -76,12 +130,34 @@
   align-items: center;
   margin-bottom: 25px;
   width: 100%;
+  transition: transform 0.3s ease;
+  
+  &:hover {
+    transform: translateX(5px);
+  }
 
   h3 {
     font-size: 32px;
     font-weight: 600;
     margin: 0;
     color: #000;
+    font-family: "Nunito";
+    position: relative;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background-color: #4785FF;
+      transition: width 0.3s ease;
+    }
+    
+    &:hover::after {
+      width: 100%;
+    }
   }
 
   .edit-btn {
@@ -90,12 +166,39 @@
     color: #4785FF;
     font-size: 16px;
     cursor: pointer;
-    transition: opacity 0.2s;
+    transition: all 0.3s ease;
     padding: 5px 10px;
     font-weight: 500;
+    font-family: "Nunito";
+    border-radius: 20px;
+    position: relative;
+    overflow: hidden;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background-color: rgba(71, 133, 255, 0.1);
+      border-radius: 20px;
+      transform: translate(-50%, -50%);
+      transition: width 0.3s ease, height 0.3s ease;
+      z-index: -1;
+    }
 
     &:hover {
-      opacity: 0.8;
+      transform: translateY(-2px);
+      
+      &::before {
+        width: 120%;
+        height: 120%;
+      }
+    }
+    
+    &:active {
+      transform: translateY(0) scale(0.95);
     }
   }
 }
@@ -105,6 +208,11 @@
   align-items: center;
   margin-bottom: 30px;
   width: 100%;
+  transition: transform 0.3s ease;
+  
+  &:hover {
+    transform: translateX(5px);
+  }
   
   .status-indicator {
     width: 14px;
@@ -112,15 +220,40 @@
     border-radius: 50%;
     background-color: #ccc;
     margin-right: 10px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
     
     &.active {
       background-color: #76C068;
+      animation: pulse 1.5s infinite;
+    }
+    
+    &:hover {
+      transform: scale(1.2);
+      box-shadow: 0 0 0 4px rgba(118, 192, 104, 0.2);
     }
   }
   
   span {
     color: #76C068;
     font-size: 16px;
+    font-family: "Nunito";
+    transition: color 0.3s ease;
+    
+    &:hover {
+      color: darken(#76C068, 10%);
+    }
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(118, 192, 104, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(118, 192, 104, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(118, 192, 104, 0);
   }
 }
 
@@ -129,12 +262,27 @@
   align-items: center;
   width: 100%;
   margin-bottom: 10px;
+  font-family: "Nunito";
+  transition: transform 0.3s ease;
+  padding: 8px;
+  border-radius: 8px;
+  
+  &:hover {
+    transform: translateX(5px);
+    background-color: rgba(71, 133, 255, 0.05);
+  }
   
   .email-icon {
     margin-right: 15px;
     
     svg {
       color: #333;
+      transition: transform 0.3s ease, color 0.3s ease;
+    }
+    
+    &:hover svg {
+      color: #4785FF;
+      transform: scale(1.1) rotate(-5deg);
     }
     
     img {
@@ -149,15 +297,39 @@
       font-size: 16px;
       color: #333;
       font-weight: 500;
+      font-family: "Nunito";
+      transition: color 0.3s ease;
+      
+      &:hover {
+        color: #4785FF;
+      }
     }
     
     a {
       color: #4785FF;
       text-decoration: none;
       font-size: 16px;
+      font-family: "Nunito";
+      transition: all 0.3s ease;
+      position: relative;
+      
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 0;
+        height: 1px;
+        background-color: #4785FF;
+        transition: width 0.3s ease;
+      }
       
       &:hover {
-        text-decoration: underline;
+        color: darken(#4785FF, 10%);
+        
+        &::after {
+          width: 100%;
+        }
       }
     }
   }
@@ -179,12 +351,41 @@
   padding: 10px 15px;
   border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.3s ease;
   color: #E94057;
   font-size: 16px;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    background-color: rgba(233, 64, 87, 0.05);
+    transition: width 0.3s ease;
+  }
   
   &:hover {
-    background-color: rgba(233, 64, 87, 0.05);
+    transform: translateX(5px);
+    
+    &::before {
+      width: 100%;
+    }
+    
+    .logout-icon {
+      transform: translateX(3px);
+      
+      svg {
+        transform: translateX(2px);
+      }
+    }
+  }
+  
+  &:active {
+    transform: translateX(5px) scale(0.98);
   }
   
   .logout-icon {
@@ -192,21 +393,18 @@
     align-items: center;
     margin-right: 10px;
     color: #E94057;
+    transition: transform 0.3s ease;
+    
+    svg {
+      transition: transform 0.3s ease;
+    }
   }
   
   span {
     font-weight: 500;
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+    font-family: "Nunito";
+    position: relative;
+    z-index: 2;
   }
 }
 
@@ -225,6 +423,11 @@
 .form-group {
   margin-bottom: 20px;
   width: 100%;
+  transition: transform 0.3s ease;
+  
+  &:focus-within {
+    transform: translateX(5px);
+  }
 }
 
 .form-label {
@@ -233,16 +436,29 @@
   margin-bottom: 10px;
   color: #333;
   font-weight: 500;
+  transition: color 0.3s ease;
+  
+  &:focus-within {
+    color: #4785FF;
+  }
   
   .label-icon {
     margin-right: 15px;
+    
     svg {
       color: #333;
+      transition: transform 0.3s ease, color 0.3s ease;
+    }
+    
+    &:hover svg {
+      color: #4785FF;
+      transform: scale(1.1);
     }
   }
   
   span {
     font-size: 16px;
+    font-family: "Nunito";
   }
 }
 
@@ -253,15 +469,24 @@
   border-radius: 8px;
   font-size: 16px;
   color: #333;
-  transition: border-color 0.2s;
+  transition: all 0.3s ease;
+  font-family: "Nunito";
   
   &:focus {
     outline: none;
     border-color: #4785FF;
+    box-shadow: 0 0 0 4px rgba(71, 133, 255, 0.1);
+    transform: translateY(-2px);
   }
   
   &::placeholder {
     color: #999;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  
+  &:focus::placeholder {
+    opacity: 0.6;
+    transform: translateX(5px);
   }
 }
 
@@ -279,10 +504,31 @@
   font-size: 16px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   border: none;
   min-width: 140px;
   text-align: center;
+  font-family: "Nunito";
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 30px;
+    transform: translate(-50%, -50%);
+    transition: width 0.5s ease, height 0.5s ease;
+    z-index: 0;
+  }
+  
+  span {
+    position: relative;
+    z-index: 1;
+  }
 }
 
 .cancel-btn {
@@ -290,8 +536,23 @@
   color: #4785FF;
   border: 1px solid #4785FF;
   
+  &::before {
+    background-color: rgba(71, 133, 255, 0.1);
+  }
+  
   &:hover {
-    background-color: rgba(71, 133, 255, 0.05);
+    transform: translateY(-3px);
+    box-shadow: 0 4px 10px rgba(71, 133, 255, 0.2);
+    
+    &::before {
+      width: 300%;
+      height: 300%;
+    }
+  }
+  
+  &:active {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(71, 133, 255, 0.2);
   }
 }
 
@@ -299,7 +560,45 @@
   background-color: #4785FF;
   color: white;
   
+  &::before {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  
   &:hover {
     background-color: darken(#4785FF, 10%);
+    transform: translateY(-3px);
+    box-shadow: 0 4px 15px rgba(71, 133, 255, 0.4);
+    
+    &::before {
+      width: 300%;
+      height: 300%;
+    }
+  }
+  
+  &:active {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(71, 133, 255, 0.4);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
 } 
