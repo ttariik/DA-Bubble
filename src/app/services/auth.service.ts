@@ -49,7 +49,7 @@ export class AuthService {
 
   resetPassword(email: string): Promise<void> {
     const actionCodeSettings = {
-      url: 'http://dabubble-408.developerakademie.net/reset-password',
+      url: 'http://dabubble-408.developerakademie.net/angular-projects/dabubble/reset-password',
       handleCodeInApp: true,
     };
     return sendPasswordResetEmail(this.auth, email, actionCodeSettings);
