@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { Location } from '@angular/common';
 import { HeaderComponent } from '../shared/header/header.component';
 import { FooterComponent } from '../shared/footer/footer.component';
 
@@ -13,8 +14,9 @@ import { FooterComponent } from '../shared/footer/footer.component';
 })
 export class DatenschutzComponent {
   private router = inject(Router);
+  private location = inject(Location);
 
   navigateBack(): void {
-    this.router.navigate(['/login']);
+    this.location.back();
   }
 }

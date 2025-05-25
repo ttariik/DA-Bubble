@@ -47,6 +47,7 @@ export class DashboardComponent {
   }
   
   navigateHome() {
-    console.log('Navigating to home/dashboard');
+    console.log('Reloading page');
+    window.location.reload();
   }
 }
