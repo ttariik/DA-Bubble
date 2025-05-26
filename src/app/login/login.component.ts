@@ -84,7 +84,33 @@ export class LoginComponent {
   }
 
   loginAsGuest() {
-    console.log('Gäste-Login wurde ausgewählt');
-    this.router.navigate(['/dashboard']);
+    this.testLogin();
+    // this.router.navigate(['/dashboard']);
+  }
+
+  // Nur für Entwicklung
+  testUsers = [
+    { mail: 'test1@mail.de', pw: '123456' },
+    { mail: 'test2@mail.de', pw: '123456' },
+    { mail: 'test3@mail.de', pw: '123456' },
+    { mail: 'test4@mail.de', pw: '123456' },
+    { mail: 'test5@mail.de', pw: '123456' },
+    { mail: 'test6@mail.de', pw: '123456' },
+  ];
+
+  async testLogin() {
+    const userNr = Math.floor(Math.random() * 6);
+    const user = this.testUsers[userNr];
+    await this.authService
+      .signIn(user.mail, user.pw)
+      .then((user: any) => {
+        this.isLoading = false;
+        console.log(user);
+        this.router.navigate(['/dashboard']);
+      })
+      .catch((errorCode) => {
+        this.isLoading = false;
+        console.warn(errorCode);
+      });
   }
 }
