@@ -10,6 +10,7 @@ import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { HeaderComponent } from '../shared';
 import { FooterComponent } from '../shared/footer/footer.component';
+import { FirestoreService } from '../services/firestore.service';
 
 @Component({
   selector: 'app-login',
@@ -25,8 +26,9 @@ import { FooterComponent } from '../shared/footer/footer.component';
   styleUrls: ['./login.component.scss'],
 })
 export class LoginComponent {
-  authService = inject(AuthService);
+  private authService = inject(AuthService);
   private router = inject(Router);
+  private firestoreService = inject(FirestoreService);
   isLoading = false;
   hidePassword = true;
 
@@ -56,7 +58,7 @@ export class LoginComponent {
           .signIn(email, password)
           .then((user: any) => {
             this.isLoading = false;
-            console.log(user);
+            this.firestoreService.updateUser(user.uid, { isActive: true });
             this.router.navigate(['/dashboard']);
           })
           .catch((errorCode) => {
@@ -105,7 +107,7 @@ export class LoginComponent {
       .signIn(user.mail, user.pw)
       .then((user: any) => {
         this.isLoading = false;
-        console.log(user);
+        this.firestoreService.updateUser(user.uid, { isActive: true });
         this.router.navigate(['/dashboard']);
       })
       .catch((errorCode) => {

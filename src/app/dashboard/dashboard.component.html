@@ -29,28 +29,18 @@
     </div>
 
     <div class="profile-container" (click)="toggleProfileModal()">
-      <div class="user-name">Frederik Beck</div>
+      <div class="user-name">
+        {{ activUser.firstName }} {{ activUser.lastName }}
+      </div>
       <div class="user-avatar">
-        <img [src]="userProfile.imageUrl" [alt]="userProfile.name" />
-        <div
-          class="status-indicator"
-          [class.active]="userProfile.isActive"
-        ></div>
+        <img
+          src="assets/icons/avatars/{{ activUser.avatar }}"
+          alt="Profil Images"
+        />
+        <div class="status-indicator" [class.active]="activUser.isActive"></div>
       </div>
       <div class="dropdown-icon">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          width="20"
-          height="20"
-        >
-          <path
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            d="M19 9l-7 7-7-7"
-          />
-        </svg>
+        <img src="assets/icons/arrow_down.svg" alt="arrow_down" />
       </div>
     </div>
   </header>
@@ -106,7 +96,7 @@
 
   <app-profile-modal
     *ngIf="showProfileModal"
-    [userName]="userProfile.name"
+    [user]="activUser"
     [userEmail]="userProfile.email"
     [userImageUrl]="userProfile.imageUrl"
     [isActive]="userProfile.isActive"

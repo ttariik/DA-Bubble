@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { AuthService } from '../../../services/auth.service';
 import { Router } from '@angular/router';
+import { User } from '../../../models/user.class';
+import { FirestoreService } from '../../../services/firestore.service';
 
 @Component({
   selector: 'app-profile-modal',
@@ -21,24 +23,32 @@ import { Router } from '@angular/router';
   ],
 })
 export class ProfileModalComponent {
-  @Input() userName: string = '';
+  @Input() user: User = new User({});
   @Input() userEmail: string = '';
   @Input() userImageUrl: string = '';
   @Input() isActive: boolean = true;
+  userName = '';
   @Output() closeModal = new EventEmitter<void>();
   @Output() editProfile = new EventEmitter<string>();
 
   private authService = inject(AuthService);
   private router = inject(Router);
+  private firestoreService = inject(FirestoreService);
 
   showEditModal = false;
   tempUserName = '';
+  constructor() {}
+
+  ngOnInit() {
+    console.log(this.user);
+  }
 
   close() {
     this.closeModal.emit();
   }
 
   logout() {
+    this.firestoreService.updateUser(this.user.userId, { isActive: false });
     this.authService.logout();
     this.router.navigate(['/login']);
   }
