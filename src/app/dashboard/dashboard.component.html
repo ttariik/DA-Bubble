@@ -96,7 +96,7 @@
 
   <app-profile-modal
     *ngIf="showProfileModal"
-    [userName]="userProfile.name"
+    [user]="activUser"
     [userEmail]="userProfile.email"
     [userImageUrl]="userProfile.imageUrl"
     [isActive]="userProfile.isActive"

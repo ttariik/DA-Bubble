@@ -71,4 +71,8 @@ export class FirestoreService {
     ) as CollectionReference<User>;
     return collectionData(usersRef, { idField: 'userId' });
   }
+
+  setStatus(id: string, status: boolean) {
+    this.updateUser(id, { isActive: status });
+  }
 }
