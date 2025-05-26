@@ -156,6 +156,7 @@
   width: fit-content;
   border-radius: 30px;
   margin: 0 auto;
+  width: 200px;
   
   &:hover {
     background-color: rgba(0, 0, 0, 0.05);
@@ -213,8 +214,8 @@
 }
 
 .channel-name, .user-name {
-  font-size: 14px;
-  color: #333;
+  font-size: 18px;
+  color: black;
   display: flex;
   align-items: center;
   white-space: nowrap;
@@ -229,8 +230,8 @@
 
 /* Avatar Styling */
 .user-avatar {
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   overflow: hidden;
   margin-right: 12px;
@@ -271,9 +272,17 @@
 }
 
 .workspace-menu {
-  margin-top: auto;
-  padding: 16px;
-  border-top: 1px solid #e1e1e1;
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(300%) rotate(-90deg);
+  transform-origin: left center;
+  padding: 8px;
+  border-top: none;
+  border-left: 1px solid white;
+  margin: 0;
+  border-radius: 0 0 30px 30px;
+  box-shadow: 4px 8px 16px 0 rgba(0, 0, 0, 0.25); // Schatten nach unten und rechts, dunkler
 }
 
 .menu-item {
@@ -309,7 +318,7 @@
 
 .menu-text {
   font-size: 14px;
-  color: #666;
+  color: black;
   transition: color 0.2s ease;
 }
 
