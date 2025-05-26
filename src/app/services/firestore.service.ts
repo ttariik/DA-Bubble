@@ -1,5 +1,8 @@
 import { Injectable } from '@angular/core';
 import {
+  collection,
+  collectionData,
+  CollectionReference,
   doc,
   Firestore,
   getDoc,
@@ -7,6 +10,7 @@ import {
   updateDoc,
 } from '@angular/fire/firestore';
 import { User } from '../models/user.class';
+import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -53,5 +57,18 @@ export class FirestoreService {
       newUser = new User({ ...docSnap.data(), userId: id });
     }
     return newUser;
+  }
+
+  /**
+   * Returns an observable stream of users from the Firestore "users" collection.
+   *
+   * @returns An observable of the user list.
+   */
+  getAllUsers(): Observable<User[]> {
+    const usersRef = collection(
+      this.firestore,
+      'users'
+    ) as CollectionReference<User>;
+    return collectionData(usersRef, { idField: 'userId' });
   }
 }
