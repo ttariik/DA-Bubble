@@ -2,12 +2,13 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-html, body {
+html,
+body {
   height: 100%;
-  background-color: #F0F2F5;
+  background-color: #f0f2f5;
 }
 
 ::-webkit-scrollbar {
@@ -58,14 +59,19 @@ body {
 }
 
 .flex-box {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .column {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.custom-snackbar-login .mdc-snackbar__surface {
+  background-color: #444df2 !important;
+  color: white !important;
 }

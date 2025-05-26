@@ -11,6 +11,7 @@ import { AuthService } from '../services/auth.service';
 import { FooterComponent, HeaderComponent } from '../shared';
 import { User } from '../models/user.class';
 import { FirestoreService } from '../services/firestore.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-signup',
@@ -31,6 +32,8 @@ export class SignupComponent {
   private firestoreService = inject(FirestoreService);
   isLoading = false;
   hidePassword = true;
+
+  constructor(private snackBar: MatSnackBar) {}
 
   nameFormControl = new FormControl('', [
     Validators.required,
@@ -66,15 +69,8 @@ export class SignupComponent {
         await this.authService
           .signUp(email, password)
           .then((user: any) => {
-            this.isLoading = false;
             this.createUser(user, name);
-            this.saveSignedUser(
-              user.uid,
-              user.stsTokenManager.accessToken,
-              user.stsTokenManager.expirationTime,
-              name
-            );
-            this.router.navigate(['/avatar']);
+            this.showSnackbar();
           })
           .catch((errorCode) => {
             this.isLoading = false;
@@ -129,5 +125,21 @@ export class SignupComponent {
         userName: name,
       })
     );
+  }
+
+  showSnackbar() {
+    const { name } = this.registerForm.value;
+    const snackBarRef = this.snackBar.open(name + ' wurde angelegt.', '', {
+      duration: 1500,
+      panelClass: ['custom-snackbar-login'],
+      horizontalPosition: 'center',
+      verticalPosition: 'top',
+    });
+
+    snackBarRef.afterDismissed().subscribe(() => {
+      console.log('Snackbar wurde geschlossen');
+      this.isLoading = false;
+      this.router.navigate(['/avatar']);
+    });
   }
 }
