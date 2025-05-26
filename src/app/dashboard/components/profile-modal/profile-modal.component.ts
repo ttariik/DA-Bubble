@@ -1,7 +1,9 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { trigger, transition, style, animate } from '@angular/animations';
+import { AuthService } from '../../../services/auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-profile-modal',
@@ -13,10 +15,10 @@ import { trigger, transition, style, animate } from '@angular/animations';
     trigger('fadeIn', [
       transition(':enter', [
         style({ opacity: 0 }),
-        animate('200ms ease-out', style({ opacity: 1 }))
-      ])
-    ])
-  ]
+        animate('200ms ease-out', style({ opacity: 1 })),
+      ]),
+    ]),
+  ],
 })
 export class ProfileModalComponent {
   @Input() userName: string = '';
@@ -24,19 +26,21 @@ export class ProfileModalComponent {
   @Input() userImageUrl: string = '';
   @Input() isActive: boolean = true;
   @Output() closeModal = new EventEmitter<void>();
-  @Output() logoutUser = new EventEmitter<void>();
   @Output() editProfile = new EventEmitter<string>();
-  
+
+  private authService = inject(AuthService);
+  private router = inject(Router);
+
   showEditModal = false;
   tempUserName = '';
 
   close() {
     this.closeModal.emit();
   }
-  
+
   logout() {
-    this.logoutUser.emit();
-    this.close();
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 
   openEditModal() {
@@ -55,4 +59,4 @@ export class ProfileModalComponent {
     }
     this.showEditModal = false;
   }
-} 
+}
