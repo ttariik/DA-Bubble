@@ -74,7 +74,7 @@ export class SignupComponent {
           })
           .catch((errorCode) => {
             this.isLoading = false;
-            console.warn(errorCode);
+            this.errorCodeHandler(errorCode);
           });
       }
     }
@@ -110,23 +110,6 @@ export class SignupComponent {
     }
   }
 
-  saveSignedUser(
-    userId: string,
-    acessToken: string,
-    expirationTime: number,
-    name: string
-  ) {
-    localStorage.setItem(
-      'signedUser',
-      JSON.stringify({
-        userId: userId,
-        acessToken: acessToken,
-        expirationTime: expirationTime,
-        userName: name,
-      })
-    );
-  }
-
   showSnackbar() {
     const { name } = this.registerForm.value;
     const snackBarRef = this.snackBar.open(name + ' wurde angelegt.', '', {
@@ -140,5 +123,17 @@ export class SignupComponent {
       this.isLoading = false;
       this.router.navigate(['/avatar']);
     });
+  }
+
+  errorCodeHandler(code: string) {
+    switch (code) {
+      case 'auth/email-already-in-use':
+        this.emailFormControl.setErrors({ emailExists: true });
+        break;
+
+      default:
+        console.error('Unbekannter Fehlercode:', code);
+        break;
+    }
   }
 }
