@@ -29,7 +29,7 @@
     </div>
   </div>
   <div class="button-group button-group-right">
-    <button type="submit" class="btn primary">
+    <button (click)="changeUserData()" class="btn primary">
       @if (isLoading) {<span>Laden...</span> }@else {<span>Weiter</span>}
     </button>
   </div>
