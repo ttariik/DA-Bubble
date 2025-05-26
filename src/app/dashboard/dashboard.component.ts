@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { ChatAreaComponent } from './components/chat-area/chat-area.component';
@@ -8,6 +8,7 @@ import { Router } from '@angular/router';
 import { FirestoreService } from '../services/firestore.service';
 import { AuthService } from '../services/auth.service';
 import { User } from '../models/user.class';
+import { take, tap } from 'rxjs';
 
 @Component({
   selector: 'app-dashboard',
@@ -24,13 +25,14 @@ import { User } from '../models/user.class';
 })
 export class DashboardComponent {
   private firestoreService = inject(FirestoreService);
-  private router = inject(Router);
   private authService = inject(AuthService);
+  private cd = inject(ChangeDetectorRef);
 
   showThreadView: boolean = true;
   showProfileModal: boolean = false;
   threadVisible: boolean = true;
   listOfAllUsers: User[] = [];
+  activUser: User = new User({});
   activUserId = '';
 
   userProfile = {
@@ -51,15 +53,21 @@ export class DashboardComponent {
     this.activUserId = await this.authService.getActiveUserId();
   }
 
-  async loadAllUsers() {
+  loadAllUsers() {
     this.firestoreService.getAllUsers().subscribe((users) => {
-      this.listOfAllUsers = [];
-      users.forEach((user) => {
-        const newUser = new User(user);
-        this.listOfAllUsers.push(newUser);
-      });
-      console.log(this.listOfAllUsers);
+      this.listOfAllUsers = users.map((user) => new User(user));
+      this.loadActiveUser();
     });
+  }
+
+  loadActiveUser() {
+    const user = this.listOfAllUsers.find((user) => {
+      return user.userId == this.activUserId;
+    });
+    if (user) {
+      this.activUser = user;
+    }
+    this.cd.detectChanges();
   }
 
   toggleThreadView() {
