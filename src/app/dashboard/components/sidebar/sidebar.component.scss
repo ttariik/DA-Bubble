@@ -82,6 +82,7 @@
   cursor: pointer;
   height: 28px;
   
+  
   &:hover {
     .section-icon {
       transform: scale(1.125);
@@ -90,6 +91,7 @@
     
     .section-title {
       color: #444df2;
+      
     }
   }
 }
@@ -132,6 +134,7 @@
   color: #666;
   flex: 1;
   transition: color 0.2s ease;
+  font-family: "Nunito";
 }
 
 .section-content {
@@ -157,6 +160,7 @@
   width: 100%;
   border-radius: 6px;
   height: 32px;
+
   
   &:hover {
     background-color: rgba(0, 0, 0, 0.05);
@@ -165,9 +169,11 @@
   &.active {
     background-color: #EAF2FF;
     
+    
     .channel-name, .user-name {
       font-weight: 600;
       color: #444df2;
+      font-family: "Nunito";
     }
     
     .channel-icon {
