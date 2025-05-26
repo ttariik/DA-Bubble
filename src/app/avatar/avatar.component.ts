@@ -3,6 +3,7 @@ import { FooterComponent, HeaderComponent } from '../shared';
 import { CommonModule } from '@angular/common';
 import { FirestoreService } from '../services/firestore.service';
 import { Router, RouterModule } from '@angular/router';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-avatar',
@@ -13,7 +14,9 @@ import { Router, RouterModule } from '@angular/router';
 export class AvatarComponent {
   private firestoreService = inject(FirestoreService);
   private router = inject(Router);
-  userName = 'Max Mustermann';
+  private authService = inject(AuthService);
+
+  userName = '';
   userId = '';
   activeImage = 'noProfile.svg';
   isLoading = false;
@@ -26,17 +29,10 @@ export class AvatarComponent {
     'user6.svg',
   ];
 
-  ngOnInit(): void {
-    this.loadData();
-  }
-
-  loadData() {
-    const data = localStorage.getItem('signedUser');
-    if (data != null) {
-      const userData = JSON.parse(data);
-      this.userName = userData.userName;
-      this.userId = userData.userId;
-    }
+  async ngOnInit() {
+    this.userId = await this.authService.getActiveUserId();
+    const user = await this.firestoreService.getSingelUser(this.userId);
+    this.userName = user.firstName + ' ' + user.lastName;
   }
 
   changeImage(newImage: string) {

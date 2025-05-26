@@ -3,6 +3,7 @@ import {
   Auth,
   confirmPasswordReset,
   createUserWithEmailAndPassword,
+  onAuthStateChanged,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
 } from '@angular/fire/auth';
@@ -68,5 +69,20 @@ export class AuthService {
    */
   changePassword(newPassword: string, oobCode: string) {
     return confirmPasswordReset(this.auth, oobCode, newPassword);
+  }
+
+  /**
+   * Returns a promise that resolves with the UID of the currently authenticated user.
+   *
+   * @returns  A promise that resolves to the user's UID.
+   */
+  getActiveUserId(): Promise<string> {
+    return new Promise((resolve) => {
+      onAuthStateChanged(this.auth, (user) => {
+        if (user) {
+          resolve(user.uid);
+        }
+      });
+    });
   }
 }
