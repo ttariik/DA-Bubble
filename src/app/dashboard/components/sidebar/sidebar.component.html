@@ -10,7 +10,7 @@
       </div>
       <div class="workspace-actions">
         <button class="edit-button">
-          <i class="edit-icon"></i>
+          <img src="assets/icons/edit.svg" alt="Edit" class="edit-icon" />
         </button>
       </div>
     </div>
@@ -21,14 +21,12 @@
         <div class="section-toggle" [class.open]="showChannels">
           <i class="toggle-icon"></i>
         </div>
-        <div class="section-title">
-          <img
-            src="assets/icons/workspaces.svg"
-            alt="Channels Icon"
-            class="section-icon"
-          />
-          Channels
-        </div>
+        <img
+          src="assets/icons/workspaces.svg"
+          alt="Channels Icon"
+          class="section-icon"
+        />
+        <div class="section-title">Channels</div>
         <div class="section-actions">
           <button
             class="add-button"
@@ -71,14 +69,12 @@
         <div class="section-toggle" [class.open]="showDirectMessages">
           <i class="toggle-icon"></i>
         </div>
-        <div class="section-title">
-          <img
-            src="assets/icons/account_circle.svg"
-            alt="Direct Messages Icon"
-            class="section-icon"
-          />
-          Direktnachrichten
-        </div>
+        <img
+          src="assets/icons/account_circle.svg"
+          alt="Direct Messages Icon"
+          class="section-icon"
+        />
+        <div class="section-title">Direktnachrichten</div>
       </div>
 
       <div class="section-content" *ngIf="showDirectMessages">
@@ -88,11 +84,13 @@
             class="dm-item"
             [class.active]="dm.name === 'Frederik Beck (Du)'"
           >
-            <div class="user-avatar">
-              <img [src]="dm.avatar" [alt]="dm.name" />
-              <div class="status-indicator" [class.online]="dm.online"></div>
+            <div class="user-info">
+              <div class="user-avatar">
+                <img [src]="dm.avatar" [alt]="dm.name" />
+                <div class="status-indicator" [class.online]="dm.online"></div>
+              </div>
+              <div class="user-name">{{ dm.name }}</div>
             </div>
-            <div class="user-name">{{ dm.name }}</div>
             <div class="unread-badge" *ngIf="dm.unread > 0">
               {{ dm.unread }}
             </div>
@@ -101,25 +99,12 @@
       </div>
     </div>
 
-    <div class="workspace-menu">
-      <div class="menu-item" (click)="toggleSidebar()">
-        <div class="menu-icon">
-          <img
-            src="assets/icons/dashboard/workspace-menu-close.svg"
-            alt="Toggle Sidebar"
-            class="toggle-sidebar-icon"
-          />
-        </div>
-        <div class="menu-text">Workspace-Menü schließen</div>
-      </div>
-    </div>
-
     <!-- Add Channel Modal -->
-    <!-- <app-add-channel-modal
+    <app-add-channel-modal
       [isVisible]="showAddChannelModal"
       (close)="closeAddChannelModal()"
       (channelCreated)="handleChannelCreated($event)"
     >
-    </app-add-channel-modal> -->
+    </app-add-channel-modal>
   </div>
 </div>
