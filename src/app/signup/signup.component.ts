@@ -137,7 +137,6 @@ export class SignupComponent {
     });
 
     snackBarRef.afterDismissed().subscribe(() => {
-      console.log('Snackbar wurde geschlossen');
       this.isLoading = false;
       this.router.navigate(['/avatar']);
     });

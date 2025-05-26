@@ -9,6 +9,7 @@ import {
 import { RouterModule } from '@angular/router';
 import { HeaderComponent } from '../shared';
 import { AuthService } from '../services/auth.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-forgot-password',
@@ -20,6 +21,8 @@ import { AuthService } from '../services/auth.service';
 export class ForgotPasswordComponent {
   private authService = inject(AuthService);
   isLoading = false;
+
+  constructor(private snackBar: MatSnackBar) {}
 
   emailFormControl = new FormControl('', [
     Validators.required,
@@ -35,8 +38,7 @@ export class ForgotPasswordComponent {
       this.isLoading = true;
       const email = this.forgotPasswordForm.value.email;
       if (email != null) {
-        console.log('Sende Passwort-Reset-Link an:', email);
-
+        this.showSnackbar();
         try {
           await this.authService.resetPassword(email);
         } catch (err: any) {
@@ -48,5 +50,22 @@ export class ForgotPasswordComponent {
 
   get email() {
     return this.emailFormControl;
+  }
+
+  showSnackbar() {
+    const snackBarRef = this.snackBar.open(
+      'E-Mail zum zurücksetzten wurde versendet',
+      '',
+      {
+        duration: 1500,
+        panelClass: ['custom-snackbar-login'],
+        horizontalPosition: 'center',
+        verticalPosition: 'top',
+      }
+    );
+
+    snackBarRef.afterDismissed().subscribe(() => {
+      this.isLoading = false;
+    });
   }
 }

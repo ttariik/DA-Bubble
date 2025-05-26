@@ -9,9 +9,10 @@ import {
   ValidationErrors,
   ValidatorFn,
 } from '@angular/forms';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { FooterComponent, HeaderComponent } from '../shared';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-password-reset',
@@ -27,10 +28,13 @@ import { FooterComponent, HeaderComponent } from '../shared';
 })
 export class PasswordResetComponent {
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private authService = inject(AuthService);
   oobCode = '';
   isLoading = false;
   hidePassword = true;
+
+  constructor(private snackBar: MatSnackBar) {}
 
   passwordFormControl = new FormControl('', [
     Validators.required,
@@ -69,6 +73,7 @@ export class PasswordResetComponent {
     if (password != null) {
       try {
         this.authService.changePassword(password, this.oobCode);
+        this.showSnackbar();
       } catch (err) {
         console.warn(err);
       }
@@ -89,10 +94,22 @@ export class PasswordResetComponent {
           ?.setErrors({ passwordMismatch: true });
         return { passwordMismatch: true };
       }
-
-      // Wichtig: Fehler entfernen, wenn sie nicht mehr zutreffen
       formGroup.get(confirmPasswordField)?.setErrors(null);
       return null;
     };
+  }
+
+  showSnackbar() {
+    const snackBarRef = this.snackBar.open('Passwort wurde geändert.', '', {
+      duration: 1500,
+      panelClass: ['custom-snackbar-login'],
+      horizontalPosition: 'center',
+      verticalPosition: 'top',
+    });
+
+    snackBarRef.afterDismissed().subscribe(() => {
+      this.isLoading = false;
+      this.router.navigate(['/']);
+    });
   }
 }
