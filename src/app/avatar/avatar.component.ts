@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { FooterComponent, HeaderComponent } from '../shared';
 import { CommonModule } from '@angular/common';
 import { FirestoreService } from '../services/firestore.service';
@@ -15,6 +15,7 @@ export class AvatarComponent {
   private firestoreService = inject(FirestoreService);
   private router = inject(Router);
   private authService = inject(AuthService);
+  private cd = inject(ChangeDetectorRef);
 
   userName = '';
   userId = '';
@@ -29,10 +30,15 @@ export class AvatarComponent {
     'user6.svg',
   ];
 
-  async ngOnInit() {
+  ngOnInit() {
+    this.loadData();
+  }
+
+  async loadData() {
     this.userId = await this.authService.getActiveUserId();
     const user = await this.firestoreService.getSingelUser(this.userId);
     this.userName = user.firstName + ' ' + user.lastName;
+    this.cd.detectChanges();
   }
 
   changeImage(newImage: string) {
