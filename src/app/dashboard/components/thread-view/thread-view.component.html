@@ -29,65 +29,72 @@
     {{ replies.length }} Antworten
   </div>
   
-  <!-- Replies -->
-  <div class="replies-container">
-    <div *ngFor="let reply of replies" class="message-item" [class.own-message]="reply.userId === currentUserId">
-      <div class="message-avatar" *ngIf="reply.userId !== currentUserId">
-        <img [src]="reply.userAvatar" [alt]="reply.userName">
-      </div>
-      
-      <div class="message-content" [class.own-message-content]="reply.userId === currentUserId">
-        <div class="message-header">
-          <div class="message-sender">{{ reply.userName }}</div>
-          <div class="message-time">{{ reply.timestamp | date:'HH:mm' }} Uhr</div>
-        </div>
-        <div class="message-bubble">{{ reply.content }}</div>
-        
-        <!-- Message Actions -->
-        <div class="message-actions">
-          <div class="reactions" *ngIf="reply.reactions?.length">
-            <div
-              *ngFor="let reaction of reply.reactions"
-              class="reaction-badge"
-            >
-              {{ reaction.emoji }} {{ reaction.count }}
+  <!-- Content Area (Replies + Reply Input) -->
+  <div class="content-area">
+    <!-- Replies -->
+    <div class="replies-container">
+      <div class="replies-scroll-area" #scrollContainer>
+        <div *ngFor="let reply of replies" class="message-item" [class.own-message]="reply.userId === currentUserId">
+          <!-- Avatar for other users' messages (left side) -->
+          <div class="message-avatar other-user-avatar" *ngIf="reply.userId !== currentUserId">
+            <img [src]="reply.userAvatar" [alt]="reply.userName">
+          </div>
+          
+          <div class="message-content" [class.own-message-content]="reply.userId === currentUserId">
+            <div class="message-header">
+              <div class="message-sender">{{ reply.userName }}</div>
+              <div class="message-time">{{ reply.timestamp | date:'HH:mm' }} Uhr</div>
+            </div>
+            <div class="message-bubble">{{ reply.content }}</div>
+            
+            <!-- Message Actions -->
+            <div class="message-actions">
+              <div class="reactions" *ngIf="reply.reactions?.length">
+                <div
+                  *ngFor="let reaction of reply.reactions"
+                  class="reaction-badge"
+                >
+                  {{ reaction.emoji }} {{ reaction.count }}
+                </div>
+              </div>
+              <div class="action-buttons">
+                <button class="action-button emoji-button" (click)="addReaction(reply)">
+                  <span>😊</span>
+                </button>
+              </div>
             </div>
           </div>
-          <div class="action-buttons">
-            <button class="action-button emoji-button" (click)="addReaction(reply)">
+          
+          <!-- Avatar for own messages (right side) -->
+          <div class="message-avatar own-user-avatar" *ngIf="reply.userId === currentUserId">
+            <img [src]="reply.userAvatar" [alt]="reply.userName">
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Reply Input -->
+    <div class="reply-input-container">
+      <div class="reply-input-wrapper">
+        <textarea 
+          class="reply-input" 
+          placeholder="Antworten..."
+          [(ngModel)]="replyInput"
+          (keydown.enter)="$event.preventDefault(); sendReply()"
+        ></textarea>
+        <div class="input-actions">
+          <div class="input-tools">
+            <button class="tool-button mention-button" (click)="insertMention()">
+              <span>&#64;</span>
+            </button>
+            <button class="tool-button emoji-button" (click)="openEmojiPicker()">
               <span>😊</span>
             </button>
           </div>
-        </div>
-      </div>
-      
-      <div class="message-avatar" *ngIf="reply.userId === currentUserId">
-        <img [src]="reply.userAvatar" [alt]="reply.userName">
-      </div>
-    </div>
-  </div>
-  
-  <!-- Reply Input -->
-  <div class="reply-input-container">
-    <div class="reply-input-wrapper">
-      <textarea 
-        class="reply-input" 
-        placeholder="Antworten..."
-        [(ngModel)]="replyInput"
-        (keydown.enter)="$event.preventDefault(); sendReply()"
-      ></textarea>
-      <div class="input-actions">
-        <div class="input-tools">
-          <button class="tool-button mention-button" (click)="insertMention()">
-            <span>&#64;</span>
-          </button>
-          <button class="tool-button emoji-button" (click)="openEmojiPicker()">
-            <span>😊</span>
+          <button class="send-button" [disabled]="!replyInput.trim()" (click)="sendReply()">
+            <img src="assets/svg/send.svg" alt="Senden" class="send-icon">
           </button>
         </div>
-        <button class="send-button" [disabled]="!replyInput.trim()" (click)="sendReply()">
-          <img src="assets/svg/send.svg" alt="Senden" class="send-icon">
-        </button>
       </div>
     </div>
   </div>

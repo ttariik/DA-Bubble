@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PickerModule } from '@ctrl/ngx-emoji-mart';
@@ -28,7 +28,9 @@ interface Reaction {
   templateUrl: './chat-area.component.html',
   styleUrls: ['./chat-area.component.scss']
 })
-export class ChatAreaComponent {
+export class ChatAreaComponent implements AfterViewInit {
+  @ViewChild('scrollContainer') scrollContainer!: ElementRef;
+
   channelName: string = 'Entwicklerteam';
   messageInput: string = '';
   showEmojiPicker: boolean = false;
@@ -65,8 +67,8 @@ export class ChatAreaComponent {
   
   channelMembers: {id: string, name: string, avatar: string}[] = [
     { id: '1', name: 'Frederik Beck', avatar: 'assets/icons/avatars/user1.svg' },
-    { id: '2', name: 'Sofia Müller', avatar: 'assets/icons/avatars/user1.svg' },
-    { id: '3', name: 'Noah Braun', avatar: 'assets/icons/avatars/user1.svg' }
+    { id: '2', name: 'Sofia Müller', avatar: 'assets/icons/avatars/user2.svg' },
+    { id: '3', name: 'Noah Braun', avatar: 'assets/icons/avatars/user3.svg' }
   ];
   
   messages: Message[] = [
@@ -74,7 +76,7 @@ export class ChatAreaComponent {
       id: '1',
       userId: '3',
       userName: 'Noah Braun',
-      userAvatar: 'assets/icons/avatars/user1.svg',
+      userAvatar: 'assets/icons/avatars/user3.svg',
       content: 'Welche Version ist aktuell von Angular?',
       timestamp: new Date('2023-01-14T14:25:00'),
       threadCount: 2
@@ -84,18 +86,105 @@ export class ChatAreaComponent {
       userId: '1',
       userName: 'Frederik Beck',
       userAvatar: 'assets/icons/avatars/user1.svg',
-      content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque blandit odio efficitur lectus vestibulum, quis accumsan ante vulputate. Quisque tristique iaculis erat, eu faucibus lacus iaculis ac.',
-      timestamp: new Date('2023-01-14T15:06:00'),
+      content: 'Wir verwenden Angular 19.2.12 in diesem Projekt.',
+      timestamp: new Date('2023-01-14T14:30:00')
+    },
+    {
+      id: '3',
+      userId: '2',
+      userName: 'Sofia Müller',
+      userAvatar: 'assets/icons/avatars/user2.svg',
+      content: 'Danke für die Info! Hast du schon die neuen Features ausprobiert?',
+      timestamp: new Date('2023-01-14T14:35:00')
+    },
+    {
+      id: '4',
+      userId: '1',
+      userName: 'Frederik Beck',
+      userAvatar: 'assets/icons/avatars/user1.svg',
+      content: 'Ja, wir nutzen bereits die neue HTTP API mit dem Fetch-Backend und es läuft deutlich effizienter!',
+      timestamp: new Date('2023-01-14T14:40:00'),
       reactions: [
         { emoji: '👍', count: 1, userIds: ['2'] },
         { emoji: '✅', count: 1, userIds: ['3'] }
       ]
+    },
+    {
+      id: '5',
+      userId: '3',
+      userName: 'Noah Braun',
+      userAvatar: 'assets/icons/avatars/user3.svg',
+      content: 'Super! Können wir das im nächsten Meeting besprechen? Ich würde gerne mehr darüber erfahren.',
+      timestamp: new Date('2023-01-14T15:06:00')
+    },
+    // Weitere Testnachrichten hinzufügen
+    {
+      id: '6',
+      userId: '2',
+      userName: 'Sofia Müller',
+      userAvatar: 'assets/icons/avatars/user2.svg',
+      content: 'Ich habe gehört, dass die Performanz erheblich verbessert wurde. Wie ist eure Erfahrung damit?',
+      timestamp: new Date('2023-01-14T15:10:00')
+    },
+    {
+      id: '7',
+      userId: '1',
+      userName: 'Frederik Beck',
+      userAvatar: 'assets/icons/avatars/user1.svg',
+      content: 'Die Anwendung lädt definitiv schneller und verbraucht weniger Ressourcen. Außerdem haben wir jetzt Service Worker implementiert, was offline Funktionalität ermöglicht.',
+      timestamp: new Date('2023-01-14T15:15:00')
+    },
+    {
+      id: '8',
+      userId: '3',
+      userName: 'Noah Braun',
+      userAvatar: 'assets/icons/avatars/user3.svg',
+      content: 'Das klingt vielversprechend! Können wir diese Optimierungen auch in anderen Projekten anwenden?',
+      timestamp: new Date('2023-01-14T15:20:00')
+    },
+    {
+      id: '9',
+      userId: '1',
+      userName: 'Frederik Beck',
+      userAvatar: 'assets/icons/avatars/user1.svg',
+      content: 'Auf jeden Fall! Ich werde ein Dokument mit allen Optimierungen vorbereiten, die wir implementiert haben.',
+      timestamp: new Date('2023-01-14T15:25:00')
+    },
+    {
+      id: '10',
+      userId: '2',
+      userName: 'Sofia Müller',
+      userAvatar: 'assets/icons/avatars/user2.svg',
+      content: 'Toll! Ich freue mich auf den Wissensaustausch.',
+      timestamp: new Date('2023-01-14T15:30:00')
+    },
+    {
+      id: '11',
+      userId: '3',
+      userName: 'Noah Braun',
+      userAvatar: 'assets/icons/avatars/user3.svg',
+      content: 'Habt ihr auch die neuen Animationsfeatures getestet?',
+      timestamp: new Date('2023-01-14T15:35:00')
+    },
+    {
+      id: '12',
+      userId: '1',
+      userName: 'Frederik Beck',
+      userAvatar: 'assets/icons/avatars/user1.svg',
+      content: 'Noch nicht, aber das steht auf unserer Liste für die nächste Iteration.',
+      timestamp: new Date('2023-01-14T15:40:00')
     }
   ];
   
   dates = [
     { date: new Date('2023-01-14'), label: 'Dienstag, 14 Januar' }
   ];
+
+  ngAfterViewInit() {
+    setTimeout(() => {
+      this.scrollToBottom();
+    }, 100);
+  }
   
   openEmojiPicker(message?: Message) {
     this.emojiPickerTargetMessage = message || null;
@@ -156,6 +245,22 @@ export class ChatAreaComponent {
       
       this.messages.push(newMessage);
       this.messageInput = '';
+      
+      setTimeout(() => {
+        this.scrollToBottom();
+      }, 0);
+    }
+  }
+  
+  scrollToBottom() {
+    try {
+      if (this.scrollContainer) {
+        const element = this.scrollContainer.nativeElement;
+        element.scrollTop = element.scrollHeight;
+        console.log('Scrolling to bottom', element.scrollHeight);
+      }
+    } catch (err) {
+      console.error('Fehler beim Scrollen:', err);
     }
   }
   

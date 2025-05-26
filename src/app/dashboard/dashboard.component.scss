@@ -172,6 +172,13 @@
   &.expanded {
     margin-left: 0; 
   }
+  
+  /* Stelle sicher, dass die Komponente die volle Höhe nutzt */
+  app-chat-area {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
 }
 
 .thread-section {

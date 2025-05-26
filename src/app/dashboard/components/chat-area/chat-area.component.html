@@ -25,89 +25,94 @@
     </div>
   </div>
 
-  <!-- Messages Area -->
-  <div class="messages-container">
-    <div *ngFor="let date of dates" class="date-separator">
-      <div class="date-line"></div>
-      <div class="date-text">{{ date.label }}</div>
-      <div class="date-line"></div>
-    </div>
-
-    <div *ngFor="let message of messages" 
-         class="message-item" 
-         [class.own-message]="message.userId === currentUserId">
-      
-      <!-- Avatar wird nur für Nachrichten von anderen angezeigt -->
-      <div class="message-avatar" *ngIf="message.userId !== currentUserId">
-        <img [src]="message.userAvatar" [alt]="message.userName" />
-      </div>
-      
-      <div class="message-content" [class.own-message-content]="message.userId === currentUserId">
-        <div class="message-header">
-          <div class="message-sender">{{ message.userName }}</div>
-          <div class="message-time">
-            {{ message.timestamp | date : "HH:mm" }} Uhr
-          </div>
+  <!-- Content Area (Scroll + Input) -->
+  <div class="content-area">
+    <!-- Messages Area -->
+    <div class="messages-container">
+      <div class="messages-scroll-area" #scrollContainer>
+        <div *ngFor="let date of dates" class="date-separator">
+          <div class="date-line"></div>
+          <div class="date-text">{{ date.label }}</div>
+          <div class="date-line"></div>
         </div>
-        <div class="message-bubble">{{ message.content }}</div>
 
-        <!-- Message Actions -->
-        <div class="message-actions">
-          <div class="reactions" *ngIf="message.reactions?.length">
-            <div
-              *ngFor="let reaction of message.reactions"
-              class="reaction-badge"
-            >
-              {{ reaction.emoji }} {{ reaction.count }}
+        <div *ngFor="let message of messages" 
+            class="message-item" 
+            [class.own-message]="message.userId === currentUserId">
+          
+          <!-- Avatar for other users' messages (left side) -->
+          <div class="message-avatar other-user-avatar" *ngIf="message.userId !== currentUserId">
+            <img [src]="message.userAvatar" [alt]="message.userName" />
+          </div>
+          
+          <div class="message-content" [class.own-message-content]="message.userId === currentUserId">
+            <div class="message-header">
+              <div class="message-sender">{{ message.userName }}</div>
+              <div class="message-time">
+                {{ message.timestamp | date : "HH:mm" }} Uhr
+              </div>
+            </div>
+            <div class="message-bubble">{{ message.content }}</div>
+
+            <!-- Message Actions -->
+            <div class="message-actions">
+              <div class="reactions" *ngIf="message.reactions?.length">
+                <div
+                  *ngFor="let reaction of message.reactions"
+                  class="reaction-badge"
+                >
+                  {{ reaction.emoji }} {{ reaction.count }}
+                </div>
+              </div>
+              <div class="action-buttons">
+                <button class="action-button emoji-button" (click)="addReaction(message)">
+                  <span>😊</span>
+                </button>
+                <button class="action-button" (click)="openThread(message)">
+                  <span>💬</span>
+                  <span *ngIf="message.threadCount" class="thread-count">{{
+                    message.threadCount
+                  }}</span>
+                </button>
+              </div>
             </div>
           </div>
-          <div class="action-buttons">
-            <button class="action-button emoji-button" (click)="addReaction(message)">
-              <span>😊</span>
-            </button>
-            <button class="action-button" (click)="openThread(message)">
-              <span>💬</span>
-              <span *ngIf="message.threadCount" class="thread-count">{{
-                message.threadCount
-              }}</span>
-            </button>
+          
+          <!-- Avatar for own messages (right side) -->
+          <div class="message-avatar own-user-avatar" *ngIf="message.userId === currentUserId">
+            <img [src]="message.userAvatar" [alt]="message.userName" />
           </div>
         </div>
       </div>
-      
-      <!-- Avatar wird rechts für eigene Nachrichten angezeigt -->
-      <div class="message-avatar" *ngIf="message.userId === currentUserId">
-        <img [src]="message.userAvatar" [alt]="message.userName" />
-      </div>
     </div>
-  </div>
 
-  <!-- Message Input -->
-  <div class="message-input-container">
-    <div class="message-input-wrapper">
-      <textarea
-        class="message-input"
-        placeholder="Nachricht an #{{ channelName }} senden"
-        [(ngModel)]="messageInput"
-        (keydown.enter)="$event.preventDefault(); sendMessage()"
-      ></textarea>
-      <div class="input-actions">
-        <div>
-          <button class="react-button emoji-button" (click)="openEmojiPicker()">
-            <img src="./assets/icons/dashboard/reaction.svg" alt="Emoji" />
-          </button>
-          <button class="react-button">
-            <img src="./assets/icons/dashboard/mark.svg" alt="" />
+    <!-- Message Input -->
+    <div class="message-input-container">
+      <div class="message-input-wrapper">
+        <textarea
+          class="message-input"
+          placeholder="Nachricht an #{{ channelName }} senden"
+          [(ngModel)]="messageInput"
+          (keydown.enter)="$event.preventDefault(); sendMessage()"
+        ></textarea>
+        <div class="input-actions">
+          <div>
+            <button class="react-button emoji-button" (click)="openEmojiPicker()">
+              <img src="./assets/icons/dashboard/reaction.svg" alt="Emoji" />
+            </button>
+            <button class="react-button">
+              <img src="./assets/icons/dashboard/mark.svg" alt="" />
+            </button>
+          </div>
+
+          <button
+            class="send-button"
+            [disabled]="!messageInput.trim()"
+            (click)="sendMessage()"
+          >
+            <img src="./assets/icons/dashboard/send.svg" alt="" />
           </button>
         </div>
-
-        <button
-          class="send-button"
-          [disabled]="!messageInput.trim()"
-          (click)="sendMessage()"
-        >
-          <img src="./assets/icons/dashboard/send.svg" alt="" />
-        </button>
       </div>
     </div>
   </div>

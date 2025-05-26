@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Output, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -25,8 +25,9 @@ interface Reaction {
   templateUrl: './thread-view.component.html',
   styleUrls: ['./thread-view.component.scss']
 })
-export class ThreadViewComponent {
+export class ThreadViewComponent implements AfterViewInit {
   @Output() closeThread = new EventEmitter<void>();
+  @ViewChild('scrollContainer') scrollContainer!: ElementRef;
   
   threadTitle: string = 'Thread';
   channelName: string = 'Entwicklerteam';
@@ -39,7 +40,7 @@ export class ThreadViewComponent {
     id: '1',
     userId: '3',
     userName: 'Noah Braun',
-    userAvatar: 'assets/avatars/user3.png',
+    userAvatar: 'assets/icons/avatars/user3.svg',
     content: 'Welche Version ist aktuell von Angular?',
     timestamp: new Date('2023-01-14T14:25:00')
   };
@@ -49,7 +50,7 @@ export class ThreadViewComponent {
       id: '2',
       userId: '2',
       userName: 'Sofia Müller',
-      userAvatar: 'assets/avatars/user2.png',
+      userAvatar: 'assets/icons/avatars/user2.svg',
       content: 'Ich habe die gleiche Frage. Ich habe gegoogelt und es scheint, dass die aktuelle Version Angular 13 ist. Vielleicht weiß Frederik, ob es wahr ist.',
       timestamp: new Date('2023-01-14T14:30:00'),
       reactions: [
@@ -60,8 +61,8 @@ export class ThreadViewComponent {
       id: '3',
       userId: '1',
       userName: 'Frederik Beck',
-      userAvatar: 'assets/avatars/user1.png',
-      content: 'Ja das ist es.',
+      userAvatar: 'assets/icons/avatars/user1.svg',
+      content: 'Die aktuelle Version ist Angular 19.2.12, wir nutzen sie in diesem Projekt.',
       timestamp: new Date('2023-01-14T15:06:00'),
       reactions: [
         { emoji: '👍', count: 1, userIds: ['2'] }
@@ -71,12 +72,19 @@ export class ThreadViewComponent {
   
   // Hinzufügen von Benutzern für @-Erwähnungen
   users = [
-    { id: '1', name: 'Frederik Beck', avatar: 'assets/avatars/user1.png' },
-    { id: '2', name: 'Sofia Müller', avatar: 'assets/avatars/user2.png' },
-    { id: '3', name: 'Noah Braun', avatar: 'assets/avatars/user3.png' },
-    { id: '4', name: 'Elise Roth', avatar: 'assets/avatars/user1.png' },
-    { id: '5', name: 'Elias Neumann', avatar: 'assets/avatars/user2.png' }
+    { id: '1', name: 'Frederik Beck', avatar: 'assets/icons/avatars/user1.svg' },
+    { id: '2', name: 'Sofia Müller', avatar: 'assets/icons/avatars/user2.svg' },
+    { id: '3', name: 'Noah Braun', avatar: 'assets/icons/avatars/user3.svg' },
+    { id: '4', name: 'Elise Roth', avatar: 'assets/icons/avatars/user1.svg' },
+    { id: '5', name: 'Elias Neumann', avatar: 'assets/icons/avatars/user2.svg' }
   ];
+  
+  ngAfterViewInit() {
+    // Gib dem DOM Zeit, sich zu rendern
+    setTimeout(() => {
+      this.scrollToBottom();
+    }, 100);
+  }
   
   insertMention() {
     this.replyInput += '@';
@@ -125,19 +133,47 @@ export class ThreadViewComponent {
     this.targetMessage = null;
   }
   
+  scrollToBottom() {
+    try {
+      if (this.scrollContainer) {
+        const element = this.scrollContainer.nativeElement;
+        element.scrollTop = element.scrollHeight;
+        console.log('Scrolling to bottom in thread view', element.scrollHeight);
+      }
+    } catch (err) {
+      console.error('Fehler beim Scrollen:', err);
+    }
+  }
+  
+  isScrolledToBottom() {
+    if (this.scrollContainer) {
+      const element = this.scrollContainer.nativeElement;
+      return Math.abs((element.scrollHeight - element.scrollTop) - element.clientHeight) < 1;
+    }
+    return true;
+  }
+  
   sendReply() {
     if (this.replyInput.trim()) {
+      const wasAtBottom = this.isScrolledToBottom();
+      
       const newReply: ThreadMessage = {
         id: (this.replies.length + 1).toString(),
         userId: '1',
         userName: 'Frederik Beck',
-        userAvatar: 'assets/avatars/user1.png',
+        userAvatar: 'assets/icons/avatars/user1.svg',
         content: this.replyInput.trim(),
         timestamp: new Date()
       };
       
       this.replies.push(newReply);
       this.replyInput = '';
+      
+      if (wasAtBottom) {
+        setTimeout(() => {
+          this.scrollToBottom();
+        }, 0);
+      }
     }
   }
   
