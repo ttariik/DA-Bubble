@@ -6,6 +6,7 @@ import {
   onAuthStateChanged,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
+  signOut,
 } from '@angular/fire/auth';
 
 @Injectable({
@@ -84,5 +85,15 @@ export class AuthService {
         }
       });
     });
+  }
+
+  /**
+   * Logs out the currently authenticated user.
+   *
+   * @returns A promise that resolves when the sign-out operation is complete.
+   * @throws An error if the sign-out fails.
+   */
+  logout(): Promise<void> {
+    return signOut(this.auth);
   }
 }
