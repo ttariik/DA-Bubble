@@ -6,6 +6,7 @@ import {
   doc,
   Firestore,
   getDoc,
+  onSnapshot,
   setDoc,
   updateDoc,
 } from '@angular/fire/firestore';
@@ -70,6 +71,28 @@ export class FirestoreService {
       'users'
     ) as CollectionReference<User>;
     return collectionData(usersRef, { idField: 'userId' });
+  }
+
+  /**
+   * Subscribes to real-time updates of a single user document from Firestore.
+   *
+   * @param id - The ID of the user document to subscribe to.
+   * @returns An Observable that emits the latest User data.
+   */
+  subscribeSingelUser(id: string): Observable<User> {
+    return new Observable<User>((observer) => {
+      const unsub = onSnapshot(
+        doc(this.firestore, 'users', id),
+        (docSnap) => {
+          const data = docSnap.data() as User;
+          observer.next(data);
+        },
+        (error) => {
+          observer.error(error);
+        }
+      );
+      return () => unsub();
+    });
   }
 
   setStatus(id: string, status: boolean) {
