@@ -24,6 +24,16 @@ export class ForgotPasswordComponent {
 
   constructor(private snackBar: MatSnackBar) {}
 
+  ngOnInit() {
+    // Fügt die Klasse auth-page zum Body hinzu
+    document.body.classList.add('auth-page');
+  }
+
+  ngOnDestroy() {
+    // Entfernt die Klasse auth-page vom Body
+    document.body.classList.remove('auth-page');
+  }
+
   emailFormControl = new FormControl('', [
     Validators.required,
     Validators.email,

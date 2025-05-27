@@ -48,6 +48,16 @@ export class LoginComponent {
     rememberMe: new FormControl(false),
   });
 
+  ngOnInit() {
+    // Fügt die Klasse auth-page zum Body hinzu
+    document.body.classList.add('auth-page');
+  }
+
+  ngOnDestroy() {
+    // Entfernt die Klasse auth-page vom Body
+    document.body.classList.remove('auth-page');
+  }
+
   async onSubmit() {
     if (this.loginForm.valid) {
       this.isLoading = true;
