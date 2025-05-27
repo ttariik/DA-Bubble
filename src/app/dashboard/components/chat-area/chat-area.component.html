@@ -30,89 +30,94 @@
     <!-- Messages Area -->
     <div class="messages-container">
       <div class="messages-scroll-area" #scrollContainer>
-        <div *ngFor="let date of dates" class="date-separator">
-          <div class="date-line"></div>
-          <div class="date-text">{{ date.label }}</div>
-          <div class="date-line"></div>
-        </div>
-
-        <div *ngFor="let message of messages" 
-            class="message-item" 
-            [class.own-message]="message.userId === currentUserId"
-            [class.new-message]="message.isNew">
-          
-          <!-- Avatar for other users' messages (left side) -->
-          <div class="message-avatar other-user-avatar" *ngIf="message.userId !== currentUserId">
-            <img [src]="message.userAvatar" [alt]="message.userName" />
+        <!-- Loop through message groups by date -->
+        <div *ngFor="let group of messageGroups">
+          <!-- Date Separator -->
+          <div class="date-separator">
+            <div class="date-line"></div>
+            <div class="date-text">{{ group.label }}</div>
+            <div class="date-line"></div>
           </div>
-          
-          <div class="message-content" [class.own-message-content]="message.userId === currentUserId">
-            <div class="message-header">
-              <div class="message-sender">{{ message.userName }}</div>
-              <div class="message-time">
-                {{ message.timestamp | date : "HH:mm" }} Uhr
-                <span *ngIf="message.isEdited" class="edited-tag">(bearbeitet)</span>
+
+          <!-- Messages in this date group -->
+          <div *ngFor="let message of group.messages" 
+              class="message-item" 
+              [class.own-message]="message.userId === currentUserId"
+              [class.new-message]="message.isNew">
+            
+            <!-- Avatar for other users' messages (left side) -->
+            <div class="message-avatar other-user-avatar" *ngIf="message.userId !== currentUserId">
+              <img [src]="message.userAvatar" [alt]="message.userName" />
+            </div>
+            
+            <div class="message-content" [class.own-message-content]="message.userId === currentUserId">
+              <div class="message-header">
+                <div class="message-sender">{{ message.userName }}</div>
+                <div class="message-time">
+                  {{ message.timestamp | date : "HH:mm" }} Uhr
+                  <span *ngIf="message.isEdited" class="edited-tag">(bearbeitet)</span>
+                </div>
+              </div>
+              
+              <!-- Show editor when editing, otherwise show message bubble -->
+              <div *ngIf="message.isEditing" class="message-edit-container">
+                <textarea 
+                  class="message-edit-input" 
+                  [(ngModel)]="message.editedContent"
+                  (keydown)="handleEditKeydown($event, message)"
+                ></textarea>
+                <div class="edit-actions">
+                  <button class="edit-action-btn cancel" (click)="cancelEdit(message)">Abbrechen</button>
+                  <button class="edit-action-btn save" (click)="saveEditedMessage(message)">Speichern</button>
+                </div>
+              </div>
+              <div *ngIf="!message.isEditing" class="message-bubble">{{ message.content }}</div>
+
+              <!-- Message Hover Menu - only show when not editing -->
+              <div *ngIf="!message.isEditing" class="message-hover-menu">
+                <button class="hover-menu-btn emoji-btn" (click)="addDirectReaction(message, '👍')">👍</button>
+                <button class="hover-menu-btn emoji-btn" (click)="addDirectReaction(message, '😊')">😊</button>
+                <button class="hover-menu-btn keyboard-btn" (click)="openEmojiPickerForReaction(message)">⌨️</button>
+                <button class="hover-menu-btn thread-btn" (click)="openThread(message)">💬</button>
+                <!-- Only show dropdown with edit for user's own messages -->
+                <div class="hover-menu-dropdown" *ngIf="message.userId === currentUserId">
+                  <button class="hover-menu-btn more-btn">⋮</button>
+                  <div class="dropdown-content">
+                    <button class="dropdown-item" (click)="editMessage(message)">Nachricht bearbeiten</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Message Actions -->
+              <div class="message-actions">
+                <div class="reactions" *ngIf="message.reactions?.length">
+                  <div
+                    *ngFor="let reaction of message.reactions"
+                    class="reaction-badge"
+                    (click)="addDirectReaction(message, reaction.emoji)"
+                    [class.user-reacted]="reaction.userIds.includes(currentUserId)"
+                  >
+                    {{ reaction.emoji }} {{ reaction.count }}
+                  </div>
+                </div>
+                <div class="action-buttons">
+                  <button class="action-button emoji-button" (click)="addReaction(message)">
+                    <span>😊</span>
+                  </button>
+                  <button class="action-button" (click)="openThread(message)">
+                    <span>💬</span>
+                    <span *ngIf="message.threadCount" class="thread-count">{{
+                      message.threadCount
+                    }}</span>
+                  </button>
+                </div>
               </div>
             </div>
             
-            <!-- Show editor when editing, otherwise show message bubble -->
-            <div *ngIf="message.isEditing" class="message-edit-container">
-              <textarea 
-                class="message-edit-input" 
-                [(ngModel)]="message.editedContent"
-                (keydown)="handleEditKeydown($event, message)"
-              ></textarea>
-              <div class="edit-actions">
-                <button class="edit-action-btn cancel" (click)="cancelEdit(message)">Abbrechen</button>
-                <button class="edit-action-btn save" (click)="saveEditedMessage(message)">Speichern</button>
-              </div>
+            <!-- Avatar for own messages (right side) -->
+            <div class="message-avatar own-user-avatar" *ngIf="message.userId === currentUserId">
+              <img [src]="message.userAvatar" [alt]="message.userName" />
             </div>
-            <div *ngIf="!message.isEditing" class="message-bubble">{{ message.content }}</div>
-
-            <!-- Message Hover Menu - only show when not editing -->
-            <div *ngIf="!message.isEditing" class="message-hover-menu">
-              <button class="hover-menu-btn emoji-btn" (click)="addDirectReaction(message, '👍')">👍</button>
-              <button class="hover-menu-btn emoji-btn" (click)="addDirectReaction(message, '😊')">😊</button>
-              <button class="hover-menu-btn keyboard-btn" (click)="openEmojiPickerForReaction(message)">⌨️</button>
-              <button class="hover-menu-btn thread-btn" (click)="openThread(message)">💬</button>
-              <!-- Only show dropdown with edit for user's own messages -->
-              <div class="hover-menu-dropdown" *ngIf="message.userId === currentUserId">
-                <button class="hover-menu-btn more-btn">⋮</button>
-                <div class="dropdown-content">
-                  <button class="dropdown-item" (click)="editMessage(message)">Nachricht bearbeiten</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Message Actions -->
-            <div class="message-actions">
-              <div class="reactions" *ngIf="message.reactions?.length">
-                <div
-                  *ngFor="let reaction of message.reactions"
-                  class="reaction-badge"
-                  (click)="addDirectReaction(message, reaction.emoji)"
-                  [class.user-reacted]="reaction.userIds.includes(currentUserId)"
-                >
-                  {{ reaction.emoji }} {{ reaction.count }}
-                </div>
-              </div>
-              <div class="action-buttons">
-                <button class="action-button emoji-button" (click)="addReaction(message)">
-                  <span>😊</span>
-                </button>
-                <button class="action-button" (click)="openThread(message)">
-                  <span>💬</span>
-                  <span *ngIf="message.threadCount" class="thread-count">{{
-                    message.threadCount
-                  }}</span>
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Avatar for own messages (right side) -->
-          <div class="message-avatar own-user-avatar" *ngIf="message.userId === currentUserId">
-            <img [src]="message.userAvatar" [alt]="message.userName" />
           </div>
         </div>
       </div>

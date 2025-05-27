@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { ChatAreaComponent } from './components/chat-area/chat-area.component';
@@ -9,6 +9,12 @@ import { FirestoreService } from '../services/firestore.service';
 import { AuthService } from '../services/auth.service';
 import { User } from '../models/user.class';
 import { MatDialog } from '@angular/material/dialog';
+
+interface Channel {
+  id: string;
+  name: string;
+  unread: number;
+}
 
 @Component({
   selector: 'app-dashboard',
@@ -23,6 +29,9 @@ import { MatDialog } from '@angular/material/dialog';
   styleUrls: ['./dashboard.component.scss'],
 })
 export class DashboardComponent {
+  @ViewChild(ChatAreaComponent) chatArea!: ChatAreaComponent;
+  @ViewChild(SidebarComponent) sidebar!: SidebarComponent;
+
   private firestoreService = inject(FirestoreService);
   private authService = inject(AuthService);
   private cd = inject(ChangeDetectorRef);
@@ -34,6 +43,8 @@ export class DashboardComponent {
   listOfAllUsers: User[] = [];
   activUser: User = new User({});
   activUserId = '';
+  
+  selectedChannel: Channel = { id: '1', name: 'Entwicklerteam', unread: 0 };
 
   userProfile = {
     name: 'Frederik Beck',
@@ -47,6 +58,7 @@ export class DashboardComponent {
   ngOnInit() {
     this.loadData();
     this.loadAllUsers();
+    this.loadSelectedChannel();
   }
 
   async loadData() {
@@ -89,5 +101,52 @@ export class DashboardComponent {
     const dialogRef = this.dialog.open(ProfileModalComponent, {
       data: { activUserId: this.activUserId, userId: userId },
     });
+  }
+  
+  handleChannelSelected(channel: Channel) {
+    this.selectedChannel = channel;
+    
+    // Update the chat area with the new channel
+    if (this.chatArea) {
+      this.chatArea.changeChannel(channel.name, channel.id);
+    }
+  }
+  
+  handleChannelDeleted(channelId: string) {
+    // Delete all messages for this channel
+    if (this.chatArea) {
+      this.chatArea.deleteChannelMessages(channelId);
+    }
+    
+    // If the deleted channel was the selected one, update the selected channel
+    if (this.selectedChannel.id === channelId && this.sidebar.channels.length > 0) {
+      this.selectedChannel = this.sidebar.channels[0];
+      
+      // Update the chat area with the new selected channel
+      if (this.chatArea) {
+        this.chatArea.changeChannel(this.selectedChannel.name, this.selectedChannel.id);
+      }
+    }
+  }
+
+  loadSelectedChannel() {
+    // Load the selected channel ID from localStorage
+    const savedChannelId = localStorage.getItem('selectedChannelId');
+    if (savedChannelId) {
+      // Load channels from localStorage
+      const savedChannels = localStorage.getItem('channels');
+      if (savedChannels) {
+        try {
+          const channels = JSON.parse(savedChannels);
+          // Find the channel with the saved ID
+          const selectedChannel = channels.find((c: any) => c.id === savedChannelId);
+          if (selectedChannel) {
+            this.selectedChannel = selectedChannel;
+          }
+        } catch (e) {
+          console.error('Error parsing saved channels:', e);
+        }
+      }
+    }
   }
 }

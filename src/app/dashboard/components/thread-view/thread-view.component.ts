@@ -22,6 +22,12 @@ interface Reaction {
   userIds: string[];
 }
 
+interface DateGroup {
+  date: Date;
+  label: string;
+  replies: ThreadMessage[];
+}
+
 @Component({
   selector: 'app-thread-view',
   standalone: true,
@@ -50,30 +56,8 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
     timestamp: new Date('2023-01-14T14:25:00')
   };
   
-  replies: ThreadMessage[] = [
-    {
-      id: '2',
-      userId: '2',
-      userName: 'Sofia Müller',
-      userAvatar: 'assets/icons/avatars/user2.svg',
-      content: 'Ich habe die gleiche Frage. Ich habe gegoogelt und es scheint, dass die aktuelle Version Angular 13 ist. Vielleicht weiß Frederik, ob es wahr ist.',
-      timestamp: new Date('2023-01-14T14:30:00'),
-      reactions: [
-        { emoji: '😊', count: 1, userIds: ['3'] }
-      ]
-    },
-    {
-      id: '3',
-      userId: '1',
-      userName: 'Frederik Beck',
-      userAvatar: 'assets/icons/avatars/user1.svg',
-      content: 'Die aktuelle Version ist Angular 19.2.12, wir nutzen sie in diesem Projekt.',
-      timestamp: new Date('2023-01-14T15:06:00'),
-      reactions: [
-        { emoji: '👍', count: 1, userIds: ['2'] }
-      ]
-    }
-  ];
+  replies: ThreadMessage[] = [];
+  replyGroups: DateGroup[] = [];
   
   // Hinzufügen von Benutzern für @-Erwähnungen
   users = [
@@ -89,9 +73,17 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
     setTimeout(() => {
       this.scrollToBottom();
     }, 100);
+    
+    // Set up interval to check if date labels need updating
+    setInterval(() => {
+      this.checkDateLabels();
+    }, 60000); // Check every minute
   }
   
   ngOnInit() {
+    // Clear out static replies
+    this.replies = [];
+    
     // Load thread messages from localStorage if available
     const savedOriginalMessage = localStorage.getItem('threadOriginalMessage');
     const savedReplies = localStorage.getItem('threadReplies');
@@ -125,6 +117,76 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
         console.error('Error parsing saved replies:', e);
       }
     }
+    
+    // Group replies by date
+    this.groupRepliesByDate();
+    
+    // Check if date labels need updating (e.g., if last opened yesterday)
+    this.checkDateLabels();
+  }
+  
+  // Group replies by date
+  groupRepliesByDate() {
+    this.replyGroups = [];
+    
+    if (this.replies.length === 0) return;
+    
+    // Sort replies by date
+    const sortedReplies = [...this.replies].sort((a, b) => 
+      a.timestamp.getTime() - b.timestamp.getTime()
+    );
+    
+    // Get unique dates
+    const uniqueDates = Array.from(new Set(
+      sortedReplies.map(reply => this.getDateWithoutTime(reply.timestamp))
+    ));
+    
+    // Create groups for each date
+    uniqueDates.forEach(date => {
+      const dateReplies = sortedReplies.filter(reply => 
+        this.getDateWithoutTime(reply.timestamp) === date
+      );
+      
+      this.replyGroups.push({
+        date: new Date(date),
+        label: this.getDateLabel(new Date(date)),
+        replies: dateReplies
+      });
+    });
+  }
+  
+  // Helper to get date without time component
+  getDateWithoutTime(date: Date): string {
+    return date.toISOString().split('T')[0];
+  }
+  
+  // Get dynamic date label (Today, Yesterday, or date)
+  getDateLabel(date: Date): string {
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    if (this.getDateWithoutTime(date) === this.getDateWithoutTime(today)) {
+      return 'Heute';
+    } else if (this.getDateWithoutTime(date) === this.getDateWithoutTime(yesterday)) {
+      return 'Gestern';
+    } else {
+      // Format as day of week + date
+      const options: Intl.DateTimeFormatOptions = { 
+        weekday: 'long', 
+        day: 'numeric', 
+        month: 'long', 
+        year: 'numeric' 
+      };
+      return date.toLocaleDateString('de-DE', options);
+    }
+  }
+  
+  // Update date labels when needed (e.g., when "Today" becomes "Yesterday")
+  updateDateLabels() {
+    this.replyGroups.forEach(group => {
+      group.label = this.getDateLabel(group.date);
+    });
   }
   
   insertMention() {
@@ -200,6 +262,7 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
   sendReply() {
     if (this.replyInput.trim()) {
       const wasAtBottom = this.isScrolledToBottom();
+      const now = new Date();
       
       const newReply: ThreadMessage = {
         id: (this.replies.length + 1).toString(),
@@ -207,12 +270,15 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
         userName: 'Frederik Beck',
         userAvatar: 'assets/icons/avatars/user1.svg',
         content: this.replyInput.trim(),
-        timestamp: new Date(),
+        timestamp: now,
         isNew: true
       };
       
       this.replies.push(newReply);
       this.replyInput = '';
+      
+      // Update groups
+      this.groupRepliesByDate();
       
       // Save to localStorage
       this.saveThreadToStorage();
@@ -337,5 +403,21 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
     
     localStorage.setItem('threadOriginalMessage', JSON.stringify(originalMessageToSave));
     localStorage.setItem('threadReplies', JSON.stringify(repliesToSave));
+    
+    // Update date labels and regrouping
+    this.updateDateLabels();
+    this.groupRepliesByDate();
+  }
+  
+  // Method to check if date labels need to be updated (e.g., at midnight)
+  checkDateLabels() {
+    const needsUpdate = this.replyGroups.some(group => {
+      const currentLabel = this.getDateLabel(group.date);
+      return currentLabel !== group.label;
+    });
+    
+    if (needsUpdate) {
+      this.updateDateLabels();
+    }
   }
 } 

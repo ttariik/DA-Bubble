@@ -68,73 +68,84 @@
     <!-- Replies -->
     <div class="replies-container">
       <div class="replies-scroll-area" #scrollContainer>
-        <div *ngFor="let reply of replies" class="message-item" [class.own-message]="reply.userId === currentUserId" [class.new-message]="reply.isNew">
-          <!-- Avatar for other users' messages (left side) -->
-          <div class="message-avatar other-user-avatar" *ngIf="reply.userId !== currentUserId">
-            <img [src]="reply.userAvatar" [alt]="reply.userName">
+        <!-- Loop through reply groups by date -->
+        <div *ngFor="let group of replyGroups">
+          <!-- Date Separator -->
+          <div class="date-separator">
+            <div class="date-line"></div>
+            <div class="date-text">{{ group.label }}</div>
+            <div class="date-line"></div>
           </div>
           
-          <div class="message-content" [class.own-message-content]="reply.userId === currentUserId">
-            <div class="message-header">
-              <div class="message-sender">{{ reply.userName }}</div>
-              <div class="message-time">
-                {{ reply.timestamp | date:'HH:mm' }} Uhr
-                <span *ngIf="reply.isEdited" class="edited-tag">(bearbeitet)</span>
-              </div>
+          <!-- Replies for this date -->
+          <div *ngFor="let reply of group.replies" class="message-item" [class.own-message]="reply.userId === currentUserId" [class.new-message]="reply.isNew">
+            <!-- Avatar for other users' messages (left side) -->
+            <div class="message-avatar other-user-avatar" *ngIf="reply.userId !== currentUserId">
+              <img [src]="reply.userAvatar" [alt]="reply.userName">
             </div>
             
-            <!-- Show editor when editing, otherwise show message bubble -->
-            <div *ngIf="reply.isEditing" class="message-edit-container">
-              <textarea 
-                class="message-edit-input" 
-                [(ngModel)]="reply.editedContent"
-                (keydown)="handleEditKeydown($event, reply)"
-              ></textarea>
-              <div class="edit-actions">
-                <button class="edit-action-btn cancel" (click)="cancelEdit(reply)">Abbrechen</button>
-                <button class="edit-action-btn save" (click)="saveEditedMessage(reply)">Speichern</button>
+            <div class="message-content" [class.own-message-content]="reply.userId === currentUserId">
+              <div class="message-header">
+                <div class="message-sender">{{ reply.userName }}</div>
+                <div class="message-time">
+                  {{ reply.timestamp | date:'HH:mm' }} Uhr
+                  <span *ngIf="reply.isEdited" class="edited-tag">(bearbeitet)</span>
+                </div>
               </div>
-            </div>
-            <div *ngIf="!reply.isEditing" class="message-bubble">{{ reply.content }}</div>
-            
-            <!-- Message Hover Menu - only show when not editing -->
-            <div *ngIf="!reply.isEditing" class="message-hover-menu">
-              <button class="hover-menu-btn emoji-btn" (click)="addDirectReaction(reply, '👍')">👍</button>
-              <button class="hover-menu-btn emoji-btn" (click)="addDirectReaction(reply, '😊')">😊</button>
-              <button class="hover-menu-btn keyboard-btn" (click)="openEmojiPickerForReaction(reply)">⌨️</button>
-              <button class="hover-menu-btn thread-btn">💬</button>
-              <!-- Only show dropdown with edit for user's own messages -->
-              <div class="hover-menu-dropdown" *ngIf="reply.userId === currentUserId">
-                <button class="hover-menu-btn more-btn">⋮</button>
-                <div class="dropdown-content">
-                  <button class="dropdown-item" (click)="editMessage(reply)">Nachricht bearbeiten</button>
+              
+              <!-- Show editor when editing, otherwise show message bubble -->
+              <div *ngIf="reply.isEditing" class="message-edit-container">
+                <textarea 
+                  class="message-edit-input" 
+                  [(ngModel)]="reply.editedContent"
+                  (keydown)="handleEditKeydown($event, reply)"
+                ></textarea>
+                <div class="edit-actions">
+                  <button class="edit-action-btn cancel" (click)="cancelEdit(reply)">Abbrechen</button>
+                  <button class="edit-action-btn save" (click)="saveEditedMessage(reply)">Speichern</button>
+                </div>
+              </div>
+              <div *ngIf="!reply.isEditing" class="message-bubble">{{ reply.content }}</div>
+              
+              <!-- Message Hover Menu - only show when not editing -->
+              <div *ngIf="!reply.isEditing" class="message-hover-menu">
+                <button class="hover-menu-btn emoji-btn" (click)="addDirectReaction(reply, '👍')">👍</button>
+                <button class="hover-menu-btn emoji-btn" (click)="addDirectReaction(reply, '😊')">😊</button>
+                <button class="hover-menu-btn keyboard-btn" (click)="openEmojiPickerForReaction(reply)">⌨️</button>
+                <button class="hover-menu-btn thread-btn">💬</button>
+                <!-- Only show dropdown with edit for user's own messages -->
+                <div class="hover-menu-dropdown" *ngIf="reply.userId === currentUserId">
+                  <button class="hover-menu-btn more-btn">⋮</button>
+                  <div class="dropdown-content">
+                    <button class="dropdown-item" (click)="editMessage(reply)">Nachricht bearbeiten</button>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Message Actions -->
+              <div class="message-actions">
+                <div class="reactions" *ngIf="reply.reactions?.length">
+                  <div
+                    *ngFor="let reaction of reply.reactions"
+                    class="reaction-badge"
+                    (click)="addDirectReaction(reply, reaction.emoji)"
+                    [class.user-reacted]="reaction.userIds.includes(currentUserId)"
+                  >
+                    {{ reaction.emoji }} {{ reaction.count }}
+                  </div>
+                </div>
+                <div class="action-buttons">
+                  <button class="action-button emoji-button" (click)="addReaction(reply)">
+                    <span>😊</span>
+                  </button>
                 </div>
               </div>
             </div>
             
-            <!-- Message Actions -->
-            <div class="message-actions">
-              <div class="reactions" *ngIf="reply.reactions?.length">
-                <div
-                  *ngFor="let reaction of reply.reactions"
-                  class="reaction-badge"
-                  (click)="addDirectReaction(reply, reaction.emoji)"
-                  [class.user-reacted]="reaction.userIds.includes(currentUserId)"
-                >
-                  {{ reaction.emoji }} {{ reaction.count }}
-                </div>
-              </div>
-              <div class="action-buttons">
-                <button class="action-button emoji-button" (click)="addReaction(reply)">
-                  <span>😊</span>
-                </button>
-              </div>
+            <!-- Avatar for own messages (right side) -->
+            <div class="message-avatar own-user-avatar" *ngIf="reply.userId === currentUserId">
+              <img [src]="reply.userAvatar" [alt]="reply.userName">
             </div>
-          </div>
-          
-          <!-- Avatar for own messages (right side) -->
-          <div class="message-avatar own-user-avatar" *ngIf="reply.userId === currentUserId">
-            <img [src]="reply.userAvatar" [alt]="reply.userName">
           </div>
         </div>
       </div>
@@ -225,3 +236,4 @@
     </div>
   </div>
 </div> 
+

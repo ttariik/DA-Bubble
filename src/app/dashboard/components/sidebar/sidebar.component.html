@@ -42,13 +42,26 @@
           <div
             *ngFor="let channel of channels"
             class="channel-item"
-            [class.active]="channel.name === 'Entwicklerteam'"
+            [class.active]="channel.id === selectedChannelId"
+            (click)="selectChannel(channel)"
+            (mouseenter)="showDeleteButton(channel.id)"
+            (mouseleave)="hideDeleteButton()"
           >
             <div class="channel-name">
               <span class="channel-icon">#</span>{{ channel.name }}
             </div>
-            <div class="unread-badge" *ngIf="channel.unread > 0">
-              {{ channel.unread }}
+            <div class="channel-actions">
+              <div class="unread-badge" *ngIf="channel.unread > 0">
+                {{ channel.unread }}
+              </div>
+              <button 
+                *ngIf="hoverChannelId === channel.id && channel.id !== '1'" 
+                class="delete-button"
+                (click)="confirmDeleteChannel(channel, $event)"
+                title="Channel löschen"
+              >
+                ×
+              </button>
             </div>
           </div>
           <div class="add-channel-button" (click)="addChannel()">
@@ -113,5 +126,19 @@
       (channelCreated)="handleChannelCreated($event)"
     >
     </app-add-channel-modal>
+    
+    <!-- Delete Channel Confirmation Dialog -->
+    <div class="delete-confirm-modal" *ngIf="showDeleteConfirm">
+      <div class="delete-confirm-backdrop" (click)="cancelDelete()"></div>
+      <div class="delete-confirm-content">
+        <h3>Channel löschen</h3>
+        <p>Möchtest du den Channel <strong>#{{ channelToDelete?.name }}</strong> wirklich löschen?</p>
+        <p class="delete-warning">Alle Nachrichten in diesem Channel werden gelöscht und können nicht wiederhergestellt werden.</p>
+        <div class="delete-confirm-actions">
+          <button class="cancel-button" (click)="cancelDelete()">Abbrechen</button>
+          <button class="delete-button" (click)="deleteChannel()">Löschen</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>

@@ -54,7 +54,10 @@
   <!-- Main Content -->
   <div class="dashboard-container">
     <div class="sidebar" [class.collapsed]="sidebar.sidebarCollapsed">
-      <app-sidebar #sidebar></app-sidebar>
+      <app-sidebar #sidebar 
+        (channelSelected)="handleChannelSelected($event)"
+        (channelDeleted)="handleChannelDeleted($event)"
+      ></app-sidebar>
     </div>
 
     <!-- Workspace Menu at left edge -->
@@ -65,20 +68,24 @@
             src="assets/icons/dashboard/workspace-menu-close.svg"
             alt="Toggle Sidebar"
             class="toggle-sidebar-icon"
+            [class.rotate-left]="sidebar.sidebarCollapsed"
+            [class.rotate-right]="!sidebar.sidebarCollapsed"
           />
         </div>
-        <div class="menu-text">Workspace-Menü schließen</div>
+        <div class="menu-text">
+          {{ sidebar.sidebarCollapsed ? 'Workspace-Menü öffnen' : 'Workspace-Menü schließen' }}
+        </div>
       </div>
     </div>
 
     <div class="chat-area" [class.expanded]="sidebar.sidebarCollapsed">
-      <app-chat-area></app-chat-area>
+      <app-chat-area #chatArea [channelName]="selectedChannel.name" [channelId]="selectedChannel.id"></app-chat-area>
     </div>
 
     <div class="thread-section" [class.hidden]="!showThreadView">
       <div class="thread-header">
         <div class="thread-title">
-          Thread <span class="thread-channel"># Entwicklerteam</span>
+          Thread <span class="thread-channel"># {{ selectedChannel.name }}</span>
         </div>
         <button class="close-button" (click)="toggleThreadView()">
           <svg

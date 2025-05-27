@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, ViewChild, ElementRef, OnInit } from '@angular/core';
+import { Component, AfterViewInit, ViewChild, ElementRef, OnInit, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PickerModule } from '@ctrl/ngx-emoji-mart';
@@ -11,6 +11,7 @@ interface Message {
   userAvatar: string;
   content: string;
   timestamp: Date;
+  channelId: string;
   reactions?: Reaction[];
   threadCount?: number;
   isNew?: boolean;
@@ -25,6 +26,12 @@ interface Reaction {
   userIds: string[];
 }
 
+interface DateGroup {
+  date: Date;
+  label: string;
+  messages: Message[];
+}
+
 @Component({
   selector: 'app-chat-area',
   standalone: true,
@@ -32,10 +39,11 @@ interface Reaction {
   templateUrl: './chat-area.component.html',
   styleUrls: ['./chat-area.component.scss']
 })
-export class ChatAreaComponent implements AfterViewInit, OnInit {
+export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
   @ViewChild('scrollContainer') scrollContainer!: ElementRef;
+  @Input() channelName: string = 'Entwicklerteam';
+  @Input() channelId: string = '1';
 
-  channelName: string = 'Entwicklerteam';
   messageInput: string = '';
   showEmojiPicker: boolean = false;
   currentUserId: string = '1'; 
@@ -76,124 +84,53 @@ export class ChatAreaComponent implements AfterViewInit, OnInit {
     { id: '3', name: 'Noah Braun', avatar: 'assets/icons/avatars/user3.svg' }
   ];
   
-  messages: Message[] = [
-    {
-      id: '1',
-      userId: '3',
-      userName: 'Noah Braun',
-      userAvatar: 'assets/icons/avatars/user3.svg',
-      content: 'Welche Version ist aktuell von Angular?',
-      timestamp: new Date('2023-01-14T14:25:00'),
-      threadCount: 2
-    },
-    {
-      id: '2',
-      userId: '1',
-      userName: 'Frederik Beck',
-      userAvatar: 'assets/icons/avatars/user1.svg',
-      content: 'Wir verwenden Angular 19.2.12 in diesem Projekt.',
-      timestamp: new Date('2023-01-14T14:30:00')
-    },
-    {
-      id: '3',
-      userId: '2',
-      userName: 'Sofia Müller',
-      userAvatar: 'assets/icons/avatars/user2.svg',
-      content: 'Danke für die Info! Hast du schon die neuen Features ausprobiert?',
-      timestamp: new Date('2023-01-14T14:35:00')
-    },
-    {
-      id: '4',
-      userId: '1',
-      userName: 'Frederik Beck',
-      userAvatar: 'assets/icons/avatars/user1.svg',
-      content: 'Ja, wir nutzen bereits die neue HTTP API mit dem Fetch-Backend und es läuft deutlich effizienter!',
-      timestamp: new Date('2023-01-14T14:40:00'),
-      reactions: [
-        { emoji: '👍', count: 1, userIds: ['2'] },
-        { emoji: '✅', count: 1, userIds: ['3'] }
-      ]
-    },
-    {
-      id: '5',
-      userId: '3',
-      userName: 'Noah Braun',
-      userAvatar: 'assets/icons/avatars/user3.svg',
-      content: 'Super! Können wir das im nächsten Meeting besprechen? Ich würde gerne mehr darüber erfahren.',
-      timestamp: new Date('2023-01-14T15:06:00')
-    },
-    // Weitere Testnachrichten hinzufügen
-    {
-      id: '6',
-      userId: '2',
-      userName: 'Sofia Müller',
-      userAvatar: 'assets/icons/avatars/user2.svg',
-      content: 'Ich habe gehört, dass die Performanz erheblich verbessert wurde. Wie ist eure Erfahrung damit?',
-      timestamp: new Date('2023-01-14T15:10:00')
-    },
-    {
-      id: '7',
-      userId: '1',
-      userName: 'Frederik Beck',
-      userAvatar: 'assets/icons/avatars/user1.svg',
-      content: 'Die Anwendung lädt definitiv schneller und verbraucht weniger Ressourcen. Außerdem haben wir jetzt Service Worker implementiert, was offline Funktionalität ermöglicht.',
-      timestamp: new Date('2023-01-14T15:15:00')
-    },
-    {
-      id: '8',
-      userId: '3',
-      userName: 'Noah Braun',
-      userAvatar: 'assets/icons/avatars/user3.svg',
-      content: 'Das klingt vielversprechend! Können wir diese Optimierungen auch in anderen Projekten anwenden?',
-      timestamp: new Date('2023-01-14T15:20:00')
-    },
-    {
-      id: '9',
-      userId: '1',
-      userName: 'Frederik Beck',
-      userAvatar: 'assets/icons/avatars/user1.svg',
-      content: 'Auf jeden Fall! Ich werde ein Dokument mit allen Optimierungen vorbereiten, die wir implementiert haben.',
-      timestamp: new Date('2023-01-14T15:25:00')
-    },
-    {
-      id: '10',
-      userId: '2',
-      userName: 'Sofia Müller',
-      userAvatar: 'assets/icons/avatars/user2.svg',
-      content: 'Toll! Ich freue mich auf den Wissensaustausch.',
-      timestamp: new Date('2023-01-14T15:30:00')
-    },
-    {
-      id: '11',
-      userId: '3',
-      userName: 'Noah Braun',
-      userAvatar: 'assets/icons/avatars/user3.svg',
-      content: 'Habt ihr auch die neuen Animationsfeatures getestet?',
-      timestamp: new Date('2023-01-14T15:35:00')
-    },
-    {
-      id: '12',
-      userId: '1',
-      userName: 'Frederik Beck',
-      userAvatar: 'assets/icons/avatars/user1.svg',
-      content: 'Noch nicht, aber das steht auf unserer Liste für die nächste Iteration.',
-      timestamp: new Date('2023-01-14T15:40:00')
-    }
-  ];
+  // All messages across all channels
+  allMessages: Message[] = [];
   
-  dates = [
-    { date: new Date('2023-01-14'), label: 'Dienstag, 14 Januar' }
-  ];
-
+  // Messages filtered for the current channel
+  messages: Message[] = [];
+  messageGroups: DateGroup[] = [];
+  
   ngAfterViewInit() {
     setTimeout(() => {
       this.scrollToBottom();
     }, 100);
+    
+    // Set up interval to check if date labels need updating
+    setInterval(() => {
+      this.checkDateLabels();
+    }, 60000); // Check every minute
+  }
+  
+  ngOnChanges(changes: SimpleChanges) {
+    // If the channel has changed, update the messages
+    if (changes['channelId'] && !changes['channelId'].firstChange) {
+      this.loadMessages();
+    }
   }
   
   ngOnInit() {
-    // Load messages from localStorage if available
-    const savedMessages = localStorage.getItem('chatMessages');
+    // Load all messages from localStorage
+    this.loadAllMessages();
+    
+    // Get the active channel ID
+    const activeChannelId = this.channelId;
+    
+    // Filter messages for the current channel
+    this.messages = this.allMessages.filter(msg => msg.channelId === activeChannelId);
+    
+    // Group messages by date
+    this.groupMessagesByDate();
+    
+    // Check if date labels need updating (e.g., if last opened yesterday)
+    this.checkDateLabels();
+    
+    console.log(`Loaded messages for channel ${this.channelName} (ID: ${this.channelId})`);
+  }
+  
+  // Load all messages from localStorage
+  loadAllMessages() {
+    const savedMessages = localStorage.getItem('allChatMessages');
     if (savedMessages) {
       try {
         const parsedMessages = JSON.parse(savedMessages);
@@ -204,11 +141,98 @@ export class ChatAreaComponent implements AfterViewInit, OnInit {
           msg.isEditing = false;
           msg.editedContent = undefined;
         });
-        this.messages = parsedMessages;
+        this.allMessages = parsedMessages;
       } catch (e) {
         console.error('Error parsing saved messages:', e);
       }
     }
+  }
+  
+  // Load messages for the current channel
+  loadMessages() {
+    // Filter messages for the current channel
+    this.messages = this.allMessages.filter(msg => msg.channelId === this.channelId);
+    
+    // Group messages by date
+    this.groupMessagesByDate();
+    
+    // Scroll to bottom after loading new messages
+    setTimeout(() => {
+      this.scrollToBottom();
+    }, 100);
+  }
+  
+  // Change to a different channel
+  changeChannel(channelName: string, channelId: string) {
+    this.channelName = channelName;
+    this.channelId = channelId;
+    
+    // Load messages for the new channel
+    this.loadMessages();
+  }
+  
+  // Group messages by date
+  groupMessagesByDate() {
+    this.messageGroups = [];
+    
+    if (this.messages.length === 0) return;
+    
+    // Sort messages by date
+    const sortedMessages = [...this.messages].sort((a, b) => 
+      a.timestamp.getTime() - b.timestamp.getTime()
+    );
+    
+    // Get unique dates
+    const uniqueDates = Array.from(new Set(
+      sortedMessages.map(msg => this.getDateWithoutTime(msg.timestamp))
+    ));
+    
+    // Create groups for each date
+    uniqueDates.forEach(date => {
+      const dateMessages = sortedMessages.filter(msg => 
+        this.getDateWithoutTime(msg.timestamp) === date
+      );
+      
+      this.messageGroups.push({
+        date: new Date(date),
+        label: this.getDateLabel(new Date(date)),
+        messages: dateMessages
+      });
+    });
+  }
+  
+  // Helper to get date without time component
+  getDateWithoutTime(date: Date): string {
+    return date.toISOString().split('T')[0];
+  }
+  
+  // Get dynamic date label (Today, Yesterday, or date)
+  getDateLabel(date: Date): string {
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    if (this.getDateWithoutTime(date) === this.getDateWithoutTime(today)) {
+      return 'Heute';
+    } else if (this.getDateWithoutTime(date) === this.getDateWithoutTime(yesterday)) {
+      return 'Gestern';
+    } else {
+      // Format as day of week + date
+      const options: Intl.DateTimeFormatOptions = { 
+        weekday: 'long', 
+        day: 'numeric', 
+        month: 'long', 
+        year: 'numeric' 
+      };
+      return date.toLocaleDateString('de-DE', options);
+    }
+  }
+  
+  // Update date labels when needed (e.g., when "Today" becomes "Yesterday")
+  updateDateLabels() {
+    this.messageGroups.forEach(group => {
+      group.label = this.getDateLabel(group.date);
+    });
   }
   
   openEmojiPicker(message?: Message) {
@@ -259,18 +283,29 @@ export class ChatAreaComponent implements AfterViewInit, OnInit {
   
   sendMessage() {
     if (this.messageInput.trim()) {
+      const now = new Date();
+      
+      // Generate a unique ID for the message
+      const messageId = Date.now().toString();
+      
       const newMessage: Message = {
-        id: (this.messages.length + 1).toString(),
+        id: messageId,
         userId: this.currentUserId,
         userName: 'Frederik Beck',
         userAvatar: 'assets/icons/avatars/user1.svg', 
         content: this.messageInput.trim(),
-        timestamp: new Date(),
+        timestamp: now,
+        channelId: this.channelId,
         isNew: true
       };
       
+      // Add to all messages and current channel messages
+      this.allMessages.push(newMessage);
       this.messages.push(newMessage);
       this.messageInput = '';
+      
+      // Update groups
+      this.groupMessagesByDate();
       
       // Save to localStorage
       this.saveMessagesToStorage();
@@ -387,7 +422,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit {
   // Save messages to localStorage
   saveMessagesToStorage() {
     // Create a copy of messages to avoid modifying the UI state
-    const messagesToSave = JSON.parse(JSON.stringify(this.messages));
+    const messagesToSave = JSON.parse(JSON.stringify(this.allMessages));
     
     // Remove temporary editing states before saving
     messagesToSave.forEach((msg: any) => {
@@ -396,6 +431,37 @@ export class ChatAreaComponent implements AfterViewInit, OnInit {
       delete msg.isNew;
     });
     
-    localStorage.setItem('chatMessages', JSON.stringify(messagesToSave));
+    localStorage.setItem('allChatMessages', JSON.stringify(messagesToSave));
+    
+    // Update date labels and regrouping
+    this.updateDateLabels();
+    this.groupMessagesByDate();
+  }
+  
+  // Method to check if date labels need to be updated (e.g., at midnight)
+  checkDateLabels() {
+    const needsUpdate = this.messageGroups.some(group => {
+      const currentLabel = this.getDateLabel(group.date);
+      return currentLabel !== group.label;
+    });
+    
+    if (needsUpdate) {
+      this.updateDateLabels();
+    }
+  }
+  
+  // Delete all messages for a specific channel
+  deleteChannelMessages(channelId: string) {
+    // Filter out messages for the deleted channel
+    this.allMessages = this.allMessages.filter(msg => msg.channelId !== channelId);
+    
+    // Save the updated messages to localStorage
+    this.saveMessagesToStorage();
+    
+    // If the current channel is the one being deleted, clear the messages array
+    if (this.channelId === channelId) {
+      this.messages = [];
+      this.messageGroups = [];
+    }
   }
 } 
