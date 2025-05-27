@@ -1,53 +1,52 @@
-<div>
-  <!-- Main Profile Modal -->
-  <div class="profile-modal" *ngIf="!showEditModal">
-    <div class="profile-header">
-      <h2>Profil</h2>
-      <button class="close-btn" (click)="close()">&#10005;</button>
+<!-- Main Profile Modal -->
+<div class="profile-modal">
+  <div class="profile-header">
+    <h2>Profil</h2>
+    <button class="close-btn" (click)="close()">&#10005;</button>
+  </div>
+  <div class="profile-content">
+    <div class="profile-image">
+      <img src="assets/icons/avatars/{{ user.avatar }}" alt="Profilbild" />
     </div>
-    <div class="profile-content">
-      <div class="profile-image">
-        <img src="assets/icons/avatars/{{ user.avatar }}" alt="Profilbild" />
+    <div class="profile-name">
+      <h3>{{ user.firstName }} {{ user.lastName }}</h3>
+      <button class="edit-btn" (click)="openEditModal()">Bearbeiten</button>
+    </div>
+    <div class="profile-status">
+      <div class="status-indicator" [class.active]="user.isActive"></div>
+      @if(user.isActive){
+      <span>Aktive</span>
+      }@else {
+      <span>Inaktive</span>
+      }
+    </div>
+    <div class="profile-email">
+      <div class="email-icon">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="28"
+          height="28"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+          <path d="M22 7l-10 7L2 7"></path>
+        </svg>
       </div>
-      <div class="profile-name">
-        <h3>{{ user.firstName }} {{ user.lastName }}</h3>
-        <button class="edit-btn" (click)="openEditModal()">Bearbeiten</button>
-      </div>
-      <div class="profile-status">
-        <div class="status-indicator" [class.active]="user.isActive"></div>
-        @if(user.isActive){
-        <span>Aktive</span>
-        }@else {
-        <span>Inaktive</span>
-        }
-      </div>
-      <div class="profile-email">
-        <div class="email-icon">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="28"
-            height="28"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
-            <path d="M22 7l-10 7L2 7"></path>
-          </svg>
-        </div>
-        <div class="email-label">
-          <p>E-Mail-Adresse</p>
-          <a href="mailto:{{ user.email }}">{{ user.email }}</a>
-        </div>
+      <div class="email-label">
+        <p>E-Mail-Adresse</p>
+        <a href="mailto:{{ user.email }}">{{ user.email }}</a>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- Edit Profile Modal -->
-  <!-- <div class="profile-modal edit-profile-modal" *ngIf="showEditModal">
+<!-- Edit Profile Modal -->
+<!-- <div class="profile-modal edit-profile-modal" *ngIf="showEditModal">
     <div class="profile-header">
       <h2>Dein Profil bearbeiten</h2>
       <button class="close-btn" (click)="cancelEdit()">&#10005;</button>
@@ -76,4 +75,3 @@
       </div>
     </div>
   </div> -->
-</div>
