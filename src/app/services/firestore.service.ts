@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import {
+  addDoc,
   collection,
   collectionData,
   CollectionReference,
@@ -98,4 +99,15 @@ export class FirestoreService {
   setStatus(id: string, status: boolean) {
     this.updateUser(id, { isActive: status });
   }
+
+  async createChannelFirestore(channel: any, activUserId: string) {
+    const docRef = await addDoc(collection(this.firestore, 'channels'), {
+    channelName: channel.name,
+    channelDescription: channel.description,
+    activUserId: activUserId
+
+             
+    });
+  }
 }
+

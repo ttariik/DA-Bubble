@@ -1,7 +1,25 @@
-import { Component, ElementRef, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  inject,
+  Input,
+  OnChanges,
+  Output,
+  SimpleChanges,
+  ViewChild,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { trigger, transition, style, animate } from '@angular/animations';
+import { collection, addDoc, Firestore } from 'firebase/firestore';
+import { FirestoreService } from '../../../services/firestore.service';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-add-channel-modal',
@@ -13,38 +31,61 @@ import { trigger, transition, style, animate } from '@angular/animations';
     trigger('fadeInOut', [
       transition(':enter', [
         style({ opacity: 0 }),
-        animate('300ms ease-out', style({ opacity: 1 }))
+        animate('300ms ease-out', style({ opacity: 1 })),
       ]),
-      transition(':leave', [
-        animate('200ms ease-in', style({ opacity: 0 }))
-      ])
+      transition(':leave', [animate('200ms ease-in', style({ opacity: 0 }))]),
     ]),
     trigger('scaleInOut', [
       transition(':enter', [
         style({ opacity: 0, transform: 'translateY(-30px) scale(0.95)' }),
-        animate('400ms cubic-bezier(0.175, 0.885, 0.32, 1.275)', 
-          style({ opacity: 1, transform: 'translateY(0) scale(1)' }))
+        animate(
+          '400ms cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+          style({ opacity: 1, transform: 'translateY(0) scale(1)' })
+        ),
       ]),
       transition(':leave', [
-        animate('200ms ease-in', 
-          style({ opacity: 0, transform: 'translateY(30px) scale(0.95)' }))
-      ])
-    ])
-  ]
+        animate(
+          '200ms ease-in',
+          style({ opacity: 0, transform: 'translateY(30px) scale(0.95)' })
+        ),
+      ]),
+    ]),
+  ],
 })
 export class AddChannelModalComponent implements OnChanges {
   @Input() isVisible = false;
+  activUserId: string = '';
   @Output() close = new EventEmitter<void>();
-  @Output() channelCreated = new EventEmitter<{name: string, description: string}>();
+  @Output() channelCreated = new EventEmitter<{
+    name: string;
+    description: string;
+  }>();
   @ViewChild('nameInput') nameInput!: ElementRef;
+ private firestoreService = inject(FirestoreService);
+  private authService = inject(AuthService);
 
   channelForm: FormGroup;
 
-  constructor(private fb: FormBuilder) {
+  constructor(private fb: FormBuilder,
+    ) {
     this.channelForm = this.fb.group({
-      name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(20)]],
-      description: ['']
+      name: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(3),
+          Validators.maxLength(20),
+        ],
+      ],
+      description: [''],
     });
+
+    this.loadData();
+
+  }
+
+  async loadData() {
+    this.activUserId = await this.authService.getActiveUserId();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -67,6 +108,7 @@ export class AddChannelModalComponent implements OnChanges {
   createChannel(): void {
     if (this.channelForm.valid) {
       this.channelCreated.emit(this.channelForm.value);
+      this.firestoreService.createChannelFirestore(this.channelForm.value, this.activUserId);
       this.channelForm.reset();
       this.close.emit();
     } else {
@@ -74,9 +116,10 @@ export class AddChannelModalComponent implements OnChanges {
     }
   }
 
+
   // Helfer-Methode, um alle FormControls als touched zu markieren
   markFormGroupTouched(formGroup: FormGroup) {
-    Object.values(formGroup.controls).forEach(control => {
+    Object.values(formGroup.controls).forEach((control) => {
       control.markAsTouched();
       control.markAsDirty();
     });
@@ -85,13 +128,15 @@ export class AddChannelModalComponent implements OnChanges {
   // Prüft, ob ein Fehler für ein Feld angezeigt werden soll
   shouldShowError(controlName: string): boolean {
     const control = this.channelForm.get(controlName);
-    return control ? (control.invalid && (control.dirty || control.touched)) : false;
+    return control
+      ? control.invalid && (control.dirty || control.touched)
+      : false;
   }
 
   // Berechnet die aktuelle Anzahl der Zeichen im Eingabefeld
   getCharCount(controlName: string): number {
     const control = this.channelForm.get(controlName);
-    return control ? (control.value?.length || 0) : 0;
+    return control ? control.value?.length || 0 : 0;
   }
 
   // Prüft, ob die Zeichenanzahl nahe am Limit ist (80% oder mehr)

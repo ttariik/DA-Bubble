@@ -2,7 +2,6 @@ import { ApplicationConfig, provideZoneChangeDetection, isDevMode } from '@angul
 import { provideRouter, withPreloading, PreloadAllModules } from '@angular/router';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideHttpClient, withInterceptorsFromDi, withFetch } from '@angular/common/http';
-
 import { routes } from './app.routes';
 import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
 import { getAuth, provideAuth } from '@angular/fire/auth';
