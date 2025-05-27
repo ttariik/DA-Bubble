@@ -1,6 +1,12 @@
 import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import {
+  FormControl,
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { User } from '../../../models/user.class';
 import { FirestoreService } from '../../../services/firestore.service';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
@@ -25,6 +31,7 @@ export interface DialogData {
     MatInputModule,
     FormsModule,
     MatButtonModule,
+    ReactiveFormsModule,
   ],
   animations: [],
 })
@@ -44,7 +51,7 @@ export class ProfileModalComponent {
     this.sub = this.firestoreService
       .subscribeSingelUser(this.data.userId)
       .subscribe((user) => {
-        this.user = new User(user);
+        this.user = new User({ ...user, userId: this.data.userId });
       });
   }
 
@@ -52,9 +59,41 @@ export class ProfileModalComponent {
     this.dialogRef.close();
   }
 
+  nameFormControl = new FormControl('', [
+    Validators.required,
+    Validators.pattern(
+      "^[A-ZÄÖÜ][a-zäöüß]+(?:[-'][A-ZÄÖÜ][a-zäöüß]+)?\\s[A-ZÄÖÜ][a-zäöüß]+(?:[-'][A-ZÄÖÜ][a-zäöüß]+)?$"
+    ),
+  ]);
+
+  userForm = new FormGroup({
+    name: this.nameFormControl,
+  });
+
+  get name() {
+    return this.nameFormControl;
+  }
+
+  async onSubmit() {
+    if (this.userForm.valid) {
+      const { name } = this.userForm.value;
+      if (name != null) {
+        const newName = name.split(' ');
+        try {
+          await this.firestoreService.updateUser(this.user.userId, {
+            firstName: newName[0],
+            lastName: newName[1],
+          });
+          this.openEditModal();
+        } catch (error) {
+          console.warn(error);
+        }
+      }
+    }
+  }
+
   openEditModal() {
-    // this.tempUserName = this.userName;
-    // this.showEditModal = true;
+    this.showEditModal = !this.showEditModal;
   }
 
   ngOnDestroy() {

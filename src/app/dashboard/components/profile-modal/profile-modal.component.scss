@@ -300,16 +300,9 @@
 
 .edit-form {
   width: 100%;
-  margin-bottom: 30px;
-}
 
-.form-group {
-  margin-bottom: 20px;
-  width: 100%;
-  transition: transform 0.3s ease;
-
-  &:focus-within {
-    transform: translateX(5px);
+  .form-group {
+    width: 100%;
   }
 }
 
@@ -359,17 +352,10 @@
     outline: none;
     border-color: #4785ff;
     box-shadow: 0 0 0 4px rgba(71, 133, 255, 0.1);
-    transform: translateY(-2px);
   }
 
   &::placeholder {
     color: #999;
-    transition: opacity 0.3s ease, transform 0.3s ease;
-  }
-
-  &:focus::placeholder {
-    opacity: 0.6;
-    transform: translateX(5px);
   }
 }
 
@@ -465,17 +451,6 @@
   }
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 @keyframes slideInLeft {
   from {
     opacity: 0;
@@ -484,5 +459,28 @@
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+.error-box {
+  height: 1rem;
+  margin-top: 0.3rem;
+  .error {
+    color: #e53935;
+    font-size: 0.8rem;
+    padding-left: 10px;
+    transition: all 0.3s ease;
+    animation: fieldFadeIn 0.3s ease forwards;
+  }
+}
+
+@keyframes fieldFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

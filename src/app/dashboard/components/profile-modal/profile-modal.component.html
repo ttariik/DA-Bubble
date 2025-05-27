@@ -1,4 +1,5 @@
 <!-- Main Profile Modal -->
+@if(!showEditModal){
 <div class="profile-modal">
   <div class="profile-header">
     <h2>Profil</h2>
@@ -44,34 +45,61 @@
     </div>
   </div>
 </div>
-
+}@else{
 <!-- Edit Profile Modal -->
-<!-- <div class="profile-modal edit-profile-modal" *ngIf="showEditModal">
-    <div class="profile-header">
-      <h2>Dein Profil bearbeiten</h2>
-      <button class="close-btn" (click)="cancelEdit()">&#10005;</button>
+<div class="profile-modal">
+  <div class="profile-header">
+    <h2>Dein Profil bearbeiten</h2>
+    <button class="close-btn" (click)="close()">&#10005;</button>
+  </div>
+  <div class="profile-content">
+    <div class="profile-image">
+      <img src="assets/icons/avatars/{{ user.avatar }}" alt="Profilbild" />
     </div>
-    <div class="profile-content">
-      <div class="profile-image">
-        <img [src]="userImageUrl" alt="Profilbild">
-      </div>
+    <form [formGroup]="userForm" (ngSubmit)="onSubmit()" class="form-group">
       <div class="edit-form">
-        <div class="form-group">
-          <label class="form-label">
-            <div class="label-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-              </svg>
-            </div>
-            <span>Vollständiger Name</span>
-          </label>
-          <input type="text" class="form-input" [(ngModel)]="tempUserName" placeholder="Dein Name">
+        <label class="form-label">
+          <div class="label-icon">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+          <span>Vollständiger Name</span>
+        </label>
+        <input
+          type="text"
+          class="form-input"
+          id="name"
+          formControlName="name"
+          placeholder="Name und Nachname"
+        />
+        <div class="error-box">
+          @if (name.hasError('required') && (name.touched || name.dirty)) {
+          <div class="error">Name ist <strong>erforderlich</strong></div>
+          }@else if (name.hasError('pattern') && !name.hasError('required')) {
+          <div class="error">
+            Muss <strong>Vorname und Nachname</strong> enthalten.(z.B. Max
+            Mustermann)
+          </div>
+          }
         </div>
       </div>
       <div class="edit-actions">
-        <button class="cancel-btn" (click)="cancelEdit()">Abbrechen</button>
-        <button class="save-btn" (click)="saveProfile()">Speichern</button>
+        <button class="cancel-btn" (click)="openEditModal()">Abbrechen</button>
+        <button class="save-btn" type="submit">Speichern</button>
       </div>
-    </div>
-  </div> -->
+    </form>
+  </div>
+</div>
+}
