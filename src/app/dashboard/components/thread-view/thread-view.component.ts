@@ -47,6 +47,13 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
   targetMessage: ThreadMessage | null = null;
   editingMessage: ThreadMessage | null = null;
   
+  // Für User-Tagging
+  showUserTagging: boolean = false;
+  tagSearchText: string = '';
+  tagCursorPosition: number = 0;
+  filteredUsers: any[] = [];
+  originalUsers: any[] = [];
+  
   originalMessage: ThreadMessage = {
     id: '1',
     userId: '3',
@@ -190,7 +197,125 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
   }
   
   insertMention() {
+    console.log('Insert mention clicked in thread view');
+    
+    // Initialisiere User-Daten
+    if (this.filteredUsers.length === 0) {
+      this.initializeUsers();
+    }
+    
+    // Füge @ Symbol an der Cursor-Position ein oder am Ende des Inputs
+    if (this.replyInput === undefined) {
+      this.replyInput = '';
+    }
+    
+    // Füge Leerzeichen vor @ ein, wenn nötig
+    if (this.replyInput.length > 0 && 
+        this.replyInput[this.replyInput.length - 1] !== ' ') {
+      this.replyInput += ' ';
+    }
+    
     this.replyInput += '@';
+    
+    // Zeige User-Tagging Modal sofort an
+    this.tagCursorPosition = this.replyInput.length;
+    this.tagSearchText = '';
+    this.showUserTagging = true;
+    
+    console.log('Mention dialog opened, showing user tagging in thread view');
+    console.log('Users available:', this.filteredUsers);
+  }
+  
+  handleInputKeyup(event: any) {
+    const input = event.target;
+    const value = input.value;
+    const cursorPosition = input.selectionStart;
+    
+    console.log('Input keyup event in thread view:', { value, cursorPosition });
+    
+    // Speichere Cursor-Position für später
+    this.tagCursorPosition = cursorPosition;
+    
+    // Prüfe, ob User-Tagging angezeigt werden soll
+    if (this.shouldShowUserTagging(value, cursorPosition)) {
+      console.log('Should show user tagging in thread view');
+      // Hole Text nach @ für Filterung
+      const atPosition = value.lastIndexOf('@', cursorPosition - 1);
+      if (atPosition !== -1) {
+        this.tagSearchText = value.substring(atPosition + 1, cursorPosition).toLowerCase();
+        console.log('Tag search text:', this.tagSearchText);
+        this.filterUsers();
+        this.showUserTagging = true;
+      }
+    } 
+    // Wenn kein @ vor dem Cursor gefunden wird, schließe Modals
+    else {
+      this.showUserTagging = false;
+    }
+  }
+  
+  shouldShowUserTagging(text: string, cursorPosition: number): boolean {
+    // Finde Position des letzten @ vor dem Cursor
+    const atPosition = text.lastIndexOf('@', cursorPosition - 1);
+    if (atPosition === -1) return false;
+    
+    // Prüfe, ob ein Leerzeichen zwischen @ und Cursor ist
+    const textBetween = text.substring(atPosition, cursorPosition);
+    return !textBetween.includes(' ');
+  }
+  
+  initializeUsers() {
+    // Benutze die vorhandenen Benutzer
+    this.filteredUsers = this.users.map(user => ({
+      ...user,
+      online: Math.random() > 0.3 // Zufälliger Online-Status für Demo-Zwecke
+    }));
+    
+    // Speichere Original-Liste für Filterung
+    this.originalUsers = [...this.filteredUsers];
+    
+    console.log('Initialized users for thread view:', this.filteredUsers);
+  }
+  
+  filterUsers() {
+    // Initialisiere mit Beispielbenutzern, falls keine vorhanden sind
+    if (this.filteredUsers.length === 0) {
+      this.initializeUsers();
+      return;
+    }
+    
+    // Setze auf Original-Liste zurück vor dem Filtern
+    if (!this.originalUsers || this.originalUsers.length === 0) {
+      this.originalUsers = [...this.filteredUsers];
+    }
+    
+    // Starte mit der Original-Liste
+    this.filteredUsers = [...this.originalUsers];
+    
+    // Filtere, wenn Suchtext vorhanden ist
+    if (this.tagSearchText) {
+      this.filteredUsers = this.filteredUsers.filter(user => 
+        user.name.toLowerCase().includes(this.tagSearchText.toLowerCase())
+      );
+    }
+    
+    console.log('Filtered users in thread view:', this.filteredUsers);
+  }
+  
+  selectUserTag(user: any) {
+    if (!this.replyInput) return;
+    
+    // Finde Position des letzten @ vor dem Cursor
+    const atPosition = this.replyInput.lastIndexOf('@', this.tagCursorPosition - 1);
+    if (atPosition === -1) return;
+    
+    // Ersetze Text von @ bis Cursor mit dem Benutzernamen
+    const beforeTag = this.replyInput.substring(0, atPosition);
+    const afterTag = this.replyInput.substring(this.tagCursorPosition);
+    this.replyInput = `${beforeTag}@${user.name} ${afterTag}`;
+    
+    // Schließe das Tagging-Modal
+    this.showUserTagging = false;
   }
   
   openEmojiPicker(message?: ThreadMessage) {

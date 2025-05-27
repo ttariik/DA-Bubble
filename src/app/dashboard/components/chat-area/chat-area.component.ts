@@ -97,6 +97,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
   tagSearchText: string = '';
   tagCursorPosition: number = 0;
   filteredUsers: any[] = [];
+  originalUsers: any[] = [];
   
   ngAfterViewInit() {
     setTimeout(() => {
@@ -476,8 +477,10 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
   insertMention() {
     console.log('Insert mention clicked in chat area');
     
-    // Initialize mention data if available
-    this.initializeMentionData();
+    // Initialize user data
+    if (this.filteredUsers.length === 0) {
+      this.initializeUsers();
+    }
     
     // Insert @ symbol at cursor position or at the end of input
     if (this.messageInput === undefined) {
@@ -492,8 +495,13 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
     
     this.messageInput += '@';
     
-    // Emit event to parent component to show user tagging modal
-    this.mentionClicked.emit();
+    // Show user tagging modal immediately
+    this.tagCursorPosition = this.messageInput.length;
+    this.tagSearchText = '';
+    this.showUserTagging = true;
+    
+    console.log('Mention dialog opened, showing user tagging in chat area');
+    console.log('Users available:', this.filteredUsers);
   }
   
   // Initialize mention data
@@ -544,27 +552,38 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
     // Initialize with sample users if none exists
     if (this.filteredUsers.length === 0) {
       this.initializeUsers();
+      // Store original list for filtering
+      this.originalUsers = [...this.filteredUsers];
+      return;
     }
     
-    if (!this.tagSearchText) {
-      // Keep all users
-    } else {
+    // Reset to original list before filtering
+    if (!this.originalUsers) {
+      this.originalUsers = [...this.filteredUsers];
+    }
+    
+    // Start with the original list
+    this.filteredUsers = [...this.originalUsers];
+    
+    // Filter if search text exists
+    if (this.tagSearchText) {
       this.filteredUsers = this.filteredUsers.filter(user => 
-        user.name.toLowerCase().includes(this.tagSearchText)
+        user.name.toLowerCase().includes(this.tagSearchText.toLowerCase())
       );
     }
+    
     console.log('Filtered users in chat area:', this.filteredUsers);
   }
   
   initializeUsers() {
     // Sample user data with realistic German names
     this.filteredUsers = [
-      { id: '1', name: 'Frederik Beck', avatar: 'assets/icons/avatars/avatar1.png', online: true },
-      { id: '2', name: 'Sofia Müller', avatar: 'assets/icons/avatars/avatar2.png', online: true },
-      { id: '3', name: 'Noah Braun', avatar: 'assets/icons/avatars/avatar3.png', online: true },
-      { id: '4', name: 'Elise Roth', avatar: 'assets/icons/avatars/avatar4.png', online: false },
-      { id: '5', name: 'Elias Neumann', avatar: 'assets/icons/avatars/avatar5.png', online: true },
-      { id: '6', name: 'Steffen Hoffmann', avatar: 'assets/icons/avatars/avatar6.png', online: true }
+      { id: '1', name: 'Frederik Beck', avatar: 'assets/icons/avatars/user1.svg', online: true },
+      { id: '2', name: 'Sofia Müller', avatar: 'assets/icons/avatars/user2.svg', online: true },
+      { id: '3', name: 'Noah Braun', avatar: 'assets/icons/avatars/user3.svg', online: true },
+      { id: '4', name: 'Elise Roth', avatar: 'assets/icons/avatars/user4.svg', online: false },
+      { id: '5', name: 'Elias Neumann', avatar: 'assets/icons/avatars/user5.svg', online: true },
+      { id: '6', name: 'Steffen Hoffmann', avatar: 'assets/icons/avatars/user6.svg', online: true }
     ];
   }
   

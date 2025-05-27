@@ -159,6 +159,7 @@
           placeholder="Antworten..."
           [(ngModel)]="replyInput"
           (keydown.enter)="$event.preventDefault(); sendReply()"
+          (keyup)="handleInputKeyup($event)"
         ></textarea>
         <div class="input-actions">
           <div>
@@ -177,6 +178,29 @@
           >
             <img src="./assets/icons/dashboard/send.svg" alt="Send" />
           </button>
+        </div>
+      </div>
+      
+      <!-- Tagging Modals -->
+      <div class="tagging-modal-container" *ngIf="showUserTagging">
+        <!-- User Tagging Modal -->
+        <div class="tagging-modal user-tagging">
+          <div class="tagging-list">
+            <div 
+              *ngFor="let user of filteredUsers" 
+              class="tagging-item"
+              (click)="selectUserTag(user)"
+            >
+              <div class="user-tag-avatar">
+                <img [src]="user.avatar" [alt]="user.name">
+                <div class="status-indicator" [class.online]="user.online"></div>
+              </div>
+              <span class="user-tag-name">{{ user.name }}</span>
+            </div>
+            <div class="tagging-empty" *ngIf="filteredUsers.length === 0">
+              Keine passenden Benutzer gefunden
+            </div>
+          </div>
         </div>
       </div>
     </div>

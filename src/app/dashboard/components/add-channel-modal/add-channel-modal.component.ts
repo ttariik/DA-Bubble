@@ -49,7 +49,6 @@ export class AddChannelModalComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['isVisible'] && changes['isVisible'].currentValue === true) {
-      // Wenn das Modal geöffnet wird, setzen wir einen Timer, um nach dem Rendern den Fokus zu setzen
       setTimeout(() => {
         if (this.nameInput) {
           this.nameInput.nativeElement.focus();
@@ -74,7 +73,6 @@ export class AddChannelModalComponent implements OnChanges {
     }
   }
 
-  // Helfer-Methode, um alle FormControls als touched zu markieren
   markFormGroupTouched(formGroup: FormGroup) {
     Object.values(formGroup.controls).forEach(control => {
       control.markAsTouched();
@@ -82,28 +80,24 @@ export class AddChannelModalComponent implements OnChanges {
     });
   }
 
-  // Prüft, ob ein Fehler für ein Feld angezeigt werden soll
   shouldShowError(controlName: string): boolean {
     const control = this.channelForm.get(controlName);
     return control ? (control.invalid && (control.dirty || control.touched)) : false;
   }
 
-  // Berechnet die aktuelle Anzahl der Zeichen im Eingabefeld
   getCharCount(controlName: string): number {
     const control = this.channelForm.get(controlName);
     return control ? (control.value?.length || 0) : 0;
   }
 
-  // Prüft, ob die Zeichenanzahl nahe am Limit ist (80% oder mehr)
   isNearCharLimit(controlName: string): boolean {
     if (controlName === 'name') {
       const currentLength = this.getCharCount(controlName);
-      return currentLength >= 16 && currentLength < 20; // 80% von 20 Zeichen
+      return currentLength >= 16 && currentLength < 20; 
     }
     return false;
   }
 
-  // Prüft, ob die Zeichenanzahl das Limit erreicht hat
   isAtCharLimit(controlName: string): boolean {
     if (controlName === 'name') {
       return this.getCharCount(controlName) >= 20;
