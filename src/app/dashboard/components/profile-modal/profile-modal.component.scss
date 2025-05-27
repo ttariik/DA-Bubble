@@ -20,20 +20,20 @@
   overflow: hidden;
   padding: 20px;
   position: relative;
-  
+
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 5px;
-    background: linear-gradient(90deg, #4785FF 0%, #6da5ff 100%);
+    background: linear-gradient(90deg, #4785ff 0%, #6da5ff 100%);
     transform: scaleX(0);
     transform-origin: left;
     transition: transform 0.3s ease-out;
   }
-  
+
   &:hover::before {
     transform: scaleX(1);
   }
@@ -67,7 +67,7 @@
     justify-content: center;
     width: 36px;
     height: 36px;
-    
+
     &:hover {
       color: #000;
       background-color: rgba(0, 0, 0, 0.05);
@@ -91,18 +91,22 @@
   transition: transform 0.3s ease;
 
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: radial-gradient(circle, rgba(71, 133, 255, 0) 70%, rgba(71, 133, 255, 0.2) 100%);
+    background: radial-gradient(
+      circle,
+      rgba(71, 133, 255, 0) 70%,
+      rgba(71, 133, 255, 0.2) 100%
+    );
     border-radius: 50%;
     opacity: 0;
     transition: opacity 0.3s ease;
   }
-  
+
   &:hover {
     &::after {
       opacity: 1;
@@ -115,10 +119,11 @@
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid #f0f0f0;
-    transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
-    
+    transition: border-color 0.3s ease, transform 0.3s ease,
+      box-shadow 0.3s ease;
+
     &:hover {
-      border-color: #4785FF;
+      border-color: #4785ff;
       box-shadow: 0 0 0 5px rgba(71, 133, 255, 0.1);
     }
   }
@@ -131,7 +136,7 @@
   margin-bottom: 25px;
   width: 100%;
   transition: transform 0.3s ease;
-  
+
   &:hover {
     transform: translateX(5px);
   }
@@ -143,18 +148,18 @@
     color: #000;
     font-family: "Nunito";
     position: relative;
-    
+
     &::after {
-      content: '';
+      content: "";
       position: absolute;
       bottom: -5px;
       left: 0;
       width: 0;
       height: 2px;
-      background-color: #4785FF;
+      background-color: #4785ff;
       transition: width 0.3s ease;
     }
-    
+
     &:hover::after {
       width: 100%;
     }
@@ -163,7 +168,7 @@
   .edit-btn {
     background: none;
     border: none;
-    color: #4785FF;
+    color: #4785ff;
     font-size: 16px;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -173,9 +178,9 @@
     border-radius: 20px;
     position: relative;
     overflow: hidden;
-    
+
     &::before {
-      content: '';
+      content: "";
       position: absolute;
       top: 50%;
       left: 50%;
@@ -190,13 +195,13 @@
 
     &:hover {
       transform: translateY(-2px);
-      
+
       &::before {
         width: 120%;
         height: 120%;
       }
     }
-    
+
     &:active {
       transform: translateY(0) scale(0.95);
     }
@@ -209,11 +214,11 @@
   margin-bottom: 30px;
   width: 100%;
   transition: transform 0.3s ease;
-  
+
   &:hover {
     transform: translateX(5px);
   }
-  
+
   .status-indicator {
     width: 14px;
     height: 14px;
@@ -221,27 +226,26 @@
     background-color: #ccc;
     margin-right: 10px;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-    
+
     &.active {
-      background-color: #76C068;
+      background-color: #76c068;
       animation: pulse 1.5s infinite;
+      ~ span {
+        color: #76c068;
+      }
     }
-    
+
     &:hover {
       transform: scale(1.2);
       box-shadow: 0 0 0 4px rgba(118, 192, 104, 0.2);
     }
   }
-  
+
   span {
-    color: #76C068;
+    color: #ccc;
     font-size: 16px;
     font-family: "Nunito";
     transition: color 0.3s ease;
-    
-    &:hover {
-      color: darken(#76C068, 10%);
-    }
   }
 }
 
@@ -266,31 +270,31 @@
   transition: transform 0.3s ease;
   padding: 8px;
   border-radius: 8px;
-  
+
   &:hover {
     transform: translateX(5px);
     background-color: rgba(71, 133, 255, 0.05);
   }
-  
+
   .email-icon {
     margin-right: 15px;
-    
+
     svg {
       color: #333;
       transition: transform 0.3s ease, color 0.3s ease;
     }
-    
+
     &:hover svg {
-      color: #4785FF;
+      color: #4785ff;
       transform: scale(1.1) rotate(-5deg);
     }
-    
+
     img {
       width: 28px;
       height: 28px;
     }
   }
-  
+
   .email-label {
     p {
       margin: 0 0 5px 0;
@@ -299,34 +303,34 @@
       font-weight: 500;
       font-family: "Nunito";
       transition: color 0.3s ease;
-      
+
       &:hover {
-        color: #4785FF;
+        color: #4785ff;
       }
     }
-    
+
     a {
-      color: #4785FF;
+      color: #4785ff;
       text-decoration: none;
       font-size: 16px;
       font-family: "Nunito";
       transition: all 0.3s ease;
       position: relative;
-      
+
       &::after {
-        content: '';
+        content: "";
         position: absolute;
         bottom: -2px;
         left: 0;
         width: 0;
         height: 1px;
-        background-color: #4785FF;
+        background-color: #4785ff;
         transition: width 0.3s ease;
       }
-      
+
       &:hover {
-        color: darken(#4785FF, 10%);
-        
+        color: darken(#4785ff, 10%);
+
         &::after {
           width: 100%;
         }
@@ -352,13 +356,13 @@
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
-  color: #E94057;
+  color: #e94057;
   font-size: 16px;
   position: relative;
   overflow: hidden;
-  
+
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
@@ -367,39 +371,39 @@
     background-color: rgba(233, 64, 87, 0.05);
     transition: width 0.3s ease;
   }
-  
+
   &:hover {
     transform: translateX(5px);
-    
+
     &::before {
       width: 100%;
     }
-    
+
     .logout-icon {
       transform: translateX(3px);
-      
+
       svg {
         transform: translateX(2px);
       }
     }
   }
-  
+
   &:active {
     transform: translateX(5px) scale(0.98);
   }
-  
+
   .logout-icon {
     display: flex;
     align-items: center;
     margin-right: 10px;
-    color: #E94057;
+    color: #e94057;
     transition: transform 0.3s ease;
-    
+
     svg {
       transition: transform 0.3s ease;
     }
   }
-  
+
   span {
     font-weight: 500;
     font-family: "Nunito";
@@ -424,7 +428,7 @@
   margin-bottom: 20px;
   width: 100%;
   transition: transform 0.3s ease;
-  
+
   &:focus-within {
     transform: translateX(5px);
   }
@@ -437,25 +441,25 @@
   color: #333;
   font-weight: 500;
   transition: color 0.3s ease;
-  
+
   &:focus-within {
-    color: #4785FF;
+    color: #4785ff;
   }
-  
+
   .label-icon {
     margin-right: 15px;
-    
+
     svg {
       color: #333;
       transition: transform 0.3s ease, color 0.3s ease;
     }
-    
+
     &:hover svg {
-      color: #4785FF;
+      color: #4785ff;
       transform: scale(1.1);
     }
   }
-  
+
   span {
     font-size: 16px;
     font-family: "Nunito";
@@ -471,19 +475,19 @@
   color: #333;
   transition: all 0.3s ease;
   font-family: "Nunito";
-  
+
   &:focus {
     outline: none;
-    border-color: #4785FF;
+    border-color: #4785ff;
     box-shadow: 0 0 0 4px rgba(71, 133, 255, 0.1);
     transform: translateY(-2px);
   }
-  
+
   &::placeholder {
     color: #999;
     transition: opacity 0.3s ease, transform 0.3s ease;
   }
-  
+
   &:focus::placeholder {
     opacity: 0.6;
     transform: translateX(5px);
@@ -498,7 +502,8 @@
   margin-top: 30px;
 }
 
-.cancel-btn, .save-btn {
+.cancel-btn,
+.save-btn {
   padding: 12px 30px;
   border-radius: 30px;
   font-size: 16px;
@@ -511,9 +516,9 @@
   font-family: "Nunito";
   position: relative;
   overflow: hidden;
-  
+
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 50%;
     left: 50%;
@@ -524,7 +529,7 @@
     transition: width 0.5s ease, height 0.5s ease;
     z-index: 0;
   }
-  
+
   span {
     position: relative;
     z-index: 1;
@@ -533,23 +538,23 @@
 
 .cancel-btn {
   background-color: transparent;
-  color: #4785FF;
-  border: 1px solid #4785FF;
-  
+  color: #4785ff;
+  border: 1px solid #4785ff;
+
   &::before {
     background-color: rgba(71, 133, 255, 0.1);
   }
-  
+
   &:hover {
     transform: translateY(-3px);
     box-shadow: 0 4px 10px rgba(71, 133, 255, 0.2);
-    
+
     &::before {
       width: 300%;
       height: 300%;
     }
   }
-  
+
   &:active {
     transform: translateY(-1px);
     box-shadow: 0 2px 5px rgba(71, 133, 255, 0.2);
@@ -557,24 +562,24 @@
 }
 
 .save-btn {
-  background-color: #4785FF;
+  background-color: #4785ff;
   color: white;
-  
+
   &::before {
     background-color: rgba(255, 255, 255, 0.1);
   }
-  
+
   &:hover {
-    background-color: darken(#4785FF, 10%);
+    background-color: darken(#4785ff, 10%);
     transform: translateY(-3px);
     box-shadow: 0 4px 15px rgba(71, 133, 255, 0.4);
-    
+
     &::before {
       width: 300%;
       height: 300%;
     }
   }
-  
+
   &:active {
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(71, 133, 255, 0.4);
@@ -601,4 +606,4 @@
     opacity: 1;
     transform: translateX(0);
   }
-} 
+}

@@ -43,7 +43,9 @@
         <img src="assets/icons/arrow_down.svg" alt="arrow_down" />
       </div>
       <div class="menue">
-        <div class="menue-point" (click)="toggleProfileModal()">Profil</div>
+        <div class="menue-point" (click)="openDialogProfil(activUserId)">
+          Profil
+        </div>
         <div class="menue-point" (click)="logout()">Log out</div>
       </div>
     </div>
@@ -98,13 +100,4 @@
       <app-thread-view (closeThread)="toggleThreadView()"></app-thread-view>
     </div>
   </div>
-
-  <app-profile-modal
-    *ngIf="showProfileModal"
-    [user]="activUser"
-    [userEmail]="userProfile.email"
-    [userImageUrl]="userProfile.imageUrl"
-    [isActive]="userProfile.isActive"
-    (closeModal)="toggleProfileModal()"
-  ></app-profile-modal>
 </div>

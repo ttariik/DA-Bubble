@@ -8,7 +8,7 @@ import { Router } from '@angular/router';
 import { FirestoreService } from '../services/firestore.service';
 import { AuthService } from '../services/auth.service';
 import { User } from '../models/user.class';
-import { take, tap } from 'rxjs';
+import { MatDialog } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-dashboard',
@@ -18,7 +18,6 @@ import { take, tap } from 'rxjs';
     SidebarComponent,
     ChatAreaComponent,
     ThreadViewComponent,
-    ProfileModalComponent,
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
@@ -28,9 +27,9 @@ export class DashboardComponent {
   private authService = inject(AuthService);
   private cd = inject(ChangeDetectorRef);
   private router = inject(Router);
+  readonly dialog = inject(MatDialog);
 
   showThreadView: boolean = true;
-  showProfileModal: boolean = false;
   threadVisible: boolean = true;
   listOfAllUsers: User[] = [];
   activUser: User = new User({});
@@ -81,12 +80,14 @@ export class DashboardComponent {
     this.showThreadView = !this.showThreadView;
   }
 
-  toggleProfileModal() {
-    this.showProfileModal = !this.showProfileModal;
-  }
-
   navigateHome() {
     console.log('Reloading page');
     window.location.reload();
+  }
+
+  openDialogProfil(userId: string) {
+    const dialogRef = this.dialog.open(ProfileModalComponent, {
+      data: { activUserId: this.activUserId, userId: userId },
+    });
   }
 }
