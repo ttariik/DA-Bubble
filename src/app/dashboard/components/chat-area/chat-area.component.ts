@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, AfterViewInit, ViewChild, ElementRef, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PickerModule } from '@ctrl/ngx-emoji-mart';
@@ -13,6 +13,10 @@ interface Message {
   timestamp: Date;
   reactions?: Reaction[];
   threadCount?: number;
+  isNew?: boolean;
+  isEditing?: boolean;
+  editedContent?: string;
+  isEdited?: boolean;
 }
 
 interface Reaction {
@@ -28,7 +32,7 @@ interface Reaction {
   templateUrl: './chat-area.component.html',
   styleUrls: ['./chat-area.component.scss']
 })
-export class ChatAreaComponent implements AfterViewInit {
+export class ChatAreaComponent implements AfterViewInit, OnInit {
   @ViewChild('scrollContainer') scrollContainer!: ElementRef;
 
   channelName: string = 'Entwicklerteam';
@@ -36,6 +40,7 @@ export class ChatAreaComponent implements AfterViewInit {
   showEmojiPicker: boolean = false;
   currentUserId: string = '1'; 
   emojiPickerTargetMessage: Message | null = null;
+  editingMessage: Message | null = null;
   
   emojiPickerOptions = {
     set: 'apple',
@@ -186,6 +191,26 @@ export class ChatAreaComponent implements AfterViewInit {
     }, 100);
   }
   
+  ngOnInit() {
+    // Load messages from localStorage if available
+    const savedMessages = localStorage.getItem('chatMessages');
+    if (savedMessages) {
+      try {
+        const parsedMessages = JSON.parse(savedMessages);
+        // Convert string dates back to Date objects
+        parsedMessages.forEach((msg: any) => {
+          msg.timestamp = new Date(msg.timestamp);
+          // Ensure no messages are in editing mode after reload
+          msg.isEditing = false;
+          msg.editedContent = undefined;
+        });
+        this.messages = parsedMessages;
+      } catch (e) {
+        console.error('Error parsing saved messages:', e);
+      }
+    }
+  }
+  
   openEmojiPicker(message?: Message) {
     this.emojiPickerTargetMessage = message || null;
     this.showEmojiPicker = !this.showEmojiPicker;
@@ -223,10 +248,10 @@ export class ChatAreaComponent implements AfterViewInit {
         });
       }
       
-      console.log('Emoji zu Nachricht hinzugefügt:', emoji, message);
+      // Save changes to localStorage
+      this.saveMessagesToStorage();
     } else {
       this.messageInput += emoji;
-      console.log('Emoji zur Eingabe hinzugefügt:', emoji);
     }
     this.showEmojiPicker = false;
     this.emojiPickerTargetMessage = null;
@@ -240,15 +265,25 @@ export class ChatAreaComponent implements AfterViewInit {
         userName: 'Frederik Beck',
         userAvatar: 'assets/icons/avatars/user1.svg', 
         content: this.messageInput.trim(),
-        timestamp: new Date()
+        timestamp: new Date(),
+        isNew: true
       };
       
       this.messages.push(newMessage);
       this.messageInput = '';
       
+      // Save to localStorage
+      this.saveMessagesToStorage();
+      
       setTimeout(() => {
         this.scrollToBottom();
-      }, 0);
+      }, 150);
+      
+      setTimeout(() => {
+        newMessage.isNew = false;
+        // Save again after removing the isNew flag
+        this.saveMessagesToStorage();
+      }, 500);
     }
   }
   
@@ -270,5 +305,97 @@ export class ChatAreaComponent implements AfterViewInit {
   
   addReaction(message: Message) {
     this.openEmojiPicker(message);
+  }
+  
+  // Add a direct reaction with a specific emoji
+  addDirectReaction(message: Message, emoji: string) {
+    if (!message.reactions) {
+      message.reactions = [];
+    }
+    
+    const existingReaction = message.reactions.find(r => r.emoji === emoji);
+    
+    if (existingReaction) {
+      if (existingReaction.userIds.includes(this.currentUserId)) {
+        // Remove reaction if already added by this user
+        existingReaction.count -= 1;
+        existingReaction.userIds = existingReaction.userIds.filter(id => id !== this.currentUserId);
+        
+        if (existingReaction.count === 0) {
+          message.reactions = message.reactions.filter(r => r.emoji !== emoji);
+        }
+      } else {
+        // Add user to existing reaction
+        existingReaction.count += 1;
+        existingReaction.userIds.push(this.currentUserId);
+      }
+    } else {
+      // Create new reaction
+      message.reactions.push({
+        emoji: emoji,
+        count: 1,
+        userIds: [this.currentUserId]
+      });
+    }
+    
+    // Save changes
+    this.saveMessagesToStorage();
+  }
+  
+  // Open emoji picker specifically for adding reactions
+  openEmojiPickerForReaction(message: Message) {
+    this.emojiPickerTargetMessage = message;
+    this.showEmojiPicker = true;
+  }
+  
+  editMessage(message: Message) {
+    if (message.userId !== this.currentUserId) return;
+    
+    message.isEditing = true;
+    message.editedContent = message.content;
+    this.editingMessage = message;
+  }
+  
+  saveEditedMessage(message: Message) {
+    if (message.editedContent && message.editedContent.trim()) {
+      message.content = message.editedContent.trim();
+      message.isEdited = true;
+      
+      // Save changes to localStorage
+      this.saveMessagesToStorage();
+    }
+    
+    this.cancelEdit(message);
+  }
+  
+  cancelEdit(message: Message) {
+    message.isEditing = false;
+    message.editedContent = undefined;
+    this.editingMessage = null;
+  }
+  
+  handleEditKeydown(event: KeyboardEvent, message: Message) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      this.saveEditedMessage(message);
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      this.cancelEdit(message);
+    }
+  }
+  
+  // Save messages to localStorage
+  saveMessagesToStorage() {
+    // Create a copy of messages to avoid modifying the UI state
+    const messagesToSave = JSON.parse(JSON.stringify(this.messages));
+    
+    // Remove temporary editing states before saving
+    messagesToSave.forEach((msg: any) => {
+      delete msg.isEditing;
+      delete msg.editedContent;
+      delete msg.isNew;
+    });
+    
+    localStorage.setItem('chatMessages', JSON.stringify(messagesToSave));
   }
 } 
