@@ -6,6 +6,7 @@
   overflow: hidden;
   position: relative;
   background-color: #fff;
+  max-height: 100vh; 
 }
 
 .thread-header {
@@ -80,7 +81,7 @@
   flex-direction: column;
   overflow: hidden;
   position: relative;
-  height: calc(100% - 150px); /* Adjust based on the height of original message and replies count */
+  height: calc(100% - 150px);
 }
 
 .replies-container {
@@ -90,24 +91,26 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  height: calc(100% - 76px); /* Account for reply input height */
+  height: calc(100% - 90px);
+  min-height: 0;
 }
 
 .replies-scroll-area {
   padding: 16px;
-  overflow-y: auto;
-  height: 100%;
+  overflow-y: scroll;
+  height: 300px;
   display: flex;
   flex-direction: column;
   
   /* Firefox */
   scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+  scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
 
   /* Chrome, Edge, Safari */
   &::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
+    display: block; /* Ensure scrollbar is displayed */
   }
 
   &::-webkit-scrollbar-track {
@@ -116,16 +119,16 @@
   }
 
   &::-webkit-scrollbar-thumb {
-    background-color: rgba(0, 0, 0, 0.2);
-    border-radius: 4px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    border: 2px solid white;
     transition: background-color 0.3s;
     
     &:hover {
-      background-color: rgba(0, 0, 0, 0.4);
+      background-color: rgba(0, 0, 0, 0.5);
     }
   }
   
-  /* Sorgt dafür, dass neue Nachrichten am unteren Rand hinzugefügt werden */
   &:not(:empty) {
     justify-content: flex-start;
   }
@@ -292,6 +295,8 @@
   position: sticky;
   bottom: 0;
   width: 100%;
+  display: block; 
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05); 
 }
 
 .reply-input-wrapper {
@@ -510,5 +515,33 @@
   
   &:hover {
     background-color: #f0f0f0;
+  }
+}
+
+.send-button {
+  background-color: #444df2;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  
+  &:hover {
+    background-color: #3037c9;
+  }
+  
+  &:disabled {
+    background-color: #c5c5c5;
+    cursor: not-allowed;
+  }
+  
+  .send-icon {
+    width: 16px;
+    height: 16px;
   }
 } 
