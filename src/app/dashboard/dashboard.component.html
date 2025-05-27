@@ -28,7 +28,7 @@
       </div>
     </div>
 
-    <div class="profile-container" (click)="toggleProfileModal()">
+    <div class="profile-container">
       <div class="user-name">
         {{ activUser.firstName }} {{ activUser.lastName }}
       </div>
@@ -41,6 +41,10 @@
       </div>
       <div class="dropdown-icon">
         <img src="assets/icons/arrow_down.svg" alt="arrow_down" />
+      </div>
+      <div class="menue">
+        <div class="menue-point" (click)="toggleProfileModal()">Profil</div>
+        <div class="menue-point" (click)="logout()">Log out</div>
       </div>
     </div>
   </header>
@@ -64,7 +68,6 @@
         <div class="menu-text">Workspace-Menü schließen</div>
       </div>
     </div>
-
 
     <div class="chat-area" [class.expanded]="sidebar.sidebarCollapsed">
       <app-chat-area></app-chat-area>

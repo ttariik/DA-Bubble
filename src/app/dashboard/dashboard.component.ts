@@ -27,6 +27,7 @@ export class DashboardComponent {
   private firestoreService = inject(FirestoreService);
   private authService = inject(AuthService);
   private cd = inject(ChangeDetectorRef);
+  private router = inject(Router);
 
   showThreadView: boolean = true;
   showProfileModal: boolean = false;
@@ -68,6 +69,12 @@ export class DashboardComponent {
       this.activUser = user;
     }
     this.cd.detectChanges();
+  }
+
+  logout() {
+    this.firestoreService.updateUser(this.activUserId, { isActive: false });
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 
   toggleThreadView() {
