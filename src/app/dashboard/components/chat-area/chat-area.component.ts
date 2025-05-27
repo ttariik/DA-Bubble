@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, ViewChild, ElementRef, OnInit, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, AfterViewInit, ViewChild, ElementRef, OnInit, Input, OnChanges, SimpleChanges, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PickerModule } from '@ctrl/ngx-emoji-mart';
@@ -43,6 +43,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
   @ViewChild('scrollContainer') scrollContainer!: ElementRef;
   @Input() channelName: string = 'Entwicklerteam';
   @Input() channelId: string = '1';
+  @Output() mentionClicked = new EventEmitter<void>();
 
   messageInput: string = '';
   showEmojiPicker: boolean = false;
@@ -90,6 +91,12 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
   // Messages filtered for the current channel
   messages: Message[] = [];
   messageGroups: DateGroup[] = [];
+  
+  // For user tagging
+  showUserTagging: boolean = false;
+  tagSearchText: string = '';
+  tagCursorPosition: number = 0;
+  filteredUsers: any[] = [];
   
   ngAfterViewInit() {
     setTimeout(() => {
@@ -463,5 +470,117 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
       this.messages = [];
       this.messageGroups = [];
     }
+  }
+  
+  // Add method to handle mention button click
+  insertMention() {
+    console.log('Insert mention clicked in chat area');
+    
+    // Initialize mention data if available
+    this.initializeMentionData();
+    
+    // Insert @ symbol at cursor position or at the end of input
+    if (this.messageInput === undefined) {
+      this.messageInput = '';
+    }
+    
+    // Add space before @ if needed
+    if (this.messageInput.length > 0 && 
+        this.messageInput[this.messageInput.length - 1] !== ' ') {
+      this.messageInput += ' ';
+    }
+    
+    this.messageInput += '@';
+    
+    // Emit event to parent component to show user tagging modal
+    this.mentionClicked.emit();
+  }
+  
+  // Initialize mention data
+  initializeMentionData() {
+    // This method would be implemented to initialize user data for mentions
+    // For now, this is a placeholder
+  }
+  
+  handleInputKeyup(event: any) {
+    const input = event.target;
+    const value = input.value;
+    const cursorPosition = input.selectionStart;
+    
+    console.log('Input keyup event in chat area:', { value, cursorPosition });
+    
+    // Store cursor position for later use
+    this.tagCursorPosition = cursorPosition;
+    
+    // Check if we need to show user tagging
+    if (this.shouldShowUserTagging(value, cursorPosition)) {
+      console.log('Should show user tagging in chat area');
+      // Get text after @ for filtering
+      const atPosition = value.lastIndexOf('@', cursorPosition - 1);
+      if (atPosition !== -1) {
+        this.tagSearchText = value.substring(atPosition + 1, cursorPosition).toLowerCase();
+        console.log('Tag search text:', this.tagSearchText);
+        this.filterUsers();
+        this.showUserTagging = true;
+      }
+    } 
+    // If no @ is found before cursor, close modals
+    else {
+      this.showUserTagging = false;
+    }
+  }
+  
+  shouldShowUserTagging(text: string, cursorPosition: number): boolean {
+    // Find position of the last @ before cursor
+    const atPosition = text.lastIndexOf('@', cursorPosition - 1);
+    if (atPosition === -1) return false;
+    
+    // Check if there's a space between @ and cursor
+    const textBetween = text.substring(atPosition, cursorPosition);
+    return !textBetween.includes(' ');
+  }
+  
+  filterUsers() {
+    // Initialize with sample users if none exists
+    if (this.filteredUsers.length === 0) {
+      this.initializeUsers();
+    }
+    
+    if (!this.tagSearchText) {
+      // Keep all users
+    } else {
+      this.filteredUsers = this.filteredUsers.filter(user => 
+        user.name.toLowerCase().includes(this.tagSearchText)
+      );
+    }
+    console.log('Filtered users in chat area:', this.filteredUsers);
+  }
+  
+  initializeUsers() {
+    // Sample user data with realistic German names
+    this.filteredUsers = [
+      { id: '1', name: 'Frederik Beck', avatar: 'assets/icons/avatars/avatar1.png', online: true },
+      { id: '2', name: 'Sofia Müller', avatar: 'assets/icons/avatars/avatar2.png', online: true },
+      { id: '3', name: 'Noah Braun', avatar: 'assets/icons/avatars/avatar3.png', online: true },
+      { id: '4', name: 'Elise Roth', avatar: 'assets/icons/avatars/avatar4.png', online: false },
+      { id: '5', name: 'Elias Neumann', avatar: 'assets/icons/avatars/avatar5.png', online: true },
+      { id: '6', name: 'Steffen Hoffmann', avatar: 'assets/icons/avatars/avatar6.png', online: true }
+    ];
+  }
+  
+  selectUserTag(user: any) {
+    if (!this.messageInput) return;
+    
+    // Find position of the last @ before cursor
+    const atPosition = this.messageInput.lastIndexOf('@', this.tagCursorPosition - 1);
+    if (atPosition === -1) return;
+    
+    // Replace text from @ to cursor with the user name
+    const beforeTag = this.messageInput.substring(0, atPosition);
+    const afterTag = this.messageInput.substring(this.tagCursorPosition);
+    this.messageInput = `${beforeTag}@${user.name} ${afterTag}`;
+    
+    // Close the tagging modal
+    this.showUserTagging = false;
   }
 } 

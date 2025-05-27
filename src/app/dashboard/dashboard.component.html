@@ -86,6 +86,7 @@
         *ngIf="!isDirectMessageActive"
         [channelName]="selectedChannel.name" 
         [channelId]="selectedChannel.id"
+        (mentionClicked)="showUserTaggingInChat()"
       ></app-chat-area>
       
       <!-- Direct message chat -->
@@ -114,12 +115,16 @@
           </div>
           
           <div class="message-input-container">
+            <!-- Debug button - remove in production -->
+            <button class="debug-button" (click)="debugTagging()">Debug Tagging</button>
+            
             <div class="message-input-wrapper">
               <input
                 type="text"
                 class="message-input"
                 placeholder="Nachricht an {{ selectedDirectMessage.name }}"
                 [(ngModel)]="directMessageInput"
+                (keyup)="handleInputKeyup($event)"
                 (keydown.enter)="$event.preventDefault(); sendDirectMessage()"
               />
               <div class="input-actions">
@@ -127,7 +132,10 @@
                   <button class="react-button emoji-button" (click)="openEmojiPicker()">
                     <img src="./assets/icons/dashboard/reaction.svg" alt="Emoji" />
                   </button>
-                  <button class="react-button">
+                  <button class="react-button" (click)="insertChannelTag()">
+                    <span class="channel-hashtag">#</span>
+                  </button>
+                  <button class="react-button" (click)="insertMention()">
                     <img src="./assets/icons/dashboard/mark.svg" alt="Mention" />
                   </button>
                 </div>
@@ -139,6 +147,49 @@
                 >
                   <img src="./assets/icons/dashboard/send.svg" alt="Send" />
                 </button>
+              </div>
+            </div>
+            
+            <!-- Tagging Modals - Moved outside the message-input-wrapper -->
+            <div class="tagging-modal-container">
+              <!-- Channel Tagging Modal -->
+              <div class="tagging-modal channel-tagging" *ngIf="showChannelTagging">
+                <div class="tagging-header">
+                  <div class="tagging-title">Channels</div>
+                </div>
+                <div class="tagging-list">
+                  <div 
+                    *ngFor="let channel of filteredChannels" 
+                    class="tagging-item"
+                    (click)="selectChannelTag(channel)"
+                  >
+                    <span class="channel-tag-icon">#</span>
+                    <span class="channel-tag-name">{{ channel.name }}</span>
+                  </div>
+                  <div class="tagging-empty" *ngIf="filteredChannels.length === 0">
+                    Keine passenden Channels gefunden
+                  </div>
+                </div>
+              </div>
+              
+              <!-- User Tagging Modal -->
+              <div class="tagging-modal user-tagging" *ngIf="showUserTagging">
+                <div class="tagging-list">
+                  <div 
+                    *ngFor="let user of filteredUsers" 
+                    class="tagging-item"
+                    (click)="selectUserTag(user)"
+                  >
+                    <div class="user-tag-avatar">
+                      <img [src]="user.avatar" [alt]="user.name">
+                      <div class="status-indicator" [class.online]="user.online"></div>
+                    </div>
+                    <span class="user-tag-name">{{ user.name }}</span>
+                  </div>
+                  <div class="tagging-empty" *ngIf="filteredUsers.length === 0">
+                    Keine passenden Benutzer gefunden
+                  </div>
+                </div>
               </div>
             </div>
           </div>

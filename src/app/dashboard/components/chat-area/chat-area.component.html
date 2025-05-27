@@ -131,14 +131,15 @@
           placeholder="Nachricht an #{{ channelName }} senden"
           [(ngModel)]="messageInput"
           (keydown.enter)="$event.preventDefault(); sendMessage()"
+          (keyup)="handleInputKeyup($event)"
         ></textarea>
         <div class="input-actions">
           <div>
             <button class="react-button emoji-button" (click)="openEmojiPicker()">
               <img src="./assets/icons/dashboard/reaction.svg" alt="Emoji" />
             </button>
-            <button class="react-button">
-              <img src="./assets/icons/dashboard/mark.svg" alt="" />
+            <button class="react-button" (click)="insertMention()">
+              <img src="./assets/icons/dashboard/mark.svg" alt="Mention" />
             </button>
           </div>
 
@@ -149,6 +150,29 @@
           >
             <img src="./assets/icons/dashboard/send.svg" alt="" />
           </button>
+        </div>
+      </div>
+      
+      <!-- Tagging Modals -->
+      <div class="tagging-modal-container" *ngIf="showUserTagging">
+        <!-- User Tagging Modal -->
+        <div class="tagging-modal user-tagging">
+          <div class="tagging-list">
+            <div 
+              *ngFor="let user of filteredUsers" 
+              class="tagging-item"
+              (click)="selectUserTag(user)"
+            >
+              <div class="user-tag-avatar">
+                <img [src]="user.avatar" [alt]="user.name">
+                <div class="status-indicator" [class.online]="user.online"></div>
+              </div>
+              <span class="user-tag-name">{{ user.name }}</span>
+            </div>
+            <div class="tagging-empty" *ngIf="filteredUsers.length === 0">
+              Keine passenden Benutzer gefunden
+            </div>
+          </div>
         </div>
       </div>
     </div>

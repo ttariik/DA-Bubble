@@ -67,6 +67,16 @@ export class DashboardComponent {
 
   directMessageInput: string = '';
   showEmojiPicker: boolean = false;
+  
+  // New properties for tagging
+  showChannelTagging: boolean = false;
+  showUserTagging: boolean = false;
+  tagSearchText: string = '';
+  tagCursorPosition: number = 0;
+  
+  // Filtered lists for tagging
+  filteredChannels: Channel[] = [];
+  filteredUsers: DirectMessage[] = [];
 
   constructor() {}
 
@@ -74,6 +84,50 @@ export class DashboardComponent {
     this.loadData();
     this.loadAllUsers();
     this.loadSelectedContent();
+    
+    // Initialize filtered lists
+    setTimeout(() => {
+      this.initializeTaggingLists();
+    }, 500);
+  }
+
+  initializeTaggingLists() {
+    console.log('Initializing tagging lists');
+    
+    // If sidebar is not available, create fallback data
+    if (!this.sidebar || !this.sidebar.channels || !this.sidebar.directMessages) {
+      console.warn('Sidebar not available, using fallback data');
+      
+      // Fallback channel data
+      this.filteredChannels = [
+        { id: '1', name: 'Entwicklerteam', unread: 0 },
+        { id: '2', name: 'Allgemein', unread: 0 },
+        { id: '3', name: 'Ankündigungen', unread: 0 }
+      ];
+      
+      // Fallback user data with realistic German names
+      this.filteredUsers = [
+        { id: '1', name: 'Frederik Beck', avatar: 'assets/icons/avatars/avatar1.png', online: true, unread: 0 },
+        { id: '2', name: 'Sofia Müller', avatar: 'assets/icons/avatars/avatar2.png', online: true, unread: 0 },
+        { id: '3', name: 'Noah Braun', avatar: 'assets/icons/avatars/avatar3.png', online: true, unread: 0 },
+        { id: '4', name: 'Elise Roth', avatar: 'assets/icons/avatars/avatar4.png', online: false, unread: 0 },
+        { id: '5', name: 'Elias Neumann', avatar: 'assets/icons/avatars/avatar5.png', online: true, unread: 0 },
+        { id: '6', name: 'Steffen Hoffmann', avatar: 'assets/icons/avatars/avatar6.png', online: true, unread: 0 }
+      ];
+    } else {
+      // Use data from sidebar
+      this.filteredChannels = [...this.sidebar.channels];
+      this.filteredUsers = [...this.sidebar.directMessages];
+    }
+    
+    console.log('Initialized channels:', this.filteredChannels);
+    console.log('Initialized users:', this.filteredUsers);
+  }
+  
+  debugTagging() {
+    console.log('Debug tagging button clicked');
+    this.initializeTaggingLists();
+    this.showUserTagging = true;
   }
 
   async loadData() {
@@ -211,6 +265,214 @@ export class DashboardComponent {
       // Here you would implement the actual sending of the message
       // For now, we'll just clear the input
       this.directMessageInput = '';
+      
+      // Close any open tagging modals
+      this.showChannelTagging = false;
+      this.showUserTagging = false;
     }
+  }
+  
+  handleInputKeyup(event: any) {
+    const input = event.target;
+    const value = input.value;
+    const cursorPosition = input.selectionStart;
+    
+    console.log('Input keyup event:', { value, cursorPosition });
+    
+    // Store cursor position for later use
+    this.tagCursorPosition = cursorPosition;
+    
+    // Check if we need to show channel tagging
+    if (this.shouldShowChannelTagging(value, cursorPosition)) {
+      console.log('Should show channel tagging');
+      // Get text after # for filtering
+      const hashPosition = value.lastIndexOf('#', cursorPosition - 1);
+      if (hashPosition !== -1) {
+        this.tagSearchText = value.substring(hashPosition + 1, cursorPosition).toLowerCase();
+        console.log('Tag search text:', this.tagSearchText);
+        this.filterChannels();
+        this.showChannelTagging = true;
+        this.showUserTagging = false;
+      }
+    } 
+    // Check if we need to show user tagging
+    else if (this.shouldShowUserTagging(value, cursorPosition)) {
+      console.log('Should show user tagging');
+      // Get text after @ for filtering
+      const atPosition = value.lastIndexOf('@', cursorPosition - 1);
+      if (atPosition !== -1) {
+        this.tagSearchText = value.substring(atPosition + 1, cursorPosition).toLowerCase();
+        console.log('Tag search text:', this.tagSearchText);
+        this.filterUsers();
+        this.showUserTagging = true;
+        this.showChannelTagging = false;
+      }
+    } 
+    // If no # or @ is found before cursor, close modals
+    else {
+      this.showChannelTagging = false;
+      this.showUserTagging = false;
+    }
+  }
+  
+  shouldShowChannelTagging(text: string, cursorPosition: number): boolean {
+    // Find position of the last # before cursor
+    const hashPosition = text.lastIndexOf('#', cursorPosition - 1);
+    if (hashPosition === -1) return false;
+    
+    // Check if there's a space between # and cursor
+    const textBetween = text.substring(hashPosition, cursorPosition);
+    return !textBetween.includes(' ');
+  }
+  
+  shouldShowUserTagging(text: string, cursorPosition: number): boolean {
+    // Find position of the last @ before cursor
+    const atPosition = text.lastIndexOf('@', cursorPosition - 1);
+    if (atPosition === -1) return false;
+    
+    // Check if there's a space between @ and cursor
+    const textBetween = text.substring(atPosition, cursorPosition);
+    return !textBetween.includes(' ');
+  }
+  
+  filterChannels() {
+    if (!this.sidebar) {
+      setTimeout(() => this.filterChannels(), 100);
+      return;
+    }
+    
+    if (!this.tagSearchText) {
+      this.filteredChannels = [...this.sidebar.channels];
+    } else {
+      this.filteredChannels = this.sidebar.channels.filter(channel => 
+        channel.name.toLowerCase().includes(this.tagSearchText)
+      );
+    }
+    console.log('Filtered channels:', this.filteredChannels);
+  }
+  
+  filterUsers() {
+    if (!this.sidebar) {
+      setTimeout(() => this.filterUsers(), 100);
+      return;
+    }
+    
+    if (!this.tagSearchText) {
+      this.filteredUsers = [...this.sidebar.directMessages];
+    } else {
+      this.filteredUsers = this.sidebar.directMessages.filter(user => 
+        user.name.toLowerCase().includes(this.tagSearchText)
+      );
+    }
+    console.log('Filtered users:', this.filteredUsers);
+  }
+  
+  selectChannelTag(channel: Channel) {
+    if (!this.directMessageInput) return;
+    
+    // Find position of the last # before cursor
+    const hashPosition = this.directMessageInput.lastIndexOf('#', this.tagCursorPosition - 1);
+    if (hashPosition === -1) return;
+    
+    // Replace text from # to cursor with the channel name
+    const beforeTag = this.directMessageInput.substring(0, hashPosition);
+    const afterTag = this.directMessageInput.substring(this.tagCursorPosition);
+    this.directMessageInput = `${beforeTag}#${channel.name} ${afterTag}`;
+    
+    // Close the tagging modal
+    this.showChannelTagging = false;
+  }
+  
+  selectUserTag(user: DirectMessage) {
+    if (!this.directMessageInput) return;
+    
+    // Find position of the last @ before cursor
+    const atPosition = this.directMessageInput.lastIndexOf('@', this.tagCursorPosition - 1);
+    if (atPosition === -1) return;
+    
+    // Replace text from @ to cursor with the user name
+    const beforeTag = this.directMessageInput.substring(0, atPosition);
+    const afterTag = this.directMessageInput.substring(this.tagCursorPosition);
+    this.directMessageInput = `${beforeTag}@${user.name} ${afterTag}`;
+    
+    // Close the tagging modal
+    this.showUserTagging = false;
+  }
+
+  insertMention() {
+    console.log('Insert mention clicked');
+    
+    // Initialize the user list if needed
+    this.initializeTaggingLists();
+    
+    // Insert @ symbol at cursor position or at the end of input
+    if (this.directMessageInput === undefined) {
+      this.directMessageInput = '';
+    }
+    
+    // Add space before @ if needed
+    if (this.directMessageInput.length > 0 && 
+        this.directMessageInput[this.directMessageInput.length - 1] !== ' ') {
+      this.directMessageInput += ' ';
+    }
+    
+    this.directMessageInput += '@';
+    
+    // Show user tagging modal
+    this.tagCursorPosition = this.directMessageInput.length;
+    this.tagSearchText = '';
+    this.showUserTagging = true;
+    this.showChannelTagging = false;
+    
+    // Force update
+    setTimeout(() => {
+      console.log('Mention dialog opened, users:', this.filteredUsers);
+      console.log('showUserTagging:', this.showUserTagging);
+    }, 0);
+  }
+
+  insertChannelTag() {
+    // Make sure sidebar is loaded
+    if (!this.sidebar) {
+      console.error('Sidebar not loaded');
+      return;
+    }
+    
+    // Insert # symbol at cursor position or at the end of input
+    if (this.directMessageInput === undefined) {
+      this.directMessageInput = '';
+    }
+    
+    // Add space before # if needed
+    if (this.directMessageInput.length > 0 && 
+        this.directMessageInput[this.directMessageInput.length - 1] !== ' ') {
+      this.directMessageInput += ' ';
+    }
+    
+    this.directMessageInput += '#';
+    
+    // Show channel tagging modal
+    this.tagCursorPosition = this.directMessageInput.length;
+    this.tagSearchText = '';
+    this.filterChannels();
+    this.showChannelTagging = true;
+    this.showUserTagging = false;
+    console.log('Channel tag dialog opened, channels:', this.filteredChannels);
+  }
+
+  showUserTaggingInChat() {
+    console.log('Show user tagging requested from chat area');
+    
+    // Initialize the user list if needed
+    this.initializeTaggingLists();
+    
+    // Show user tagging modal
+    this.showUserTagging = true;
+    this.showChannelTagging = false;
+    
+    // Force update
+    setTimeout(() => {
+      console.log('User tagging dialog opened from chat, users:', this.filteredUsers);
+    }, 0);
   }
 }
