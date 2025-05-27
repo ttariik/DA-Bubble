@@ -161,16 +161,21 @@
           (keydown.enter)="$event.preventDefault(); sendReply()"
         ></textarea>
         <div class="input-actions">
-          <div class="input-tools">
-            <button class="tool-button mention-button" (click)="insertMention()">
-              <span>&#64;</span>
+          <div>
+            <button class="react-button emoji-button" (click)="openEmojiPicker()">
+              <img src="./assets/icons/dashboard/reaction.svg" alt="Emoji" />
             </button>
-            <button class="tool-button emoji-button" (click)="openEmojiPicker()">
-              <span>😊</span>
+            <button class="react-button" (click)="insertMention()">
+              <img src="./assets/icons/dashboard/mark.svg" alt="Mention" />
             </button>
           </div>
-          <button class="send-button" [disabled]="!replyInput.trim()" (click)="sendReply()">
-            <img src="assets/svg/send.svg" alt="Senden" class="send-icon">
+
+          <button
+            class="send-button"
+            [disabled]="!replyInput.trim()"
+            (click)="sendReply()"
+          >
+            <img src="./assets/icons/dashboard/send.svg" alt="Send" />
           </button>
         </div>
       </div>

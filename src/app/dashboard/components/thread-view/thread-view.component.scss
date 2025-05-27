@@ -363,7 +363,7 @@
   outline: none;
   font-size: 15px;
   font-family: inherit;
-  padding: 10px 0px 31px 8px;;
+  padding: 10px 0px 8px 8px;;
   
   &::placeholder {
     color: #999;
@@ -374,6 +374,56 @@
   display: flex;
   justify-content: space-between;
   margin-top: 8px;
+}
+
+.react-button {
+  border: none;
+  background-color: unset;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  
+  img {
+    transition: transform 0.3s ease, filter 0.3s ease;
+  }
+  
+  &:hover {
+    img {
+      transform: scale(1.2);
+      filter: invert(32%) sepia(59%) saturate(3714%) hue-rotate(229deg) brightness(95%) contrast(95%);
+    }
+  }
+}
+
+.send-button {
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+  
+  &:disabled {
+    color: #999;
+    cursor: not-allowed;
+    
+    img {
+      opacity: 0.5;
+    }
+  }
+  
+  &:not(:disabled):hover {
+    background-color: #3b43d8;
+    
+    img {
+      transform: translateX(2px);
+    }
+  }
 }
 
 .input-tools {
@@ -561,34 +611,6 @@
   
   &:hover {
     background-color: #f0f0f0;
-  }
-}
-
-.send-button {
-  background-color: #444df2;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  
-  &:hover {
-    background-color: #3037c9;
-  }
-  
-  &:disabled {
-    background-color: #c5c5c5;
-    cursor: not-allowed;
-  }
-  
-  .send-icon {
-    width: 16px;
-    height: 16px;
   }
 }
 
