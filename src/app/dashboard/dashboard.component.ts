@@ -1,5 +1,6 @@
 import { ChangeDetectorRef, Component, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { ChatAreaComponent } from './components/chat-area/chat-area.component';
 import { ThreadViewComponent } from './components/thread-view/thread-view.component';
@@ -16,11 +17,20 @@ interface Channel {
   unread: number;
 }
 
+interface DirectMessage {
+  id: string;
+  name: string;
+  avatar: string;
+  online: boolean;
+  unread: number;
+}
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     SidebarComponent,
     ChatAreaComponent,
     ThreadViewComponent,
@@ -45,6 +55,8 @@ export class DashboardComponent {
   activUserId = '';
   
   selectedChannel: Channel = { id: '1', name: 'Entwicklerteam', unread: 0 };
+  selectedDirectMessage: DirectMessage | null = null;
+  isDirectMessageActive: boolean = false;
 
   userProfile = {
     name: 'Frederik Beck',
@@ -53,12 +65,15 @@ export class DashboardComponent {
     isActive: true,
   };
 
+  directMessageInput: string = '';
+  showEmojiPicker: boolean = false;
+
   constructor() {}
 
   ngOnInit() {
     this.loadData();
     this.loadAllUsers();
-    this.loadSelectedChannel();
+    this.loadSelectedContent();
   }
 
   async loadData() {
@@ -105,11 +120,20 @@ export class DashboardComponent {
   
   handleChannelSelected(channel: Channel) {
     this.selectedChannel = channel;
+    this.selectedDirectMessage = null;
+    this.isDirectMessageActive = false;
     
     // Update the chat area with the new channel
     if (this.chatArea) {
       this.chatArea.changeChannel(channel.name, channel.id);
     }
+  }
+  
+  handleDirectMessageSelected(directMessage: DirectMessage) {
+    this.selectedDirectMessage = directMessage;
+    this.isDirectMessageActive = true;
+    
+    // No need to update the chat area for direct messages since we're using a separate UI
   }
   
   handleChannelDeleted(channelId: string) {
@@ -129,6 +153,32 @@ export class DashboardComponent {
     }
   }
 
+  loadSelectedContent() {
+    // First check if there's a selected direct message
+    const savedDirectMessageId = localStorage.getItem('selectedDirectMessageId');
+    if (savedDirectMessageId) {
+      // Load direct messages from localStorage
+      const savedDirectMessages = localStorage.getItem('directMessages');
+      if (savedDirectMessages) {
+        try {
+          const directMessages = JSON.parse(savedDirectMessages);
+          // Find the direct message with the saved ID
+          const selectedDirectMessage = directMessages.find((dm: any) => dm.id === savedDirectMessageId);
+          if (selectedDirectMessage) {
+            this.selectedDirectMessage = selectedDirectMessage;
+            this.isDirectMessageActive = true;
+            return; // Skip loading channel
+          }
+        } catch (e) {
+          console.error('Error parsing saved direct messages:', e);
+        }
+      }
+    }
+    
+    // If no direct message is selected, load channel
+    this.loadSelectedChannel();
+  }
+
   loadSelectedChannel() {
     // Load the selected channel ID from localStorage
     const savedChannelId = localStorage.getItem('selectedChannelId');
@@ -142,11 +192,25 @@ export class DashboardComponent {
           const selectedChannel = channels.find((c: any) => c.id === savedChannelId);
           if (selectedChannel) {
             this.selectedChannel = selectedChannel;
+            this.isDirectMessageActive = false;
           }
         } catch (e) {
           console.error('Error parsing saved channels:', e);
         }
       }
+    }
+  }
+
+  openEmojiPicker() {
+    this.showEmojiPicker = !this.showEmojiPicker;
+  }
+  
+  sendDirectMessage() {
+    if (this.directMessageInput && this.directMessageInput.trim()) {
+      console.log('Sending direct message:', this.directMessageInput);
+      // Here you would implement the actual sending of the message
+      // For now, we'll just clear the input
+      this.directMessageInput = '';
     }
   }
 }

@@ -93,13 +93,11 @@
       <div class="section-content" *ngIf="showDirectMessages">
         <div class="dm-list">
           <ng-container *ngFor="let dm of directMessages; let i = index">
-            <input
-              type="radio"
-              [id]="'dm-' + i"
-              name="dm-select"
-              class="dm-radio"
-            />
-            <label [for]="'dm-' + i" class="dm-item">
+            <div 
+              class="dm-item" 
+              [class.active]="dm.id === selectedDirectMessageId"
+              (click)="selectDirectMessage(dm)"
+            >
               <div class="user-info">
                 <div class="user-avatar">
                   <img [src]="dm.avatar" [alt]="dm.name" />
@@ -113,7 +111,7 @@
               <div class="unread-badge" *ngIf="dm.unread > 0">
                 {{ dm.unread }}
               </div>
-            </label>
+            </div>
           </ng-container>
         </div>
       </div>

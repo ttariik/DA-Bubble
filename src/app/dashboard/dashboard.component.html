@@ -57,6 +57,7 @@
       <app-sidebar #sidebar 
         (channelSelected)="handleChannelSelected($event)"
         (channelDeleted)="handleChannelDeleted($event)"
+        (directMessageSelected)="handleDirectMessageSelected($event)"
       ></app-sidebar>
     </div>
 
@@ -79,13 +80,78 @@
     </div>
 
     <div class="chat-area" [class.expanded]="sidebar.sidebarCollapsed">
-      <app-chat-area #chatArea [channelName]="selectedChannel.name" [channelId]="selectedChannel.id"></app-chat-area>
+      <!-- Regular channel chat -->
+      <app-chat-area 
+        #chatArea 
+        *ngIf="!isDirectMessageActive"
+        [channelName]="selectedChannel.name" 
+        [channelId]="selectedChannel.id"
+      ></app-chat-area>
+      
+      <!-- Direct message chat -->
+      <div *ngIf="isDirectMessageActive && selectedDirectMessage" class="direct-message-container">
+        <div class="direct-message-header">
+          <div class="user-info">
+            <div class="user-avatar">
+              <img [src]="selectedDirectMessage.avatar" [alt]="selectedDirectMessage.name">
+              <div class="status-indicator" [class.online]="selectedDirectMessage.online"></div>
+            </div>
+            <div class="user-name">{{ selectedDirectMessage.name }}</div>
+          </div>
+        </div>
+        
+        <div class="direct-message-content">
+          <div class="direct-message-info">
+            <div class="user-avatar-container">
+              <div class="user-avatar large">
+                <img [src]="selectedDirectMessage.avatar" [alt]="selectedDirectMessage.name">
+              </div>
+              <div class="user-name large">{{ selectedDirectMessage.name }}</div>
+            </div>
+            <p class="conversation-info">
+              Diese Unterhaltung findet nur zwischen <span class="user-mention">{{'@'}}{{ selectedDirectMessage.name }}</span> und dir statt.
+            </p>
+          </div>
+          
+          <div class="message-input-container">
+            <div class="message-input-wrapper">
+              <input
+                type="text"
+                class="message-input"
+                placeholder="Nachricht an {{ selectedDirectMessage.name }}"
+                [(ngModel)]="directMessageInput"
+                (keydown.enter)="$event.preventDefault(); sendDirectMessage()"
+              />
+              <div class="input-actions">
+                <div class="input-buttons">
+                  <button class="react-button emoji-button" (click)="openEmojiPicker()">
+                    <img src="./assets/icons/dashboard/reaction.svg" alt="Emoji" />
+                  </button>
+                  <button class="react-button">
+                    <img src="./assets/icons/dashboard/mark.svg" alt="Mention" />
+                  </button>
+                </div>
+
+                <button
+                  class="send-button"
+                  [disabled]="!directMessageInput || !directMessageInput.trim()"
+                  (click)="sendDirectMessage()"
+                >
+                  <img src="./assets/icons/dashboard/send.svg" alt="Send" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="thread-section" [class.hidden]="!showThreadView">
       <div class="thread-header">
         <div class="thread-title">
-          Thread <span class="thread-channel"># {{ selectedChannel.name }}</span>
+          Thread 
+          <span class="thread-channel" *ngIf="!isDirectMessageActive"># {{ selectedChannel.name }}</span>
+          <span class="thread-channel" *ngIf="isDirectMessageActive && selectedDirectMessage">{{ selectedDirectMessage.name }}</span>
         </div>
         <button class="close-button" (click)="toggleThreadView()">
           <svg

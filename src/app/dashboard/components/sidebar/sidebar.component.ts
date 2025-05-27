@@ -27,6 +27,7 @@ interface DirectMessage {
 export class SidebarComponent {
   @Output() channelSelected = new EventEmitter<Channel>();
   @Output() channelDeleted = new EventEmitter<string>();
+  @Output() directMessageSelected = new EventEmitter<DirectMessage>();
   
   workspaceName: string = 'Devspace';
   showChannels: boolean = true;
@@ -34,6 +35,7 @@ export class SidebarComponent {
   showAddChannelModal: boolean = false;
   sidebarCollapsed: boolean = false;
   selectedChannelId: string = '1';
+  selectedDirectMessageId: string | null = null;
   
   channels: Channel[] = [
     { id: '1', name: 'Entwicklerteam', unread: 0 }
@@ -85,10 +87,13 @@ export class SidebarComponent {
   
   selectChannel(channel: Channel) {
     this.selectedChannelId = channel.id;
+    this.selectedDirectMessageId = null; // Deselect any direct message
     this.channelSelected.emit(channel);
     
     // Save the selected channel ID to localStorage
     localStorage.setItem('selectedChannelId', channel.id);
+    // Clear any selected direct message
+    localStorage.removeItem('selectedDirectMessageId');
     
     // If the channel had unread messages, clear them
     if (channel.unread > 0) {
@@ -166,6 +171,25 @@ export class SidebarComponent {
     this.channelToDelete = null;
   }
   
+  selectDirectMessage(directMessage: DirectMessage) {
+    this.selectedDirectMessageId = directMessage.id;
+    this.selectedChannelId = ''; // Deselect any channel
+    this.directMessageSelected.emit(directMessage);
+    
+    // Save the selected direct message ID to localStorage
+    localStorage.setItem('selectedDirectMessageId', directMessage.id);
+    
+    // If the direct message had unread messages, clear them
+    if (directMessage.unread > 0) {
+      directMessage.unread = 0;
+      this.saveDirectMessagesToStorage();
+    }
+  }
+  
+  saveDirectMessagesToStorage() {
+    localStorage.setItem('directMessages', JSON.stringify(this.directMessages));
+  }
+  
   ngOnInit() {
     // Load channels from localStorage if available
     const savedChannels = localStorage.getItem('channels');
@@ -177,7 +201,33 @@ export class SidebarComponent {
       }
     }
     
-    // Load the selected channel ID from localStorage
+    // Load direct messages from localStorage if available
+    const savedDirectMessages = localStorage.getItem('directMessages');
+    if (savedDirectMessages) {
+      try {
+        this.directMessages = JSON.parse(savedDirectMessages);
+      } catch (e) {
+        console.error('Error parsing saved direct messages:', e);
+      }
+    }
+    
+    // Check if a direct message was selected previously
+    const savedDirectMessageId = localStorage.getItem('selectedDirectMessageId');
+    if (savedDirectMessageId) {
+      this.selectedDirectMessageId = savedDirectMessageId;
+      this.selectedChannelId = ''; // Clear channel selection
+      
+      // Find the direct message with the saved ID
+      const directMessageToSelect = this.directMessages.find(dm => dm.id === savedDirectMessageId);
+      if (directMessageToSelect) {
+        setTimeout(() => {
+          this.selectDirectMessage(directMessageToSelect);
+        }, 0);
+        return; // Don't select a channel
+      }
+    }
+    
+    // If no direct message was selected, check for channel selection
     const savedChannelId = localStorage.getItem('selectedChannelId');
     if (savedChannelId) {
       this.selectedChannelId = savedChannelId;
