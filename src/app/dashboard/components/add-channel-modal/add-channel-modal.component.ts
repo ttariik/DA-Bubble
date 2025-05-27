@@ -114,12 +114,6 @@ export class AddChannelModalComponent implements OnChanges {
       this.markFormGroupTouched(this.channelForm);
     }
   }
-
-<<<<<<< HEAD
-=======
-
-  // Helfer-Methode, um alle FormControls als touched zu markieren
->>>>>>> 7253c5c605082e5fb67f33df871383755696daa7
   markFormGroupTouched(formGroup: FormGroup) {
     Object.values(formGroup.controls).forEach((control) => {
       control.markAsTouched();

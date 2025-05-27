@@ -124,11 +124,6 @@ export class DashboardComponent {
     console.log('Initialized users:', this.filteredUsers);
   }
   
-  debugTagging() {
-    console.log('Debug tagging button clicked');
-    this.initializeTaggingLists();
-    this.showUserTagging = true;
-  }
 
   async loadData() {
     this.activUserId = await this.authService.getActiveUserId();
