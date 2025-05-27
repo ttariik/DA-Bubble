@@ -109,5 +109,12 @@ export class FirestoreService {
              
     });
   }
+
+  async readChannelFirestore() {
+    const docRef = doc(this.firestore, "channels");
+    const docSnap = await getDoc(docRef);
+
+
+  }
 }
 
