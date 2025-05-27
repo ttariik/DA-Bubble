@@ -78,24 +78,20 @@ export class SidebarComponent {
     };
     this.channels.push(newChannel);
     
-    // Save channels to localStorage for persistence
     this.saveChannelsToStorage();
     
-    // Select the newly created channel
     this.selectChannel(newChannel);
   }
   
   selectChannel(channel: Channel) {
     this.selectedChannelId = channel.id;
-    this.selectedDirectMessageId = null; // Deselect any direct message
+    this.selectedDirectMessageId = null; 
     this.channelSelected.emit(channel);
     
-    // Save the selected channel ID to localStorage
     localStorage.setItem('selectedChannelId', channel.id);
     // Clear any selected direct message
     localStorage.removeItem('selectedDirectMessageId');
     
-    // If the channel had unread messages, clear them
     if (channel.unread > 0) {
       channel.unread = 0;
       this.saveChannelsToStorage();
@@ -123,10 +119,8 @@ export class SidebarComponent {
   }
   
   confirmDeleteChannel(channel: Channel, event: MouseEvent) {
-    // Stop propagation to prevent channel selection
     event.stopPropagation();
     
-    // Don't allow deletion of the default channel
     if (channel.id === '1') {
       return;
     }
@@ -143,30 +137,23 @@ export class SidebarComponent {
   deleteChannel() {
     if (!this.channelToDelete) return;
     
-    // Get the channel ID
     const channelId = this.channelToDelete.id;
     
-    // Remove the channel from the list
     this.channels = this.channels.filter(c => c.id !== channelId);
     
-    // Save the updated channels list
     this.saveChannelsToStorage();
     
-    // Emit the deleted channel ID
     this.channelDeleted.emit(channelId);
     
-    // If the deleted channel was selected, select the first available channel
     if (this.selectedChannelId === channelId && this.channels.length > 0) {
       const newSelectedChannel = this.channels[0];
       this.selectedChannelId = newSelectedChannel.id;
       
-      // Update the selected channel ID in localStorage
       localStorage.setItem('selectedChannelId', newSelectedChannel.id);
       
       this.selectChannel(newSelectedChannel);
     }
     
-    // Close the confirmation dialog
     this.showDeleteConfirm = false;
     this.channelToDelete = null;
   }
@@ -176,10 +163,8 @@ export class SidebarComponent {
     this.selectedChannelId = ''; // Deselect any channel
     this.directMessageSelected.emit(directMessage);
     
-    // Save the selected direct message ID to localStorage
     localStorage.setItem('selectedDirectMessageId', directMessage.id);
     
-    // If the direct message had unread messages, clear them
     if (directMessage.unread > 0) {
       directMessage.unread = 0;
       this.saveDirectMessagesToStorage();
@@ -191,7 +176,6 @@ export class SidebarComponent {
   }
   
   ngOnInit() {
-    // Load channels from localStorage if available
     const savedChannels = localStorage.getItem('channels');
     if (savedChannels) {
       try {
@@ -201,7 +185,6 @@ export class SidebarComponent {
       }
     }
     
-    // Load direct messages from localStorage if available
     const savedDirectMessages = localStorage.getItem('directMessages');
     if (savedDirectMessages) {
       try {
@@ -211,34 +194,28 @@ export class SidebarComponent {
       }
     }
     
-    // Check if a direct message was selected previously
     const savedDirectMessageId = localStorage.getItem('selectedDirectMessageId');
     if (savedDirectMessageId) {
       this.selectedDirectMessageId = savedDirectMessageId;
-      this.selectedChannelId = ''; // Clear channel selection
+      this.selectedChannelId = ''; 
       
-      // Find the direct message with the saved ID
       const directMessageToSelect = this.directMessages.find(dm => dm.id === savedDirectMessageId);
       if (directMessageToSelect) {
         setTimeout(() => {
           this.selectDirectMessage(directMessageToSelect);
         }, 0);
-        return; // Don't select a channel
+        return; 
       }
     }
     
-    // If no direct message was selected, check for channel selection
     const savedChannelId = localStorage.getItem('selectedChannelId');
     if (savedChannelId) {
       this.selectedChannelId = savedChannelId;
     }
     
-    // Select the default or saved channel
     if (this.channels.length > 0) {
-      // Find the channel with the saved ID, or use the first channel if not found
       const channelToSelect = this.channels.find(c => c.id === this.selectedChannelId) || this.channels[0];
       
-      // If the saved channel doesn't exist anymore, update the stored ID
       if (channelToSelect.id !== this.selectedChannelId) {
         this.selectedChannelId = channelToSelect.id;
         localStorage.setItem('selectedChannelId', channelToSelect.id);
