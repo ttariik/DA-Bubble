@@ -254,6 +254,12 @@ export class DashboardComponent {
     this.showEmojiPicker = !this.showEmojiPicker;
   }
   
+  addEmoji(event: any) {
+    const emoji = event.emoji?.native || event.emoji || '';
+    this.directMessageInput += emoji;
+    this.showEmojiPicker = false;
+  }
+  
   sendDirectMessage() {
     if (this.directMessageInput && this.directMessageInput.trim()) {
       console.log('Sending direct message:', this.directMessageInput);

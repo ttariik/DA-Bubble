@@ -1,8 +1,6 @@
 import { Component, AfterViewInit, ViewChild, ElementRef, OnInit, Input, OnChanges, SimpleChanges, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { PickerModule } from '@ctrl/ngx-emoji-mart';
-import { EmojiEvent } from '@ctrl/ngx-emoji-mart/ngx-emoji';
 
 interface Message {
   id: string;
@@ -35,7 +33,7 @@ interface DateGroup {
 @Component({
   selector: 'app-chat-area',
   standalone: true,
-  imports: [CommonModule, FormsModule, PickerModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './chat-area.component.html',
   styleUrls: ['./chat-area.component.scss']
 })
@@ -50,34 +48,6 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
   currentUserId: string = '1'; 
   emojiPickerTargetMessage: Message | null = null;
   editingMessage: Message | null = null;
-  
-  emojiPickerOptions = {
-    set: 'apple',
-    enableSearch: true,
-    enableFrequentEmojiSort: true,
-    enableWindow: false,
-    emojiSize: 24,
-    emojiTooltip: true,
-    style: {
-      width: '320px',
-      height: '320px',
-    },
-    i18n: {
-      search: 'Suchen',
-      categories: {
-        search: 'Suchergebnisse',
-        recent: 'Kürzlich verwendet',
-        people: 'Smileys & Personen',
-        nature: 'Tiere & Natur',
-        foods: 'Essen & Trinken',
-        activity: 'Aktivitäten',
-        places: 'Reisen & Orte',
-        objects: 'Objekte',
-        symbols: 'Symbole',
-        flags: 'Flaggen',
-      },
-    },
-  };
   
   channelMembers: {id: string, name: string, avatar: string}[] = [
     { id: '1', name: 'Frederik Beck', avatar: 'assets/icons/avatars/user1.svg' },

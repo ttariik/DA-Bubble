@@ -223,11 +223,13 @@
       
       <div class="emoji-picker-content">
         <div class="emoji-categories">
-          <button class="emoji-category-btn active">😀</button>
-          <button class="emoji-category-btn">🙂</button>
-          <button class="emoji-category-btn">🚗</button>
+          <button class="emoji-category-btn active">➕</button>
+          <button class="emoji-category-btn">😀</button>
+          <button class="emoji-category-btn">🐶</button>
+          <button class="emoji-category-btn">🍎</button>
           <button class="emoji-category-btn">🏀</button>
-          <button class="emoji-category-btn">🏳️</button>
+          <button class="emoji-category-btn">🚗</button>
+          <button class="emoji-category-btn">💡</button>
           <button class="emoji-category-btn">🔣</button>
           <button class="emoji-category-btn">🏁</button>
         </div>
@@ -236,28 +238,28 @@
           <div class="emoji-section">
             <div class="emoji-section-title">Kürzlich verwendet</div>
             <div class="emoji-grid">
-              <button class="emoji-btn" (click)="addEmoji({emoji: '👍'})">👍</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: '😀'})">😀</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: '😉'})">😉</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: '😍'})">😍</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: '😜'})">😜</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: '😂'})">😂</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: '🤣'})">🤣</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: '😱'})">😱</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '👍'}})">👍</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😀'}})">😀</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😉'}})">😉</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😍'}})">😍</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😜'}})">😜</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😂'}})">😂</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '🤣'}})">🤣</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😱'}})">😱</button>
             </div>
           </div>
           
           <div class="emoji-section">
             <div class="emoji-section-title">Smileys & Personen</div>
             <div class="emoji-grid">
-              <button class="emoji-btn" (click)="addEmoji({emoji: '😀'})">😀</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: '😃'})">😃</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: '😄'})">😄</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: '😁'})">😁</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: '😆'})">😆</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: '😅'})">😅</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: '🤣'})">🤣</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: '😂'})">😂</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😀'}})">😀</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😃'}})">😃</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😄'}})">😄</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😁'}})">😁</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😆'}})">😆</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😅'}})">😅</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '🤣'}})">🤣</button>
+              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😂'}})">😂</button>
             </div>
           </div>
         </div>
