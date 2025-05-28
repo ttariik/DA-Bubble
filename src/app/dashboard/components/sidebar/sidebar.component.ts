@@ -1,7 +1,9 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Inject, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AddChannelModalComponent } from '../add-channel-modal/add-channel-modal.component';
+import { FirestoreService } from '../../../services/firestore.service';
+import { map } from 'rxjs/operators';
 
 interface Channel {
   id: string;
@@ -24,6 +26,7 @@ interface DirectMessage {
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.scss']
 })
+
 export class SidebarComponent {
   @Output() channelSelected = new EventEmitter<Channel>();
   @Output() channelDeleted = new EventEmitter<string>();
@@ -53,7 +56,9 @@ export class SidebarComponent {
   hoverChannelId: string | null = null;
   showDeleteConfirm: boolean = false;
   channelToDelete: Channel | null = null;
-  
+
+ constructor(private firestoreService: FirestoreService) {}
+
   toggleChannels() {
     this.showChannels = !this.showChannels;
   }
@@ -179,6 +184,10 @@ export class SidebarComponent {
     const savedChannels = localStorage.getItem('channels');
     if (savedChannels) {
       try {
+      this.firestoreService.getAllChannels().subscribe(channels => {
+      this.channels = channels;
+    });
+
         this.channels = JSON.parse(savedChannels);
       } catch (e) {
         console.error('Error parsing saved channels:', e);

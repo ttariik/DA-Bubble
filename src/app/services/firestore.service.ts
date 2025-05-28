@@ -12,7 +12,8 @@ import {
   updateDoc,
 } from '@angular/fire/firestore';
 import { User } from '../models/user.class';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
+
 
 @Injectable({
   providedIn: 'root',
@@ -110,11 +111,15 @@ export class FirestoreService {
     });
   }
 
-  async readChannelFirestore() {
-    const docRef = doc(this.firestore, "channels");
-    const docSnap = await getDoc(docRef);
-
-
-  }
+getAllChannels(): Observable<any[]> {
+  const channelsRef = collection(this.firestore, 'channels');
+  return collectionData(channelsRef, { idField: 'id' }).pipe(
+    map(channels => channels.map(channel => ({
+      id: channel['id'],
+      name: channel['channelName'],
+      unread: 0 // oder aus DB, falls vorhanden
+    })))
+  );
+}
 }
 
