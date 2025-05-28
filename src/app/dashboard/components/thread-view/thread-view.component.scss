@@ -244,6 +244,13 @@
     font-style: italic;
     opacity: 0.8;
   }
+
+  .deleted-tag {
+    margin-left: 4px;
+    font-style: italic;
+    opacity: 0.8;
+    color: #e74c3c;
+  }
 }
 
 .message-bubble {
@@ -257,6 +264,13 @@
   display: inline-block;
   max-width: 100%;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+
+  &.deleted-message {
+    font-style: italic;
+    color: #888;
+    background-color: #f8f8f8;
+    border: 1px dashed #ddd;
+  }
 }
 
 .message-actions {
@@ -693,6 +707,14 @@
   &:hover {
     background-color: #f5f5f5;
   }
+
+  &.delete-action {
+    color: #e74c3c;
+    
+    &:hover {
+      background-color: #fde8e7;
+    }
+  }
 }
 
 .message-edit-container {
@@ -924,4 +946,22 @@
   font-size: 0.9rem;
   color: #757575;
   line-height: 1.5;
+}
+
+// Styling für das Hover-Menü der ursprünglichen Nachricht
+.original-message-hover-menu {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 100;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px);
+  transition: all 0.2s ease;
+}
+
+.original-message:hover .original-message-hover-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
 } 

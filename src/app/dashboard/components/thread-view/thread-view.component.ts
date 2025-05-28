@@ -14,6 +14,7 @@ interface ThreadMessage {
   isEditing?: boolean;
   editedContent?: string;
   isEdited?: boolean;
+  isDeleted?: boolean;
 }
 
 interface Reaction {
@@ -112,7 +113,8 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
       content: message.content,
       timestamp: message.timestamp,
       reactions: message.reactions,
-      isEdited: message.isEdited
+      isEdited: message.isEdited,
+      isDeleted: message.isDeleted
     };
 
     // Lade existierende Antworten für diese Nachricht aus dem localStorage
@@ -539,6 +541,65 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
       this.saveEditedMessage(message);
     } else if (event.key === 'Escape') {
       this.cancelEdit(message);
+    }
+  }
+  
+  // Neue Methode zum Löschen einer Nachricht
+  deleteMessage(message: ThreadMessage) {
+    // Prüfen, ob es sich um die eigene Nachricht handelt
+    if (message.userId !== this.currentUserId) {
+      console.error('Nur eigene Nachrichten können gelöscht werden');
+      return;
+    }
+    
+    // Wenn es die Original-Nachricht ist, markiere sie als gelöscht
+    if (this.originalMessage && this.originalMessage.id === message.id) {
+      this.originalMessage.isDeleted = true;
+      this.originalMessage.content = 'Diese Nachricht wurde gelöscht';
+      
+      // Speichere Änderungen
+      this.saveThreadToStorage();
+      
+      // Aktualisiere die Originalnachricht auch im Hauptchat
+      this.updateDeletedMessageInMainChat(message.id);
+      return;
+    }
+    
+    // Für Thread-Antworten
+    const replyIndex = this.replies.findIndex(reply => reply.id === message.id);
+    if (replyIndex !== -1) {
+      // Option 1: Nachricht aus dem Array entfernen
+      // this.replies.splice(replyIndex, 1);
+      
+      // Option 2: Nachricht als gelöscht markieren und Inhalt ersetzen
+      this.replies[replyIndex].isDeleted = true;
+      this.replies[replyIndex].content = 'Diese Nachricht wurde gelöscht';
+      
+      // Gruppen aktualisieren
+      this.groupRepliesByDate();
+      
+      // Speichere Änderungen
+      this.saveThreadToStorage();
+    }
+  }
+  
+  // Methode zum Aktualisieren einer gelöschten Nachricht im Hauptchat
+  updateDeletedMessageInMainChat(messageId: string) {
+    const allMessages = localStorage.getItem('allChatMessages');
+    if (allMessages) {
+      try {
+        const parsedMessages = JSON.parse(allMessages);
+        const messageIndex = parsedMessages.findIndex((msg: any) => msg.id === messageId);
+        
+        if (messageIndex !== -1) {
+          parsedMessages[messageIndex].isDeleted = true;
+          parsedMessages[messageIndex].content = 'Diese Nachricht wurde gelöscht';
+          localStorage.setItem('allChatMessages', JSON.stringify(parsedMessages));
+          console.log(`Message ${messageId} marked as deleted in main chat`);
+        }
+      } catch (e) {
+        console.error('Error updating deleted message in main chat:', e);
+      }
     }
   }
   

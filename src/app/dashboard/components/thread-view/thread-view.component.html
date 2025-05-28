@@ -22,7 +22,8 @@
           <div class="message-header">
             <div class="message-sender">{{ originalMessage.userName }}</div>
             <div class="message-time">{{ originalMessage.timestamp | date:'HH:mm' }} Uhr
-              <span *ngIf="originalMessage.isEdited" class="edited-tag">(bearbeitet)</span>
+              <span *ngIf="originalMessage.isEdited && !originalMessage.isDeleted" class="edited-tag">(bearbeitet)</span>
+              <span *ngIf="originalMessage.isDeleted" class="deleted-tag">(gelöscht)</span>
             </div>
           </div>
           
@@ -38,10 +39,14 @@
               <button class="edit-action-btn save" (click)="saveEditedMessage(originalMessage)">Speichern</button>
             </div>
           </div>
-          <div *ngIf="!originalMessage.isEditing" class="message-bubble">{{ originalMessage.content }}</div>
+          <div *ngIf="!originalMessage.isEditing" 
+               class="message-bubble"
+               [class.deleted-message]="originalMessage.isDeleted">
+            {{ originalMessage.content }}
+          </div>
           
-          <!-- Message Actions -->
-          <div class="message-actions">
+          <!-- Message Actions - nur anzeigen, wenn die Nachricht nicht gelöscht ist -->
+          <div class="message-actions" *ngIf="!originalMessage.isDeleted">
             <div class="reactions" *ngIf="originalMessage.reactions?.length">
               <div
                 *ngFor="let reaction of originalMessage.reactions"
@@ -65,6 +70,17 @@
               <button *ngIf="originalMessage.userId === currentUserId" class="action-button edit-button" (click)="editMessage(originalMessage)">
                 <span>✏️</span>
               </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Hover menu for original message -->
+        <div *ngIf="originalMessage.userId === currentUserId && !originalMessage.isDeleted" class="message-hover-menu original-message-hover-menu">
+          <div class="hover-menu-dropdown">
+            <button class="hover-menu-btn more-btn">⋮</button>
+            <div class="dropdown-content">
+              <button class="dropdown-item" (click)="editMessage(originalMessage)">Nachricht bearbeiten</button>
+              <button class="dropdown-item delete-action" (click)="deleteMessage(originalMessage)">Nachricht löschen</button>
             </div>
           </div>
         </div>
@@ -102,7 +118,8 @@
                   <div class="message-sender">{{ reply.userName }}</div>
                   <div class="message-time">
                     {{ reply.timestamp | date:'HH:mm' }} Uhr
-                    <span *ngIf="reply.isEdited" class="edited-tag">(bearbeitet)</span>
+                    <span *ngIf="reply.isEdited && !reply.isDeleted" class="edited-tag">(bearbeitet)</span>
+                    <span *ngIf="reply.isDeleted" class="deleted-tag">(gelöscht)</span>
                   </div>
                 </div>
                 
@@ -118,25 +135,30 @@
                     <button class="edit-action-btn save" (click)="saveEditedMessage(reply)">Speichern</button>
                   </div>
                 </div>
-                <div *ngIf="!reply.isEditing" class="message-bubble">{{ reply.content }}</div>
+                <div *ngIf="!reply.isEditing" 
+                     class="message-bubble"
+                     [class.deleted-message]="reply.isDeleted">
+                  {{ reply.content }}
+                </div>
                 
-                <!-- Message Hover Menu - only show when not editing -->
-                <div *ngIf="!reply.isEditing" class="message-hover-menu">
+                <!-- Message Hover Menu - only show when not editing and not deleted -->
+                <div *ngIf="!reply.isEditing && !reply.isDeleted" class="message-hover-menu">
                   <button class="hover-menu-btn emoji-btn" (click)="addDirectReaction(reply, '👍')">👍</button>
                   <button class="hover-menu-btn emoji-btn" (click)="addDirectReaction(reply, '😊')">😊</button>
                   <button class="hover-menu-btn keyboard-btn" (click)="openEmojiPickerForReaction(reply)">⌨️</button>
                   <button class="hover-menu-btn thread-btn">💬</button>
-                  <!-- Only show dropdown with edit for user's own messages -->
+                  <!-- Only show dropdown with edit/delete for user's own messages -->
                   <div class="hover-menu-dropdown" *ngIf="reply.userId === currentUserId">
                     <button class="hover-menu-btn more-btn">⋮</button>
                     <div class="dropdown-content">
                       <button class="dropdown-item" (click)="editMessage(reply)">Nachricht bearbeiten</button>
+                      <button class="dropdown-item delete-action" (click)="deleteMessage(reply)">Nachricht löschen</button>
                     </div>
                   </div>
                 </div>
                 
-                <!-- Message Actions -->
-                <div class="message-actions">
+                <!-- Message Actions - nur anzeigen, wenn die Nachricht nicht gelöscht ist -->
+                <div class="message-actions" *ngIf="!reply.isDeleted">
                   <div class="reactions" *ngIf="reply.reactions?.length">
                     <div
                       *ngFor="let reaction of reply.reactions"

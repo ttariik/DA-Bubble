@@ -55,7 +55,8 @@
                 <div class="message-sender">{{ message.userName }}</div>
                 <div class="message-time">
                   {{ message.timestamp | date : "HH:mm" }} Uhr
-                  <span *ngIf="message.isEdited" class="edited-tag">(bearbeitet)</span>
+                  <span *ngIf="message.isEdited && !message.isDeleted" class="edited-tag">(bearbeitet)</span>
+                  <span *ngIf="message.isDeleted" class="deleted-tag">(gelöscht)</span>
                 </div>
               </div>
               
@@ -71,25 +72,28 @@
                   <button class="edit-action-btn save" (click)="saveEditedMessage(message)">Speichern</button>
                 </div>
               </div>
-              <div *ngIf="!message.isEditing" class="message-bubble">{{ message.content }}</div>
+              <div *ngIf="!message.isEditing" class="message-bubble" [class.deleted-message]="message.isDeleted">
+                {{ message.content }}
+              </div>
 
-              <!-- Message Hover Menu - only show when not editing -->
-              <div *ngIf="!message.isEditing" class="message-hover-menu">
+              <!-- Message Hover Menu - only show when not editing and not deleted -->
+              <div *ngIf="!message.isEditing && !message.isDeleted" class="message-hover-menu">
                 <button class="hover-menu-btn emoji-btn" (click)="addDirectReaction(message, '👍')">👍</button>
                 <button class="hover-menu-btn emoji-btn" (click)="addDirectReaction(message, '😊')">😊</button>
                 <button class="hover-menu-btn keyboard-btn" (click)="openEmojiPickerForReaction(message)">⌨️</button>
                 <button class="hover-menu-btn thread-btn" (click)="openThread(message)">💬</button>
-                <!-- Only show dropdown with edit for user's own messages -->
+                <!-- Only show dropdown with edit/delete for user's own messages -->
                 <div class="hover-menu-dropdown" *ngIf="message.userId === currentUserId">
                   <button class="hover-menu-btn more-btn">⋮</button>
                   <div class="dropdown-content">
                     <button class="dropdown-item" (click)="editMessage(message)">Nachricht bearbeiten</button>
+                    <button class="dropdown-item delete-action" (click)="deleteMessage(message)">Nachricht löschen</button>
                   </div>
                 </div>
               </div>
 
               <!-- Message Actions -->
-              <div class="message-actions">
+              <div class="message-actions" *ngIf="!message.isDeleted">
                 <div class="reactions" *ngIf="message.reactions?.length">
                   <div
                     *ngFor="let reaction of message.reactions"
@@ -100,16 +104,11 @@
                     {{ reaction.emoji }} {{ reaction.count }}
                   </div>
                 </div>
-                <div class="action-buttons">
-                  <button class="action-button emoji-button" (click)="addReaction(message)">
-                    <span>😊</span>
-                  </button>
-                  <button class="action-button" (click)="openThread(message)">
-                    <span>💬</span>
-                    <span *ngIf="message.threadCount" class="thread-count">{{
-                      message.threadCount
-                    }}</span>
-                  </button>
+                <div class="thread-info" *ngIf="message.threadCount && message.threadCount > 0">
+                  <div class="thread-count" (click)="openThread(message)">
+                    <span class="thread-icon">💬</span>
+                    <span class="thread-text">{{ message.threadCount }} Antworten</span>
+                  </div>
                 </div>
               </div>
             </div>

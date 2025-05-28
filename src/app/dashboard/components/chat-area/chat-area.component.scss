@@ -263,28 +263,42 @@
 }
 
 .message-time {
-  margin-left: 8px;
   font-size: 12px;
-  color: #666;
+  color: #999;
+  margin-left: 8px;
   
   .edited-tag {
     margin-left: 4px;
     font-style: italic;
     opacity: 0.8;
   }
+  
+  .deleted-tag {
+    margin-left: 4px;
+    font-style: italic;
+    opacity: 0.8;
+    color: #e74c3c;
+  }
 }
 
 .message-bubble {
-  font-size: 15px;
-  line-height: 1.4;
-  color: #333;
-  word-break: break-word;
-  background-color: #F3F3F3;
   padding: 12px 16px;
   border-radius: 16px 16px 16px 0;
-  display: inline-block;
-  max-width: 100%;
+  background-color: #f3f3f3;
+  max-width: 80%;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #333;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  word-break: break-word;
+  position: relative;
+  
+  &.deleted-message {
+    font-style: italic;
+    color: #888;
+    background-color: #f8f8f8;
+    border: 1px dashed #ddd;
+  }
 }
 
 .message-actions {
@@ -679,17 +693,26 @@
 }
 
 .dropdown-item {
+  padding: 8px 16px;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
   display: block;
   width: 100%;
-  padding: 8px 16px;
   text-align: left;
   background: none;
   border: none;
-  font-size: 14px;
-  cursor: pointer;
   
   &:hover {
     background-color: #f5f5f5;
+  }
+  
+  &.delete-action {
+    color: #e74c3c;
+    
+    &:hover {
+      background-color: #fde8e7;
+    }
   }
 }
 
@@ -833,4 +856,26 @@
   font-size: 16px;
   font-weight: 500;
   color: #333;
+}
+
+.thread-info {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #666;
+  
+  .thread-count {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    
+    &:hover {
+      color: #444df2;
+      text-decoration: underline;
+    }
+    
+    .thread-icon {
+      margin-right: 4px;
+      font-size: 14px;
+    }
+  }
 }

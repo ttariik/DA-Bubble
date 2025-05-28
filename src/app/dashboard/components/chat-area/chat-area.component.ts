@@ -16,6 +16,7 @@ interface Message {
   isEditing?: boolean;
   editedContent?: string;
   isEdited?: boolean;
+  isDeleted?: boolean;
 }
 
 interface Reaction {
@@ -406,6 +407,56 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
     } else if (event.key === 'Escape') {
       event.preventDefault();
       this.cancelEdit(message);
+    }
+  }
+  
+  // Neue Methode zum Löschen einer Nachricht
+  deleteMessage(message: Message) {
+    // Prüfen, ob es sich um die eigene Nachricht handelt
+    if (message.userId !== this.currentUserId) {
+      console.error('Nur eigene Nachrichten können gelöscht werden');
+      return;
+    }
+    
+    // Nachricht im lokalen Array finden
+    const messageIndex = this.messages.findIndex(msg => msg.id === message.id);
+    if (messageIndex !== -1) {
+      // Nachricht als gelöscht markieren
+      this.messages[messageIndex].isDeleted = true;
+      this.messages[messageIndex].content = 'Diese Nachricht wurde gelöscht';
+      
+      // Auch in allMessages aktualisieren
+      const allMessageIndex = this.allMessages.findIndex(msg => msg.id === message.id);
+      if (allMessageIndex !== -1) {
+        this.allMessages[allMessageIndex].isDeleted = true;
+        this.allMessages[allMessageIndex].content = 'Diese Nachricht wurde gelöscht';
+      }
+      
+      // Thread-Antworten für diese Nachricht aktualisieren
+      this.updateThreadForDeletedMessage(message.id);
+      
+      // Speichern
+      this.saveMessagesToStorage();
+      
+      console.log(`Nachricht ${message.id} wurde gelöscht`);
+    }
+  }
+  
+  // Methode zum Aktualisieren des Threads für eine gelöschte Nachricht
+  updateThreadForDeletedMessage(messageId: string) {
+    const originalMessageKey = `threadOriginalMessage_${messageId}`;
+    const originalMessage = localStorage.getItem(originalMessageKey);
+    
+    if (originalMessage) {
+      try {
+        const parsedMessage = JSON.parse(originalMessage);
+        parsedMessage.isDeleted = true;
+        parsedMessage.content = 'Diese Nachricht wurde gelöscht';
+        localStorage.setItem(originalMessageKey, JSON.stringify(parsedMessage));
+        console.log(`Thread-Originalnachricht ${messageId} als gelöscht markiert`);
+      } catch (e) {
+        console.error('Fehler beim Aktualisieren der Thread-Originalnachricht:', e);
+      }
     }
   }
   
