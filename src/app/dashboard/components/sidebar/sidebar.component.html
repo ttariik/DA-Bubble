@@ -163,7 +163,7 @@
               </div>
               <div class="stat-info">
                 <span class="stat-label">Mitglieder</span>
-                <span class="stat-value">{{ currentChannelDescription?.name === 'Entwicklerteam' ? '5' : '3' }}</span>
+                <span class="stat-value">{{ currentChannelStats?.memberCount || 'Wird geladen...' }}</span>
               </div>
             </div>
             <div class="stat-item">
@@ -174,7 +174,7 @@
               </div>
               <div class="stat-info">
                 <span class="stat-label">Nachrichten</span>
-                <span class="stat-value">{{ currentChannelDescription?.name === 'Entwicklerteam' ? '124' : '37' }}</span>
+                <span class="stat-value">{{ currentChannelStats?.messageCount || 'Wird geladen...' }}</span>
               </div>
             </div>
             <div class="stat-item">
@@ -188,7 +188,7 @@
               </div>
               <div class="stat-info">
                 <span class="stat-label">Erstellt am</span>
-                <span class="stat-value">{{ currentChannelDescription?.name === 'Entwicklerteam' ? '01.05.2023' : '15.06.2023' }}</span>
+                <span class="stat-value">{{ currentChannelStats?.createdAt ? formatDate(currentChannelStats?.createdAt!) : 'Wird geladen...' }}</span>
               </div>
             </div>
           </div>

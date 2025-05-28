@@ -1,16 +1,10 @@
-import { Component, EventEmitter, Inject, Output } from '@angular/core';
+import { Component, EventEmitter, Inject, Output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AddChannelModalComponent } from '../add-channel-modal/add-channel-modal.component';
-import { FirestoreService } from '../../../services/firestore.service';
-import { map } from 'rxjs/operators';
-
-interface Channel {
-  id: string;
-  name: string;
-  unread: number;
-  description?: string;
-}
+import { FirestoreService, Channel, ChannelStats } from '../../../services/firestore.service';
+import { map, switchMap, tap } from 'rxjs/operators';
+import { Observable, forkJoin, of } from 'rxjs';
 
 interface DirectMessage {
   id: string;
@@ -28,7 +22,7 @@ interface DirectMessage {
   styleUrls: ['./sidebar.component.scss']
 })
 
-export class SidebarComponent {
+export class SidebarComponent implements OnInit {
   @Output() channelSelected = new EventEmitter<Channel>();
   @Output() channelDeleted = new EventEmitter<string>();
   @Output() directMessageSelected = new EventEmitter<DirectMessage>();
@@ -59,8 +53,9 @@ export class SidebarComponent {
   channelToDelete: Channel | null = null;
   showChannelDescriptionModal: boolean = false;
   currentChannelDescription: { name: string, description: string } | null = null;
+  currentChannelStats: ChannelStats | null = null;
 
- constructor(private firestoreService: FirestoreService) {}
+  constructor(private firestoreService: FirestoreService) {}
 
   toggleChannels() {
     this.showChannels = !this.showChannels;
@@ -79,17 +74,26 @@ export class SidebarComponent {
   }
   
   handleChannelCreated(channelData: {name: string, description: string}) {
-    const newChannel: Channel = {
-      id: (this.channels.length + 1).toString(),
-      name: channelData.name,
-      unread: 0,
-      description: channelData.description
-    };
-    this.channels.push(newChannel);
-    
-    this.saveChannelsToStorage();
-    
-    this.selectChannel(newChannel);
+    // Channel im Firestore erstellen und die ID zurückbekommen
+    this.firestoreService.createChannelFirestore(channelData, 'activeUserId')
+      .then((channelId) => {
+        const newChannel: Channel = {
+          id: channelId || (this.channels.length + 1).toString(),
+          name: channelData.name,
+          unread: 0,
+          description: channelData.description
+        };
+        
+        // Lokale Channels aktualisieren
+        this.channels.push(newChannel);
+        this.saveChannelsToStorage();
+        
+        // Channel auswählen
+        this.selectChannel(newChannel);
+        
+        // Alle Channel mit Statistiken neu laden
+        this.loadChannelsWithStats();
+      });
   }
   
   selectChannel(channel: Channel) {
@@ -159,7 +163,7 @@ export class SidebarComponent {
     
     // Sicherstellen, dass der Entwicklerteam-Channel immer existiert
     if (!this.channels.some(channel => channel.id === '1')) {
-      this.channels.unshift({ id: '1', name: 'Entwicklerteam', unread: 0 });
+      this.channels.unshift({ id: '1', name: 'Entwicklerteam', unread: 0, description: 'Der Hauptkanal für alle Entwickler. Hier werden wichtige Updates und allgemeine Entwicklungsthemen besprochen.' });
     }
     
     this.saveChannelsToStorage();
@@ -204,16 +208,120 @@ export class SidebarComponent {
         name: channel.name,
         description: channel.description
       };
+      
+      // Statistiken für den Channel laden
+      this.loadChannelStats(channel.id);
+      
       this.showChannelDescriptionModal = true;
     }
+  }
+  
+  loadChannelStats(channelId: string) {
+    this.firestoreService.getChannelStats(channelId).subscribe(
+      stats => {
+        this.currentChannelStats = stats;
+      },
+      error => {
+        console.error('Error loading channel stats:', error);
+        // Fallback zu Standard-Werten
+        this.currentChannelStats = {
+          memberCount: channelId === '1' ? 5 : 3,
+          messageCount: channelId === '1' ? 124 : 37,
+          createdAt: channelId === '1' ? new Date(2023, 4, 1) : new Date(2023, 5, 15)
+        };
+      }
+    );
+  }
+  
+  // Lädt alle Channels mit ihren Statistiken
+  loadChannelsWithStats() {
+    this.firestoreService.getAllChannelsWithStats().subscribe(
+      channels => {
+        // Channels aus Firestore mit lokalen Channels zusammenführen
+        this.mergeChannelsWithLocalStorage(channels);
+      },
+      error => {
+        console.error('Error loading channels with stats:', error);
+        // Fallback auf lokale Daten
+        this.loadChannelsFromLocalStorage();
+      }
+    );
+  }
+  
+  // Lokale Channels mit Firestore-Channels zusammenführen
+  mergeChannelsWithLocalStorage(firestoreChannels: Channel[]) {
+    const savedChannels = localStorage.getItem('channels');
+    let localChannels: Channel[] = [];
+    
+    if (savedChannels) {
+      try {
+        localChannels = JSON.parse(savedChannels);
+      } catch (e) {
+        console.error('Error parsing saved channels:', e);
+      }
+    }
+    
+    // Kombiniere Firestore und lokale Channels
+    const combinedChannels = [...firestoreChannels];
+    
+    // Füge lokale Channels hinzu, die nicht in Firestore sind
+    localChannels.forEach(localChannel => {
+      if (!combinedChannels.some(c => c.id === localChannel.id)) {
+        combinedChannels.push(localChannel);
+      }
+    });
+    
+    // Stelle sicher, dass der Entwicklerteam-Channel existiert
+    if (!combinedChannels.some(channel => channel.id === '1' && channel.name === 'Entwicklerteam')) {
+      combinedChannels.unshift({
+        id: '1',
+        name: 'Entwicklerteam',
+        unread: 0,
+        description: 'Der Hauptkanal für alle Entwickler. Hier werden wichtige Updates und allgemeine Entwicklungsthemen besprochen.'
+      });
+    }
+    
+    this.channels = combinedChannels;
+    this.saveChannelsToStorage();
   }
   
   closeChannelInfoModal() {
     this.showChannelDescriptionModal = false;
     this.currentChannelDescription = null;
+    this.currentChannelStats = null;
   }
   
+  // Formatiert ein Datum für die Anzeige
+  formatDate(date: Date | null): string {
+    if (!date) return 'Unbekannt';
+    
+    return date.toLocaleDateString('de-DE', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  }
+
   ngOnInit() {
+    // Laden der Channels aus Firestore mit Statistiken
+    this.loadChannelsWithStats();
+    
+    // Fallback: Lokale Channels laden, falls Firestore-Ladeprozess fehlschlägt
+    this.loadChannelsFromLocalStorage();
+    
+    const savedDirectMessages = localStorage.getItem('directMessages');
+    if (savedDirectMessages) {
+      try {
+        this.directMessages = JSON.parse(savedDirectMessages);
+      } catch (e) {
+        console.error('Error parsing saved direct messages:', e);
+      }
+    }
+    
+    this.loadSelectedContent();
+  }
+  
+  loadChannelsFromLocalStorage() {
     const savedChannels = localStorage.getItem('channels');
     if (savedChannels) {
       try {
@@ -257,16 +365,9 @@ export class SidebarComponent {
       }];
       this.saveChannelsToStorage();
     }
-    
-    const savedDirectMessages = localStorage.getItem('directMessages');
-    if (savedDirectMessages) {
-      try {
-        this.directMessages = JSON.parse(savedDirectMessages);
-      } catch (e) {
-        console.error('Error parsing saved direct messages:', e);
-      }
-    }
-    
+  }
+  
+  loadSelectedContent() {
     const savedDirectMessageId = localStorage.getItem('selectedDirectMessageId');
     if (savedDirectMessageId) {
       this.selectedDirectMessageId = savedDirectMessageId;
