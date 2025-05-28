@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, ViewChild, ElementRef, AfterViewInit, OnInit } from '@angular/core';
+import { Component, EventEmitter, Output, ViewChild, ElementRef, AfterViewInit, OnInit, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -54,17 +54,13 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
   filteredUsers: any[] = [];
   originalUsers: any[] = [];
   
-  originalMessage: ThreadMessage = {
-    id: '1',
-    userId: '3',
-    userName: 'Noah Braun',
-    userAvatar: 'assets/icons/avatars/user3.svg',
-    content: 'Welche Version ist aktuell von Angular?',
-    timestamp: new Date('2023-01-14T14:25:00')
-  };
+  originalMessage: ThreadMessage | null = null;
   
   replies: ThreadMessage[] = [];
   replyGroups: DateGroup[] = [];
+
+  // Neuer Status zur Prüfung, ob ein Thread geöffnet ist
+  hasActiveThread: boolean = false;
   
   // Hinzufügen von Benutzern für @-Erwähnungen
   users = [
@@ -90,46 +86,92 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
   ngOnInit() {
     // Clear out static replies
     this.replies = [];
-    
-    // Load thread messages from localStorage if available
-    const savedOriginalMessage = localStorage.getItem('threadOriginalMessage');
-    const savedReplies = localStorage.getItem('threadReplies');
-    
-    if (savedOriginalMessage) {
-      try {
-        const parsedMessage = JSON.parse(savedOriginalMessage);
-        // Convert string date back to Date object
-        parsedMessage.timestamp = new Date(parsedMessage.timestamp);
-        // Ensure message is not in editing mode
-        parsedMessage.isEditing = false;
-        parsedMessage.editedContent = undefined;
-        this.originalMessage = parsedMessage;
-      } catch (e) {
-        console.error('Error parsing saved original message:', e);
-      }
+    this.replyGroups = [];
+    this.hasActiveThread = false;
+    this.originalMessage = null;
+  }
+
+  // Methode zum Öffnen eines Threads mit einer bestimmten Nachricht
+  openThreadWithMessage(message: any) {
+    if (!message) {
+      console.error('Keine gültige Nachricht zum Öffnen des Threads bereitgestellt');
+      return;
     }
+
+    console.log('Thread wird mit Nachricht geöffnet:', message);
+
+    // Erst alle vorherigen Thread-Daten zurücksetzen
+    this.resetThread();
+
+    // Konvertiere die Nachricht in das ThreadMessage-Format
+    this.originalMessage = {
+      id: message.id,
+      userId: message.userId,
+      userName: message.userName,
+      userAvatar: message.userAvatar,
+      content: message.content,
+      timestamp: message.timestamp,
+      reactions: message.reactions,
+      isEdited: message.isEdited
+    };
+
+    // Lade existierende Antworten für diese Nachricht aus dem localStorage
+    this.loadRepliesForMessage(message.id);
+
+    // Setze den aktiven Thread-Status
+    this.hasActiveThread = true;
+
+    // Speichere die Original-Nachricht im localStorage
+    this.saveThreadToStorage();
+
+    // Scrolle zum unteren Ende des Thread-Bereichs
+    setTimeout(() => {
+      this.scrollToBottom();
+    }, 100);
+  }
+
+  // Methode zum Laden von Antworten für eine bestimmte Nachricht
+  loadRepliesForMessage(messageId: string) {
+    // Lösche vorherige Antworten
+    this.replies = [];
+    this.replyGroups = [];
+
+    // Lade Antworten aus dem localStorage basierend auf der Nachrichten-ID
+    const threadRepliesKey = `threadReplies_${messageId}`;
+    const savedReplies = localStorage.getItem(threadRepliesKey);
     
     if (savedReplies) {
       try {
         const parsedReplies = JSON.parse(savedReplies);
-        // Convert string dates back to Date objects
+        // Konvertiere Datumswerte und stelle sicher, dass kein Bearbeitungsmodus aktiv ist
         parsedReplies.forEach((reply: any) => {
           reply.timestamp = new Date(reply.timestamp);
-          // Ensure no replies are in editing mode after reload
           reply.isEditing = false;
           reply.editedContent = undefined;
         });
         this.replies = parsedReplies;
+        console.log(`Loaded ${this.replies.length} replies for message ${messageId}`);
       } catch (e) {
         console.error('Error parsing saved replies:', e);
       }
+    } else {
+      console.log(`No saved replies found for message ${messageId}`);
     }
-    
-    // Group replies by date
+
+    // Gruppiere Antworten nach Datum
     this.groupRepliesByDate();
+  }
+
+  // Methode zum Schließen des Threads und Zurücksetzen des Status
+  resetThread() {
+    console.log('Resetting thread');
+    this.originalMessage = null;
+    this.replies = [];
+    this.replyGroups = [];
+    this.hasActiveThread = false;
+    this.replyInput = '';
     
-    // Check if date labels need updating (e.g., if last opened yesterday)
-    this.checkDateLabels();
+    // Lokalen Speicher nicht löschen, nur Status zurücksetzen
   }
   
   // Group replies by date
@@ -248,73 +290,65 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
         this.showUserTagging = true;
       }
     } 
-    // Wenn kein @ vor dem Cursor gefunden wird, schließe Modals
+    // Wenn kein @ gefunden wird oder ein Leerzeichen dazwischen ist, schließe das Tagging-Modal
     else {
       this.showUserTagging = false;
     }
   }
   
   shouldShowUserTagging(text: string, cursorPosition: number): boolean {
-    // Finde Position des letzten @ vor dem Cursor
+    // Find position of the last @ before cursor
     const atPosition = text.lastIndexOf('@', cursorPosition - 1);
     if (atPosition === -1) return false;
     
-    // Prüfe, ob ein Leerzeichen zwischen @ und Cursor ist
+    // Check if there's a space between @ and cursor
     const textBetween = text.substring(atPosition, cursorPosition);
     return !textBetween.includes(' ');
   }
   
   initializeUsers() {
-    // Benutze die vorhandenen Benutzer
-    this.filteredUsers = this.users.map(user => ({
-      ...user,
-      online: Math.random() > 0.3 // Zufälliger Online-Status für Demo-Zwecke
-    }));
+    this.originalUsers = [...this.users];
+    this.filteredUsers = [...this.users];
     
-    // Speichere Original-Liste für Filterung
-    this.originalUsers = [...this.filteredUsers];
+    // Sort users by name
+    this.filteredUsers.sort((a, b) => {
+      if (a.name < b.name) return -1;
+      if (a.name > b.name) return 1;
+      return 0;
+    });
     
     console.log('Initialized users for thread view:', this.filteredUsers);
   }
   
   filterUsers() {
-    // Initialisiere mit Beispielbenutzern, falls keine vorhanden sind
-    if (this.filteredUsers.length === 0) {
+    if (this.originalUsers.length === 0) {
       this.initializeUsers();
-      return;
     }
     
-    // Setze auf Original-Liste zurück vor dem Filtern
-    if (!this.originalUsers || this.originalUsers.length === 0) {
-      this.originalUsers = [...this.filteredUsers];
-    }
-    
-    // Starte mit der Original-Liste
-    this.filteredUsers = [...this.originalUsers];
-    
-    // Filtere, wenn Suchtext vorhanden ist
-    if (this.tagSearchText) {
-      this.filteredUsers = this.filteredUsers.filter(user => 
-        user.name.toLowerCase().includes(this.tagSearchText.toLowerCase())
+    if (!this.tagSearchText) {
+      this.filteredUsers = [...this.originalUsers];
+    } else {
+      this.filteredUsers = this.originalUsers.filter(user => 
+        user.name.toLowerCase().includes(this.tagSearchText)
       );
     }
     
-    console.log('Filtered users in thread view:', this.filteredUsers);
+    console.log('Filtered users for thread view:', this.filteredUsers);
   }
   
   selectUserTag(user: any) {
-    if (!this.replyInput) return;
+    if (this.replyInput === undefined) return;
     
-    // Finde Position des letzten @ vor dem Cursor
+    // Find position of the last @ before cursor
     const atPosition = this.replyInput.lastIndexOf('@', this.tagCursorPosition - 1);
     if (atPosition === -1) return;
     
-    // Ersetze Text von @ bis Cursor mit dem Benutzernamen
+    // Replace text from @ to cursor with the user name
     const beforeTag = this.replyInput.substring(0, atPosition);
     const afterTag = this.replyInput.substring(this.tagCursorPosition);
     this.replyInput = `${beforeTag}@${user.name} ${afterTag}`;
     
-    // Schließe das Tagging-Modal
+    // Close the tagging modal
     this.showUserTagging = false;
   }
   
@@ -365,35 +399,36 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
   }
   
   scrollToBottom() {
-    try {
-      if (this.scrollContainer) {
-        const element = this.scrollContainer.nativeElement;
-        element.scrollTop = element.scrollHeight;
-        console.log('Scrolling to bottom in thread view', element.scrollHeight);
-      }
-    } catch (err) {
-      console.error('Fehler beim Scrollen:', err);
+    if (this.scrollContainer) {
+      const element = this.scrollContainer.nativeElement;
+      element.scrollTop = element.scrollHeight;
     }
   }
   
-  isScrolledToBottom() {
-    if (this.scrollContainer) {
-      const element = this.scrollContainer.nativeElement;
-      return Math.abs((element.scrollHeight - element.scrollTop) - element.clientHeight) < 1;
-    }
-    return true;
+  isScrolledToBottom(): boolean {
+    if (!this.scrollContainer) return true;
+    const element = this.scrollContainer.nativeElement;
+    const threshold = 150; // Schwelle in Pixeln
+    return element.scrollHeight - element.scrollTop - element.clientHeight < threshold;
   }
   
   sendReply() {
+    if (!this.originalMessage) {
+      console.error('Keine aktive Thread-Nachricht zum Antworten');
+      return;
+    }
+
     if (this.replyInput.trim()) {
-      const wasAtBottom = this.isScrolledToBottom();
       const now = new Date();
       
+      // Generate a unique ID for the reply
+      const replyId = Date.now().toString();
+      
       const newReply: ThreadMessage = {
-        id: (this.replies.length + 1).toString(),
-        userId: '1',
+        id: replyId,
+        userId: this.currentUserId,
         userName: 'Frederik Beck',
-        userAvatar: 'assets/icons/avatars/user1.svg',
+        userAvatar: 'assets/icons/avatars/user1.svg', 
         content: this.replyInput.trim(),
         timestamp: now,
         isNew: true
@@ -402,22 +437,28 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
       this.replies.push(newReply);
       this.replyInput = '';
       
+      // Update thread count in original message if needed
+      if (this.originalMessage) {
+        // This would be saved with the original message in a real app
+      }
+      
       // Update groups
       this.groupRepliesByDate();
       
       // Save to localStorage
       this.saveThreadToStorage();
       
+      // Scroll to bottom
+      const wasAtBottom = this.isScrolledToBottom();
       if (wasAtBottom) {
         setTimeout(() => {
           this.scrollToBottom();
-        }, 150);
+        }, 100);
       }
       
-      // Remove isNew flag after animation completes to prevent re-animation
+      // Remove new message highlight after a short delay
       setTimeout(() => {
         newReply.isNew = false;
-        // Save again after removing the isNew flag
         this.saveThreadToStorage();
       }, 500);
     }
@@ -431,7 +472,6 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
     this.openEmojiPicker(message);
   }
   
-  // Add a direct reaction with a specific emoji
   addDirectReaction(message: ThreadMessage, emoji: string) {
     if (!message.reactions) {
       message.reactions = [];
@@ -441,7 +481,6 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
     
     if (existingReaction) {
       if (existingReaction.userIds.includes(this.currentUserId)) {
-        // Remove reaction if already added by this user
         existingReaction.count -= 1;
         existingReaction.userIds = existingReaction.userIds.filter(id => id !== this.currentUserId);
         
@@ -449,12 +488,10 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
           message.reactions = message.reactions.filter(r => r.emoji !== emoji);
         }
       } else {
-        // Add user to existing reaction
         existingReaction.count += 1;
         existingReaction.userIds.push(this.currentUserId);
       }
     } else {
-      // Create new reaction
       message.reactions.push({
         emoji: emoji,
         count: 1,
@@ -462,19 +499,16 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
       });
     }
     
-    // Save changes
+    // Save changes to localStorage
     this.saveThreadToStorage();
   }
   
-  // Open emoji picker specifically for adding reactions
   openEmojiPickerForReaction(message: ThreadMessage) {
     this.targetMessage = message;
     this.showEmojiPicker = true;
   }
   
   editMessage(message: ThreadMessage) {
-    if (message.userId !== this.currentUserId) return;
-    
     message.isEditing = true;
     message.editedContent = message.content;
     this.editingMessage = message;
@@ -484,12 +518,13 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
     if (message.editedContent && message.editedContent.trim()) {
       message.content = message.editedContent.trim();
       message.isEdited = true;
-      
-      // Save changes to localStorage
-      this.saveThreadToStorage();
     }
+    message.isEditing = false;
+    message.editedContent = undefined;
+    this.editingMessage = null;
     
-    this.cancelEdit(message);
+    // Save changes to localStorage
+    this.saveThreadToStorage();
   }
   
   cancelEdit(message: ThreadMessage) {
@@ -503,42 +538,43 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
       event.preventDefault();
       this.saveEditedMessage(message);
     } else if (event.key === 'Escape') {
-      event.preventDefault();
       this.cancelEdit(message);
     }
   }
   
-  // Save messages to localStorage
   saveThreadToStorage() {
-    // Create copies to avoid modifying the UI state
-    const originalMessageToSave = JSON.parse(JSON.stringify(this.originalMessage));
-    const repliesToSave = JSON.parse(JSON.stringify(this.replies));
-    
-    // Remove temporary editing states from original message
-    delete originalMessageToSave.isEditing;
-    delete originalMessageToSave.editedContent;
-    delete originalMessageToSave.isNew;
-    
-    // Remove temporary editing states from replies
-    repliesToSave.forEach((reply: any) => {
-      delete reply.isEditing;
-      delete reply.editedContent;
-      delete reply.isNew;
-    });
-    
-    localStorage.setItem('threadOriginalMessage', JSON.stringify(originalMessageToSave));
-    localStorage.setItem('threadReplies', JSON.stringify(repliesToSave));
-    
-    // Update date labels and regrouping
-    this.updateDateLabels();
-    this.groupRepliesByDate();
+    // Speichere die Antworten mit Referenz zur Original-Nachricht
+    if (this.originalMessage) {
+      const threadRepliesKey = `threadReplies_${this.originalMessage.id}`;
+      localStorage.setItem(threadRepliesKey, JSON.stringify(this.replies));
+      console.log(`Saved ${this.replies.length} replies for message ${this.originalMessage.id}`);
+      
+      // Speichere auch die Original-Nachricht separat
+      localStorage.setItem(`threadOriginalMessage_${this.originalMessage.id}`, JSON.stringify(this.originalMessage));
+    }
   }
   
-  // Method to check if date labels need to be updated (e.g., at midnight)
   checkDateLabels() {
-    const needsUpdate = this.replyGroups.some(group => {
-      const currentLabel = this.getDateLabel(group.date);
-      return currentLabel !== group.label;
+    const today = new Date();
+    const todayStr = this.getDateWithoutTime(today);
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = this.getDateWithoutTime(yesterday);
+    
+    let needsUpdate = false;
+    
+    this.replyGroups.forEach(group => {
+      const groupDateStr = this.getDateWithoutTime(group.date);
+      const oldLabel = group.label;
+      
+      if (groupDateStr === todayStr && oldLabel !== 'Heute') {
+        needsUpdate = true;
+      } else if (groupDateStr === yesterdayStr && oldLabel !== 'Gestern') {
+        needsUpdate = true;
+      } else if (groupDateStr !== todayStr && groupDateStr !== yesterdayStr && 
+                (oldLabel === 'Heute' || oldLabel === 'Gestern')) {
+        needsUpdate = true;
+      }
     });
     
     if (needsUpdate) {

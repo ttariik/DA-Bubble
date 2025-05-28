@@ -41,6 +41,7 @@ interface DirectMessage {
 export class DashboardComponent {
   @ViewChild(ChatAreaComponent) chatArea!: ChatAreaComponent;
   @ViewChild(SidebarComponent) sidebar!: SidebarComponent;
+  @ViewChild(ThreadViewComponent) threadView!: ThreadViewComponent;
 
   private firestoreService = inject(FirestoreService);
   private authService = inject(AuthService);
@@ -154,6 +155,13 @@ export class DashboardComponent {
 
   toggleThreadView() {
     this.showThreadView = !this.showThreadView;
+    
+    // Wenn der Thread-Bereich geschlossen wird, setze den Thread zurück
+    if (!this.showThreadView && this.threadView) {
+      setTimeout(() => {
+        this.threadView.resetThread();
+      });
+    }
   }
 
   navigateHome() {
@@ -490,5 +498,23 @@ export class DashboardComponent {
     setTimeout(() => {
       console.log('User tagging dialog opened from chat, users:', this.filteredUsers);
     }, 0);
+  }
+
+  // Methode zum Öffnen des Thread-Bereichs mit einer Nachricht
+  openThreadWithMessage(message: any) {
+    console.log('Opening thread in dashboard with message:', message);
+    
+    // Stelle sicher, dass der Thread-Bereich sichtbar ist
+    this.showThreadView = true;
+    
+    // Warte auf das nächste Change Detection, damit threadView verfügbar ist
+    setTimeout(() => {
+      if (this.threadView) {
+        // Öffne den Thread mit der ausgewählten Nachricht
+        this.threadView.openThreadWithMessage(message);
+      } else {
+        console.error('ThreadViewComponent nicht verfügbar');
+      }
+    });
   }
 }

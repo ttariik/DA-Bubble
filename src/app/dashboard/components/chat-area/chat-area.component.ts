@@ -42,6 +42,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
   @Input() channelName: string = 'Entwicklerteam';
   @Input() channelId: string = '1';
   @Output() mentionClicked = new EventEmitter<void>();
+  @Output() threadOpened = new EventEmitter<Message>();
 
   messageInput: string = '';
   showEmojiPicker: boolean = false;
@@ -313,7 +314,18 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
   }
   
   openThread(message: Message) {
-    console.log('Open thread for message:', message);
+    console.log('Opening thread for message:', message);
+    
+    // Aktualisiere Thread-Count, wenn er noch nicht existiert
+    if (!message.threadCount) {
+      message.threadCount = 0;
+    }
+    
+    // Emit ein Event mit der ausgewählten Nachricht
+    this.threadOpened.emit(message);
+    
+    // Speichere die aktualisierte Nachricht
+    this.saveMessagesToStorage();
   }
   
   addReaction(message: Message) {
