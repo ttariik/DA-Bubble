@@ -226,6 +226,13 @@ export class DashboardComponent {
     
     // If no direct message is selected, load channel
     this.loadSelectedChannel();
+    
+    // Wenn die Chat-Area verfügbar ist, lade den "Entwicklerteam"-Channel
+    setTimeout(() => {
+      if (this.chatArea && this.selectedChannel.id === '1') {
+        this.chatArea.changeChannel(this.selectedChannel.name, this.selectedChannel.id);
+      }
+    }, 0);
   }
 
   loadSelectedChannel() {
@@ -242,12 +249,20 @@ export class DashboardComponent {
           if (selectedChannel) {
             this.selectedChannel = selectedChannel;
             this.isDirectMessageActive = false;
+            return;
           }
         } catch (e) {
           console.error('Error parsing saved channels:', e);
         }
       }
     }
+    
+    // Standardmäßig immer auf den "Entwicklerteam"-Channel (ID 1) zurückfallen, wenn kein Channel geladen werden konnte
+    this.selectedChannel = { id: '1', name: 'Entwicklerteam', unread: 0 };
+    this.isDirectMessageActive = false;
+    
+    // Speichere die Auswahl im localStorage
+    localStorage.setItem('selectedChannelId', '1');
   }
 
   openEmojiPicker() {

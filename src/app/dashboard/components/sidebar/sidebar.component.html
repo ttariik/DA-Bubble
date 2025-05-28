@@ -47,8 +47,9 @@
             (mouseenter)="showDeleteButton(channel.id)"
             (mouseleave)="hideDeleteButton()"
           >
-            <div class="channel-name">
+            <div class="channel-name" (click)="showChannelInfo(channel, $event)" title="Klicke um Beschreibung zu sehen">
               <span class="channel-icon">#</span>{{ channel.name }}
+              <img *ngIf="channel.description" src="assets/icons/info.svg" alt="Info" class="info-icon" title="Klicke um Beschreibung zu sehen">
             </div>
             <div class="channel-actions">
               <div class="unread-badge" *ngIf="channel.unread > 0">
@@ -135,6 +136,24 @@
         <div class="delete-confirm-actions">
           <button class="cancel-button" (click)="cancelDelete()">Abbrechen</button>
           <button class="delete-button" (click)="deleteChannel()">Löschen</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Channel Description Modal -->
+    <div class="channel-description-modal" *ngIf="showChannelDescriptionModal">
+      <div class="channel-description-backdrop" (click)="closeChannelInfoModal()"></div>
+      <div class="channel-description-content">
+        <div class="modal-header">
+          <h3>Channel-Info: #{{ currentChannelDescription?.name }}</h3>
+          <button class="close-button" (click)="closeChannelInfoModal()">×</button>
+        </div>
+        <div class="modal-body">
+          <h4>Beschreibung</h4>
+          <p>{{ currentChannelDescription?.description }}</p>
+        </div>
+        <div class="modal-footer">
+          <button class="ok-button" (click)="closeChannelInfoModal()">Schließen</button>
         </div>
       </div>
     </div>

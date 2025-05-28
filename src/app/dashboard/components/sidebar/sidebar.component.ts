@@ -9,6 +9,7 @@ interface Channel {
   id: string;
   name: string;
   unread: number;
+  description?: string;
 }
 
 interface DirectMessage {
@@ -41,7 +42,7 @@ export class SidebarComponent {
   selectedDirectMessageId: string | null = null;
   
   channels: Channel[] = [
-    { id: '1', name: 'Entwicklerteam', unread: 0 }
+    { id: '1', name: 'Entwicklerteam', unread: 0, description: 'Der Hauptkanal für alle Entwickler. Hier werden wichtige Updates und allgemeine Entwicklungsthemen besprochen.' }
   ];
   
   directMessages: DirectMessage[] = [
@@ -56,6 +57,8 @@ export class SidebarComponent {
   hoverChannelId: string | null = null;
   showDeleteConfirm: boolean = false;
   channelToDelete: Channel | null = null;
+  showChannelDescriptionModal: boolean = false;
+  currentChannelDescription: { name: string, description: string } | null = null;
 
  constructor(private firestoreService: FirestoreService) {}
 
@@ -79,7 +82,8 @@ export class SidebarComponent {
     const newChannel: Channel = {
       id: (this.channels.length + 1).toString(),
       name: channelData.name,
-      unread: 0
+      unread: 0,
+      description: channelData.description
     };
     this.channels.push(newChannel);
     
@@ -144,7 +148,19 @@ export class SidebarComponent {
     
     const channelId = this.channelToDelete.id;
     
+    // Zusätzliche Sicherheit: Entwicklerteam-Channel kann nicht gelöscht werden
+    if (channelId === '1') {
+      this.showDeleteConfirm = false;
+      this.channelToDelete = null;
+      return;
+    }
+    
     this.channels = this.channels.filter(c => c.id !== channelId);
+    
+    // Sicherstellen, dass der Entwicklerteam-Channel immer existiert
+    if (!this.channels.some(channel => channel.id === '1')) {
+      this.channels.unshift({ id: '1', name: 'Entwicklerteam', unread: 0 });
+    }
     
     this.saveChannelsToStorage();
     
@@ -180,18 +196,66 @@ export class SidebarComponent {
     localStorage.setItem('directMessages', JSON.stringify(this.directMessages));
   }
   
+  showChannelInfo(channel: Channel, event: MouseEvent) {
+    event.stopPropagation(); // Verhindert, dass der Channel ausgewählt wird
+    
+    if (channel.description) {
+      this.currentChannelDescription = {
+        name: channel.name,
+        description: channel.description
+      };
+      this.showChannelDescriptionModal = true;
+    }
+  }
+  
+  closeChannelInfoModal() {
+    this.showChannelDescriptionModal = false;
+    this.currentChannelDescription = null;
+  }
+  
   ngOnInit() {
     const savedChannels = localStorage.getItem('channels');
     if (savedChannels) {
       try {
-      this.firestoreService.getAllChannels().subscribe(channels => {
-      this.channels = channels;
-    });
-
         this.channels = JSON.parse(savedChannels);
+        
+        // Sicherstellen, dass der "Entwicklerteam"-Channel immer existiert
+        if (!this.channels.some(channel => channel.id === '1' && channel.name === 'Entwicklerteam')) {
+          this.channels.unshift({ 
+            id: '1', 
+            name: 'Entwicklerteam', 
+            unread: 0,
+            description: 'Der Hauptkanal für alle Entwickler. Hier werden wichtige Updates und allgemeine Entwicklungsthemen besprochen.'
+          });
+          this.saveChannelsToStorage();
+        } else {
+          // Stelle sicher, dass der Entwicklerteam-Channel eine Beschreibung hat
+          const entwicklerteamChannel = this.channels.find(channel => channel.id === '1' && channel.name === 'Entwicklerteam');
+          if (entwicklerteamChannel && !entwicklerteamChannel.description) {
+            entwicklerteamChannel.description = 'Der Hauptkanal für alle Entwickler. Hier werden wichtige Updates und allgemeine Entwicklungsthemen besprochen.';
+            this.saveChannelsToStorage();
+          }
+        }
       } catch (e) {
         console.error('Error parsing saved channels:', e);
+        // Setze auf Default-Channel zurück, wenn etwas schief geht
+        this.channels = [{ 
+          id: '1', 
+          name: 'Entwicklerteam', 
+          unread: 0,
+          description: 'Der Hauptkanal für alle Entwickler. Hier werden wichtige Updates und allgemeine Entwicklungsthemen besprochen.'
+        }];
+        this.saveChannelsToStorage();
       }
+    } else {
+      // Wenn keine Kanäle gefunden wurden, stelle sicher, dass der Standard-Kanal vorhanden ist
+      this.channels = [{ 
+        id: '1', 
+        name: 'Entwicklerteam', 
+        unread: 0,
+        description: 'Der Hauptkanal für alle Entwickler. Hier werden wichtige Updates und allgemeine Entwicklungsthemen besprochen.'
+      }];
+      this.saveChannelsToStorage();
     }
     
     const savedDirectMessages = localStorage.getItem('directMessages');
