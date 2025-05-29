@@ -299,19 +299,22 @@
 }
 
 .user-avatar {
-  width: 30px;
-  height: 30px;
+  position: relative;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
   overflow: hidden;
   margin-right: 10px;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease;
   
+  &:hover {
+    transform: scale(1.1);
+  }
+
   img {
     width: 100%;
     height: 100%;
-    border-radius: 50%;
     object-fit: cover;
   }
   
@@ -322,11 +325,11 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background-color: #ccc;
-    border: 2px solid #FFF;
+    background-color: #e0e0e0;
+    border: 2px solid #fff;
     
     &.online {
-      background-color: #76C068;
+      background-color: #00C851;
     }
   }
 }

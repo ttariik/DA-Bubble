@@ -100,7 +100,7 @@
               (click)="selectDirectMessage(dm)"
             >
               <div class="user-info">
-                <div class="user-avatar">
+                <div class="user-avatar" (click)="showContactProfileModal(dm, $event)" title="Profilinfo anzeigen">
                   <img [src]="dm.avatar" [alt]="dm.name" />
                   <div
                     class="status-indicator"
@@ -200,5 +200,13 @@
         </div>
       </div>
     </div>
+
+    <!-- Add Contact Profile Modal -->
+    <app-contact-profile-modal
+      [isVisible]="showContactProfile"
+      [contact]="selectedContact"
+      (close)="closeContactProfile()"
+    >
+    </app-contact-profile-modal>
   </div>
 </div>

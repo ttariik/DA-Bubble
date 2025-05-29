@@ -5,6 +5,7 @@ import { AddChannelModalComponent } from '../add-channel-modal/add-channel-modal
 import { FirestoreService, Channel, ChannelStats } from '../../../services/firestore.service';
 import { map, switchMap, tap } from 'rxjs/operators';
 import { Observable, forkJoin, of } from 'rxjs';
+import { ContactProfileModalComponent, ContactProfile } from '../contact-profile-modal/contact-profile-modal.component';
 
 interface DirectMessage {
   id: string;
@@ -12,12 +13,16 @@ interface DirectMessage {
   avatar: string;
   online: boolean;
   unread: number;
+  email?: string;
+  phone?: string;
+  title?: string;
+  department?: string;
 }
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule, AddChannelModalComponent],
+  imports: [CommonModule, RouterModule, AddChannelModalComponent, ContactProfileModalComponent],
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.scss']
 })
@@ -35,17 +40,72 @@ export class SidebarComponent implements OnInit {
   selectedChannelId: string = '1';
   selectedDirectMessageId: string | null = null;
   
+  // Contact profile modal properties
+  showContactProfile: boolean = false;
+  selectedContact: ContactProfile | null = null;
+  
   channels: Channel[] = [
     { id: '1', name: 'Entwicklerteam', unread: 0, description: 'Der Hauptkanal für alle Entwickler. Hier werden wichtige Updates und allgemeine Entwicklungsthemen besprochen.' }
   ];
   
   directMessages: DirectMessage[] = [
-    { id: '1', name: 'Max Mustermann (Du)', avatar: 'assets/icons/avatars/user2.svg', online: true, unread: 0 },
-    { id: '2', name: 'Sofia Müller', avatar: 'assets/icons/avatars/user1.svg', online: true, unread: 0 },
-    { id: '3', name: 'Noah Braun', avatar: 'assets/icons/avatars/user3.svg', online: true, unread: 0 },
-    { id: '4', name: 'Elise Roth', avatar: 'assets/icons/avatars/user6.svg', online: false, unread: 0 },
-    { id: '5', name: 'Elias Neumann', avatar: 'assets/icons/avatars/user5.svg', online: true, unread: 0 },
-    { id: '6', name: 'Steffen Hoffmann', avatar: 'assets/icons/avatars/user2.svg', online: false, unread: 0 }
+    { 
+      id: '1', 
+      name: 'Max Mustermann (Du)', 
+      avatar: 'assets/icons/avatars/user2.svg', 
+      online: true, 
+      unread: 0,
+      email: 'max.mustermann@beispiel.com',
+      title: 'Senior Developer',
+      department: 'Engineering'
+    },
+    { 
+      id: '2', 
+      name: 'Sofia Müller', 
+      avatar: 'assets/icons/avatars/user1.svg', 
+      online: true, 
+      unread: 0,
+      email: 'sofia.mueller@beispiel.com',
+      title: 'UX Designer',
+      department: 'Design'
+    },
+    { 
+      id: '3', 
+      name: 'Noah Braun', 
+      avatar: 'assets/icons/avatars/user3.svg', 
+      online: true, 
+      unread: 0,
+      email: 'noah.braun@beispiel.com',
+      title: 'Product Manager',
+      department: 'Product'
+    },
+    { 
+      id: '4', 
+      name: 'Elise Roth', 
+      avatar: 'assets/icons/avatars/user6.svg', 
+      online: false, 
+      unread: 0,
+      email: 'elise.roth@beispiel.com',
+      title: 'Backend Developer',
+      department: 'Engineering'
+    },
+    { 
+      id: '5', 
+      name: 'Elias Neumann', 
+      avatar: 'assets/icons/avatars/user5.svg', 
+      online: true, 
+      unread: 0,
+      email: 'elias.neumann@beispiel.com',
+      department: 'Marketing'
+    },
+    { 
+      id: '6', 
+      name: 'Steffen Hoffmann', 
+      avatar: 'assets/icons/avatars/user2.svg', 
+      online: false, 
+      unread: 0,
+      phone: '+49 176 12345678'
+    }
   ];
   
   hoverChannelId: string | null = null;
@@ -56,6 +116,19 @@ export class SidebarComponent implements OnInit {
   currentChannelStats: ChannelStats | null = null;
 
   constructor(private firestoreService: FirestoreService) {}
+
+  // Show contact profile when avatar is clicked
+  showContactProfileModal(contact: DirectMessage, event: MouseEvent): void {
+    event.stopPropagation(); // Prevent selecting the direct message
+    this.selectedContact = contact;
+    this.showContactProfile = true;
+  }
+  
+  // Close contact profile modal
+  closeContactProfile(): void {
+    this.showContactProfile = false;
+    this.selectedContact = null;
+  }
 
   toggleChannels() {
     this.showChannels = !this.showChannels;
