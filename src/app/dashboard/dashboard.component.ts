@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, ViewChild, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, ViewChild, inject, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
@@ -10,6 +10,7 @@ import { FirestoreService } from '../services/firestore.service';
 import { AuthService } from '../services/auth.service';
 import { User } from '../models/user.class';
 import { MatDialog } from '@angular/material/dialog';
+import { trigger, state, style, animate, transition } from '@angular/animations';
 
 interface Channel {
   id: string;
@@ -37,6 +38,26 @@ interface DirectMessage {
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
+  animations: [
+    trigger('profileMenuAnimation', [
+      state('closed', style({
+        opacity: 0,
+        transform: 'translateY(-20px) scale(0.95)',
+        visibility: 'hidden'
+      })),
+      state('open', style({
+        opacity: 1,
+        transform: 'translateY(0) scale(1)',
+        visibility: 'visible'
+      })),
+      transition('closed => open', [
+        animate('200ms cubic-bezier(0.175, 0.885, 0.32, 1.275)')
+      ]),
+      transition('open => closed', [
+        animate('150ms ease-in')
+      ])
+    ])
+  ]
 })
 export class DashboardComponent {
   @ViewChild(ChatAreaComponent) chatArea!: ChatAreaComponent;
@@ -78,6 +99,8 @@ export class DashboardComponent {
   // Filtered lists for tagging
   filteredChannels: Channel[] = [];
   filteredUsers: DirectMessage[] = [];
+
+  profileMenuOpen: boolean = false;
 
   constructor() {}
 
@@ -516,5 +539,19 @@ export class DashboardComponent {
         console.error('ThreadViewComponent nicht verfügbar');
       }
     });
+  }
+
+  // Toggle the profile menu on click
+  toggleProfileMenu(event: MouseEvent): void {
+    event.stopPropagation();
+    this.profileMenuOpen = !this.profileMenuOpen;
+  }
+  
+  // Close profile menu when clicking outside
+  @HostListener('document:click')
+  closeProfileMenu(): void {
+    if (this.profileMenuOpen) {
+      this.profileMenuOpen = false;
+    }
   }
 }
