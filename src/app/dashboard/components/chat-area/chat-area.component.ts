@@ -42,6 +42,8 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
   @ViewChild('scrollContainer') scrollContainer!: ElementRef;
   @Input() channelName: string = 'Entwicklerteam';
   @Input() channelId: string = '1';
+  @Input() isDirect: boolean = false;
+  @Input() directContact: any = null;
   @Output() mentionClicked = new EventEmitter<void>();
   @Output() threadOpened = new EventEmitter<Message>();
 

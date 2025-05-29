@@ -3,18 +3,30 @@
   <div class="channel-header">
     <div class="channel-info">
       <div class="channel-name">
-        <span class="hash-symbol">#</span>
-        {{ channelName }}
+        <!-- Show hash for channels, avatar for direct messages -->
+        <ng-container *ngIf="!isDirect">
+          <span class="hash-symbol">#</span>
+          {{ channelName }}
+        </ng-container>
+        <ng-container *ngIf="isDirect && directContact">
+          <div class="direct-contact-info">
+            <div class="direct-contact-avatar">
+              <img [src]="directContact.avatar" [alt]="directContact.name">
+              <div class="status-indicator" [class.online]="directContact.online"></div>
+            </div>
+            <span class="direct-contact-name">{{ directContact.name }}</span>
+          </div>
+        </ng-container>
       </div>
       <div class="channel-details">
-        <div class="member-count">
+        <div class="member-count" *ngIf="!isDirect">
           <span class="member-count-icon">👥</span>
           <span class="member-count-text">{{ channelMembers.length }}</span>
         </div>
       </div>
     </div>
     <div class="channel-actions">
-      <div class="members-avatars">
+      <div class="members-avatars" *ngIf="!isDirect">
         <div
           *ngFor="let member of channelMembers.slice(0, 3)"
           class="member-avatar"
@@ -127,7 +139,7 @@
       <div class="message-input-wrapper">
         <textarea
           class="message-input"
-          placeholder="Nachricht an #{{ channelName }} senden"
+          [placeholder]="isDirect ? 'Nachricht an ' + directContact?.name + ' senden' : 'Nachricht an #' + channelName + ' senden'"
           [(ngModel)]="messageInput"
           (keydown.enter)="$event.preventDefault(); sendMessage()"
           (keyup)="handleInputKeyup($event)"

@@ -61,6 +61,7 @@ interface DirectMessage {
 })
 export class DashboardComponent {
   @ViewChild(ChatAreaComponent) chatArea!: ChatAreaComponent;
+  @ViewChild('directChatArea') directChatArea!: ChatAreaComponent;
   @ViewChild(SidebarComponent) sidebar!: SidebarComponent;
   @ViewChild(ThreadViewComponent) threadView!: ThreadViewComponent;
 
@@ -87,11 +88,7 @@ export class DashboardComponent {
     isActive: true,
   };
 
-  directMessageInput: string = '';
   showEmojiPicker: boolean = false;
-  
-  // Direct messages storage
-  directMessages: { [userId: string]: any[] } = {};
   
   // New properties for tagging
   showChannelTagging: boolean = false;
@@ -116,9 +113,6 @@ export class DashboardComponent {
     setTimeout(() => {
       this.initializeTaggingLists();
     }, 500);
-    
-    // Load direct messages from localStorage
-    this.loadDirectMessagesFromStorage();
   }
 
   initializeTaggingLists() {
@@ -219,11 +213,8 @@ export class DashboardComponent {
     this.selectedDirectMessage = directMessage;
     this.isDirectMessageActive = true;
     
-    // Initialize direct messages for this user if not already done
-    if (!this.directMessages[directMessage.id]) {
-      this.directMessages[directMessage.id] = [];
-      this.saveDirectMessagesToStorage();
-    }
+    // Store the selection in localStorage
+    localStorage.setItem('selectedDirectMessageId', directMessage.id);
   }
   
   handleChannelDeleted(channelId: string) {
@@ -312,242 +303,42 @@ export class DashboardComponent {
   
   addEmoji(event: any) {
     const emoji = event.emoji?.native || event.emoji || '';
-    this.directMessageInput += emoji;
+    // No longer needed - direct messages now handled by ChatAreaComponent
+    // this.directMessageInput += emoji;
     this.showEmojiPicker = false;
   }
   
-  sendDirectMessage() {
-    if (this.directMessageInput && this.directMessageInput.trim() && this.selectedDirectMessage) {
-      console.log('Sending direct message:', this.directMessageInput);
-      
-      // Create message object
-      const now = new Date();
-      const messageId = Date.now().toString();
-      
-      const newMessage = {
-        id: messageId,
-        userId: this.activUserId,
-        userName: `${this.activUser.firstName} ${this.activUser.lastName}`,
-        userAvatar: `assets/icons/avatars/${this.activUser.avatar}`,
-        content: this.directMessageInput.trim(),
-        timestamp: now,
-        isNew: true
-      };
-      
-      // Initialize messages array for this user if it doesn't exist
-      const userId = this.selectedDirectMessage.id;
-      if (!this.directMessages[userId]) {
-        this.directMessages[userId] = [];
-      }
-      
-      // Add message to the array
-      this.directMessages[userId].push(newMessage);
-      
-      // Save to localStorage
-      this.saveDirectMessagesToStorage();
-      
-      // Clear input and close modals
-      this.directMessageInput = '';
-      this.showChannelTagging = false;
-      this.showUserTagging = false;
-      
-      // Mark as not new after animation
-      setTimeout(() => {
-        const index = this.directMessages[userId].findIndex(msg => msg.id === messageId);
-        if (index !== -1) {
-          this.directMessages[userId][index].isNew = false;
-          this.saveDirectMessagesToStorage();
-        }
-      }, 500);
-    }
-  }
-  
   handleInputKeyup(event: any) {
-    const input = event.target;
-    const value = input.value;
-    const cursorPosition = input.selectionStart;
-    
-    console.log('Input keyup event:', { value, cursorPosition });
-    
-    // Store cursor position for later use
-    this.tagCursorPosition = cursorPosition;
-    
-    // Check if we need to show channel tagging
-    if (this.shouldShowChannelTagging(value, cursorPosition)) {
-      console.log('Should show channel tagging');
-      // Get text after # for filtering
-      const hashPosition = value.lastIndexOf('#', cursorPosition - 1);
-      if (hashPosition !== -1) {
-        this.tagSearchText = value.substring(hashPosition + 1, cursorPosition).toLowerCase();
-        console.log('Tag search text:', this.tagSearchText);
-        this.filterChannels();
-        this.showChannelTagging = true;
-        this.showUserTagging = false;
-      }
-    } 
-    // Check if we need to show user tagging
-    else if (this.shouldShowUserTagging(value, cursorPosition)) {
-      console.log('Should show user tagging');
-      // Get text after @ for filtering
-      const atPosition = value.lastIndexOf('@', cursorPosition - 1);
-      if (atPosition !== -1) {
-        this.tagSearchText = value.substring(atPosition + 1, cursorPosition).toLowerCase();
-        console.log('Tag search text:', this.tagSearchText);
-        this.filterUsers();
-        this.showUserTagging = true;
-        this.showChannelTagging = false;
-      }
-    } 
-    // If no # or @ is found before cursor, close modals
-    else {
-      this.showChannelTagging = false;
-      this.showUserTagging = false;
-    }
+    // This method is no longer needed as we're using ChatAreaComponent for direct messages
+    // It can be simplified or removed
   }
   
   shouldShowChannelTagging(text: string, cursorPosition: number): boolean {
-    // Find position of the last # before cursor
-    const hashPosition = text.lastIndexOf('#', cursorPosition - 1);
-    if (hashPosition === -1) return false;
-    
-    // Check if there's a space between # and cursor
-    const textBetween = text.substring(hashPosition, cursorPosition);
-    return !textBetween.includes(' ');
+    // These tagging methods are no longer needed for direct messages
+    // as ChatAreaComponent handles this
+    return false;
   }
   
   shouldShowUserTagging(text: string, cursorPosition: number): boolean {
-    // Find position of the last @ before cursor
-    const atPosition = text.lastIndexOf('@', cursorPosition - 1);
-    if (atPosition === -1) return false;
-    
-    // Check if there's a space between @ and cursor
-    const textBetween = text.substring(atPosition, cursorPosition);
-    return !textBetween.includes(' ');
-  }
-  
-  filterChannels() {
-    if (!this.sidebar) {
-      setTimeout(() => this.filterChannels(), 100);
-      return;
-    }
-    
-    if (!this.tagSearchText) {
-      this.filteredChannels = [...this.sidebar.channels];
-    } else {
-      this.filteredChannels = this.sidebar.channels.filter(channel => 
-        channel.name.toLowerCase().includes(this.tagSearchText)
-      );
-    }
-    console.log('Filtered channels:', this.filteredChannels);
-  }
-  
-  filterUsers() {
-    if (!this.sidebar) {
-      setTimeout(() => this.filterUsers(), 100);
-      return;
-    }
-    
-    if (!this.tagSearchText) {
-      this.filteredUsers = [...this.sidebar.directMessages];
-    } else {
-      this.filteredUsers = this.sidebar.directMessages.filter(user => 
-        user.name.toLowerCase().includes(this.tagSearchText)
-      );
-    }
-    console.log('Filtered users:', this.filteredUsers);
+    // These tagging methods are no longer needed for direct messages
+    // as ChatAreaComponent handles this
+    return false;
   }
   
   selectChannelTag(channel: Channel) {
-    if (!this.directMessageInput) return;
-    
-    // Find position of the last # before cursor
-    const hashPosition = this.directMessageInput.lastIndexOf('#', this.tagCursorPosition - 1);
-    if (hashPosition === -1) return;
-    
-    // Replace text from # to cursor with the channel name
-    const beforeTag = this.directMessageInput.substring(0, hashPosition);
-    const afterTag = this.directMessageInput.substring(this.tagCursorPosition);
-    this.directMessageInput = `${beforeTag}#${channel.name} ${afterTag}`;
-    
-    // Close the tagging modal
-    this.showChannelTagging = false;
+    // No longer needed - direct messages now handled by ChatAreaComponent
   }
   
   selectUserTag(user: DirectMessage) {
-    if (!this.directMessageInput) return;
-    
-    // Find position of the last @ before cursor
-    const atPosition = this.directMessageInput.lastIndexOf('@', this.tagCursorPosition - 1);
-    if (atPosition === -1) return;
-    
-    // Replace text from @ to cursor with the user name
-    const beforeTag = this.directMessageInput.substring(0, atPosition);
-    const afterTag = this.directMessageInput.substring(this.tagCursorPosition);
-    this.directMessageInput = `${beforeTag}@${user.name} ${afterTag}`;
-    
-    // Close the tagging modal
-    this.showUserTagging = false;
+    // No longer needed - direct messages now handled by ChatAreaComponent
   }
 
   insertMention() {
-    console.log('Insert mention clicked');
-    
-    // Initialize the user list if needed
-    this.initializeTaggingLists();
-    
-    // Insert @ symbol at cursor position or at the end of input
-    if (this.directMessageInput === undefined) {
-      this.directMessageInput = '';
-    }
-    
-    // Add space before @ if needed
-    if (this.directMessageInput.length > 0 && 
-        this.directMessageInput[this.directMessageInput.length - 1] !== ' ') {
-      this.directMessageInput += ' ';
-    }
-    
-    this.directMessageInput += '@';
-    
-    // Show user tagging modal
-    this.tagCursorPosition = this.directMessageInput.length;
-    this.tagSearchText = '';
-    this.showUserTagging = true;
-    this.showChannelTagging = false;
-    
-    // Force update
-    setTimeout(() => {
-      console.log('Mention dialog opened, users:', this.filteredUsers);
-      console.log('showUserTagging:', this.showUserTagging);
-    }, 0);
+    // No longer needed - direct messages now handled by ChatAreaComponent
   }
 
   insertChannelTag() {
-    // Make sure sidebar is loaded
-    if (!this.sidebar) {
-      console.error('Sidebar not loaded');
-      return;
-    }
-    
-    // Insert # symbol at cursor position or at the end of input
-    if (this.directMessageInput === undefined) {
-      this.directMessageInput = '';
-    }
-    
-    // Add space before # if needed
-    if (this.directMessageInput.length > 0 && 
-        this.directMessageInput[this.directMessageInput.length - 1] !== ' ') {
-      this.directMessageInput += ' ';
-    }
-    
-    this.directMessageInput += '#';
-    
-    // Show channel tagging modal
-    this.tagCursorPosition = this.directMessageInput.length;
-    this.tagSearchText = '';
-    this.filterChannels();
-    this.showChannelTagging = true;
-    this.showUserTagging = false;
-    console.log('Channel tag dialog opened, channels:', this.filteredChannels);
+    // No longer needed - direct messages now handled by ChatAreaComponent
   }
 
   showUserTaggingInChat() {
@@ -598,26 +389,40 @@ export class DashboardComponent {
     }
   }
 
-  // New method to load direct messages from localStorage
-  loadDirectMessagesFromStorage() {
-    const savedDirectMessages = localStorage.getItem('userDirectMessages');
-    if (savedDirectMessages) {
-      try {
-        this.directMessages = JSON.parse(savedDirectMessages);
-      } catch (e) {
-        console.error('Error parsing saved direct messages:', e);
-        this.directMessages = {};
-      }
-    }
-  }
-  
-  // New method to save direct messages to localStorage
-  saveDirectMessagesToStorage() {
-    localStorage.setItem('userDirectMessages', JSON.stringify(this.directMessages));
-  }
-
   // Method for tracking messages by ID
   trackById(index: number, item: any): string {
     return item.id;
+  }
+
+  filterChannels() {
+    if (!this.sidebar) {
+      setTimeout(() => this.filterChannels(), 100);
+      return;
+    }
+    
+    if (!this.tagSearchText) {
+      this.filteredChannels = [...this.sidebar.channels];
+    } else {
+      this.filteredChannels = this.sidebar.channels.filter(channel => 
+        channel.name.toLowerCase().includes(this.tagSearchText)
+      );
+    }
+    console.log('Filtered channels:', this.filteredChannels);
+  }
+  
+  filterUsers() {
+    if (!this.sidebar) {
+      setTimeout(() => this.filterUsers(), 100);
+      return;
+    }
+    
+    if (!this.tagSearchText) {
+      this.filteredUsers = [...this.sidebar.directMessages];
+    } else {
+      this.filteredUsers = this.sidebar.directMessages.filter(user => 
+        user.name.toLowerCase().includes(this.tagSearchText)
+      );
+    }
+    console.log('Filtered users:', this.filteredUsers);
   }
 }
