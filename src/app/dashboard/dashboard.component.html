@@ -118,16 +118,54 @@
         </div>
         
         <div class="direct-message-content">
-          <div class="direct-message-info">
-            <div class="user-avatar-container">
-              <div class="user-avatar large">
-                <img [src]="selectedDirectMessage.avatar" [alt]="selectedDirectMessage.name">
+          <!-- Messages display area -->
+          <div class="direct-messages-display">
+            <div *ngIf="selectedDirectMessage && directMessages && directMessages[selectedDirectMessage.id] && directMessages[selectedDirectMessage.id].length > 0" class="messages-container">
+              <div class="messages-scroll-area">
+                <div *ngFor="let message of directMessages[selectedDirectMessage.id]; trackBy: trackById">
+                  <div class="message-item" 
+                      [class.own-message]="message.userId === activUserId"
+                      [class.new-message]="message.isNew">
+                    
+                    <!-- Avatar for other users' messages (left side) -->
+                    <div class="message-avatar other-user-avatar" *ngIf="message.userId !== activUserId">
+                      <img [src]="message.userAvatar" [alt]="message.userName" />
+                    </div>
+                    
+                    <div class="message-content" [class.own-message-content]="message.userId === activUserId">
+                      <div class="message-header">
+                        <div class="message-sender">{{ message.userName }}</div>
+                        <div class="message-time">
+                          {{ message.timestamp | date : "HH:mm" }} Uhr
+                        </div>
+                      </div>
+                      
+                      <div class="message-bubble">
+                        {{ message.content }}
+                      </div>
+                    </div>
+                    
+                    <!-- Avatar for own messages (right side) -->
+                    <div class="message-avatar own-avatar" *ngIf="message.userId === activUserId">
+                      <img [src]="message.userAvatar" [alt]="message.userName" />
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div class="user-name large">{{ selectedDirectMessage.name }}</div>
             </div>
-            <p class="conversation-info">
-              Diese Unterhaltung findet nur zwischen <span class="user-mention">{{'@'}}{{ selectedDirectMessage.name }}</span> und dir statt.
-            </p>
+            
+            <!-- Initial conversation info when no messages -->
+            <div *ngIf="!selectedDirectMessage || !directMessages[selectedDirectMessage.id] || directMessages[selectedDirectMessage.id]?.length === 0" class="direct-message-info">
+              <div class="user-avatar-container">
+                <div class="user-avatar large">
+                  <img [src]="selectedDirectMessage.avatar" [alt]="selectedDirectMessage.name">
+                </div>
+                <div class="user-name large">{{ selectedDirectMessage.name }}</div>
+              </div>
+              <p class="conversation-info">
+                Diese Unterhaltung findet nur zwischen <span class="user-mention">{{'@'}}{{ selectedDirectMessage.name }}</span> und dir statt.
+              </p>
+            </div>
           </div>
           
           <div class="message-input-container">

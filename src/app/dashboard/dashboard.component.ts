@@ -90,6 +90,9 @@ export class DashboardComponent {
   directMessageInput: string = '';
   showEmojiPicker: boolean = false;
   
+  // Direct messages storage
+  directMessages: { [userId: string]: any[] } = {};
+  
   // New properties for tagging
   showChannelTagging: boolean = false;
   showUserTagging: boolean = false;
@@ -113,6 +116,9 @@ export class DashboardComponent {
     setTimeout(() => {
       this.initializeTaggingLists();
     }, 500);
+    
+    // Load direct messages from localStorage
+    this.loadDirectMessagesFromStorage();
   }
 
   initializeTaggingLists() {
@@ -213,7 +219,11 @@ export class DashboardComponent {
     this.selectedDirectMessage = directMessage;
     this.isDirectMessageActive = true;
     
-    // No need to update the chat area for direct messages since we're using a separate UI
+    // Initialize direct messages for this user if not already done
+    if (!this.directMessages[directMessage.id]) {
+      this.directMessages[directMessage.id] = [];
+      this.saveDirectMessagesToStorage();
+    }
   }
   
   handleChannelDeleted(channelId: string) {
@@ -307,15 +317,48 @@ export class DashboardComponent {
   }
   
   sendDirectMessage() {
-    if (this.directMessageInput && this.directMessageInput.trim()) {
+    if (this.directMessageInput && this.directMessageInput.trim() && this.selectedDirectMessage) {
       console.log('Sending direct message:', this.directMessageInput);
-      // Here you would implement the actual sending of the message
-      // For now, we'll just clear the input
-      this.directMessageInput = '';
       
-      // Close any open tagging modals
+      // Create message object
+      const now = new Date();
+      const messageId = Date.now().toString();
+      
+      const newMessage = {
+        id: messageId,
+        userId: this.activUserId,
+        userName: `${this.activUser.firstName} ${this.activUser.lastName}`,
+        userAvatar: `assets/icons/avatars/${this.activUser.avatar}`,
+        content: this.directMessageInput.trim(),
+        timestamp: now,
+        isNew: true
+      };
+      
+      // Initialize messages array for this user if it doesn't exist
+      const userId = this.selectedDirectMessage.id;
+      if (!this.directMessages[userId]) {
+        this.directMessages[userId] = [];
+      }
+      
+      // Add message to the array
+      this.directMessages[userId].push(newMessage);
+      
+      // Save to localStorage
+      this.saveDirectMessagesToStorage();
+      
+      // Clear input and close modals
+      this.directMessageInput = '';
       this.showChannelTagging = false;
       this.showUserTagging = false;
+      
+      // Mark as not new after animation
+      setTimeout(() => {
+        const index = this.directMessages[userId].findIndex(msg => msg.id === messageId);
+        if (index !== -1) {
+          this.directMessages[userId][index].isNew = false;
+          this.saveDirectMessagesToStorage();
+        }
+      }, 500);
     }
   }
   
@@ -553,5 +596,28 @@ export class DashboardComponent {
     if (this.profileMenuOpen) {
       this.profileMenuOpen = false;
     }
+  }
+
+  // New method to load direct messages from localStorage
+  loadDirectMessagesFromStorage() {
+    const savedDirectMessages = localStorage.getItem('userDirectMessages');
+    if (savedDirectMessages) {
+      try {
+        this.directMessages = JSON.parse(savedDirectMessages);
+      } catch (e) {
+        console.error('Error parsing saved direct messages:', e);
+        this.directMessages = {};
+      }
+    }
+  }
+  
+  // New method to save direct messages to localStorage
+  saveDirectMessagesToStorage() {
+    localStorage.setItem('userDirectMessages', JSON.stringify(this.directMessages));
+  }
+
+  // Method for tracking messages by ID
+  trackById(index: number, item: any): string {
+    return item.id;
   }
 }
