@@ -4,9 +4,8 @@ import { AppComponent } from './app/app.component';
 import { enableProdMode } from '@angular/core';
 import { environment } from './environments/environment';
 
-if (environment.production) {
-  enableProdMode();
-}
+// Enable production mode by default for better performance
+enableProdMode();
 
 bootstrapApplication(AppComponent, appConfig)
   .catch((err) => console.error(err));

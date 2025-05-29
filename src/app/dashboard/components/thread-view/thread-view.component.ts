@@ -73,15 +73,13 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
   ];
   
   ngAfterViewInit() {
-    // Gib dem DOM Zeit, sich zu rendern
+    // Give the DOM time to render
     setTimeout(() => {
       this.scrollToBottom();
     }, 100);
     
-    // Set up interval to check if date labels need updating
-    setInterval(() => {
-      this.checkDateLabels();
-    }, 60000); // Check every minute
+    // Instead of checking every minute with setInterval, check only when thread is opened
+    this.checkDateLabels();
   }
   
   ngOnInit() {
@@ -613,6 +611,11 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
       // Speichere auch die Original-Nachricht separat
       localStorage.setItem(`threadOriginalMessage_${this.originalMessage.id}`, JSON.stringify(this.originalMessage));
     }
+  }
+  
+  // Instead of continuous setInterval, check labels when necessary
+  onThreadViewVisible() {
+    this.checkDateLabels();
   }
   
   checkDateLabels() {

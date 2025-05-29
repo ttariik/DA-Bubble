@@ -375,9 +375,9 @@ export class SidebarComponent implements OnInit {
       
       const directMessageToSelect = this.directMessages.find(dm => dm.id === savedDirectMessageId);
       if (directMessageToSelect) {
-        setTimeout(() => {
+        requestAnimationFrame(() => {
           this.selectDirectMessage(directMessageToSelect);
-        }, 0);
+        });
         return; 
       }
     }
@@ -395,9 +395,9 @@ export class SidebarComponent implements OnInit {
         localStorage.setItem('selectedChannelId', channelToSelect.id);
       }
       
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         this.selectChannel(channelToSelect);
-      }, 0);
+      });
     }
   }
 } 

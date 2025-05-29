@@ -31,22 +31,22 @@ import { AuthService } from '../../../services/auth.service';
     trigger('fadeInOut', [
       transition(':enter', [
         style({ opacity: 0 }),
-        animate('300ms ease-out', style({ opacity: 1 })),
+        animate('200ms ease-out', style({ opacity: 1 })),
       ]),
-      transition(':leave', [animate('200ms ease-in', style({ opacity: 0 }))]),
+      transition(':leave', [animate('150ms ease-in', style({ opacity: 0 }))]),
     ]),
     trigger('scaleInOut', [
       transition(':enter', [
-        style({ opacity: 0, transform: 'translateY(-30px) scale(0.95)' }),
+        style({ opacity: 0, transform: 'translateY(-20px) scale(0.95)' }),
         animate(
-          '400ms cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+          '250ms cubic-bezier(0.175, 0.885, 0.32, 1.275)',
           style({ opacity: 1, transform: 'translateY(0) scale(1)' })
         ),
       ]),
       transition(':leave', [
         animate(
-          '200ms ease-in',
-          style({ opacity: 0, transform: 'translateY(30px) scale(0.95)' })
+          '150ms ease-in',
+          style({ opacity: 0, transform: 'translateY(20px) scale(0.95)' })
         ),
       ]),
     ]),
@@ -90,11 +90,11 @@ export class AddChannelModalComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['isVisible'] && changes['isVisible'].currentValue === true) {
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         if (this.nameInput) {
           this.nameInput.nativeElement.focus();
         }
-      }, 100);
+      });
     }
   }
 

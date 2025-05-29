@@ -31,7 +31,7 @@
     <div class="messages-container">
       <div class="messages-scroll-area" #scrollContainer>
         <!-- Loop through message groups by date -->
-        <div *ngFor="let group of messageGroups">
+        <div *ngFor="let group of messageGroups; trackBy: trackByGroup">
           <!-- Date Separator -->
           <div class="date-separator">
             <div class="date-line"></div>
@@ -40,7 +40,7 @@
           </div>
 
           <!-- Messages in this date group -->
-          <div *ngFor="let message of group.messages" 
+          <div *ngFor="let message of group.messages; trackBy: trackByMessageId" 
               class="message-item" 
               [class.own-message]="message.userId === currentUserId"
               [class.new-message]="message.isNew">

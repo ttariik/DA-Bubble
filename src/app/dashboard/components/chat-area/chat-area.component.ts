@@ -136,10 +136,10 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
     // Group messages by date
     this.groupMessagesByDate();
     
-    // Scroll to bottom after loading new messages
-    setTimeout(() => {
+    // Use requestAnimationFrame instead of setTimeout for smoother scrolling
+    requestAnimationFrame(() => {
       this.scrollToBottom();
-    }, 100);
+    });
   }
   
   // Change to a different channel
@@ -290,15 +290,17 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
       // Save to localStorage
       this.saveMessagesToStorage();
       
-      setTimeout(() => {
+      // Use requestAnimationFrame instead of setTimeout
+      requestAnimationFrame(() => {
         this.scrollToBottom();
-      }, 150);
-      
-      setTimeout(() => {
-        newMessage.isNew = false;
-        // Save again after removing the isNew flag
-        this.saveMessagesToStorage();
-      }, 500);
+        
+        // Remove isNew flag after animation frame
+        setTimeout(() => {
+          newMessage.isNew = false;
+          // Save again after removing the isNew flag
+          this.saveMessagesToStorage();
+        }, 500);
+      });
     }
   }
   
@@ -634,5 +636,15 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
     
     // Close the tagging modal
     this.showUserTagging = false;
+  }
+
+  // Add a trackBy function for better ngFor performance
+  trackByMessageId(index: number, message: Message): string {
+    return message.id;
+  }
+  
+  // Add trackBy for message groups
+  trackByGroup(index: number, group: DateGroup): string {
+    return group.date.toISOString();
   }
 } 

@@ -6,10 +6,14 @@ import { routes } from './app.routes';
 import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
 import { getAuth, provideAuth } from '@angular/fire/auth';
 import { getFirestore, provideFirestore, enableIndexedDbPersistence } from '@angular/fire/firestore';
+import { environment } from '../environments/environment';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideZoneChangeDetection({ 
+      eventCoalescing: true,
+      runCoalescing: true,
+    }),
     provideRouter(routes, withPreloading(PreloadAllModules)), 
     provideAnimations(),
     provideHttpClient(withInterceptorsFromDi(), withFetch()),
