@@ -48,6 +48,7 @@ export class ContactProfileModalComponent implements OnInit {
   @Input() isVisible = false;
   @Input() contact: ContactProfile | null = null;
   @Output() close = new EventEmitter<void>();
+  @Output() sendMessage = new EventEmitter<ContactProfile>();
 
   constructor() {}
 
@@ -55,6 +56,13 @@ export class ContactProfileModalComponent implements OnInit {
 
   closeModal(): void {
     this.close.emit();
+  }
+  
+  openChat(): void {
+    if (this.contact) {
+      this.sendMessage.emit(this.contact);
+      this.closeModal();
+    }
   }
   
   getInitials(name: string): string {

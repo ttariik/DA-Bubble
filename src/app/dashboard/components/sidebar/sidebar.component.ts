@@ -130,6 +130,20 @@ export class SidebarComponent implements OnInit {
     this.selectedContact = null;
   }
 
+  // Send message to contact from profile modal
+  sendMessageToContact(contact: ContactProfile): void {
+    // Find the matching direct message by ID
+    const directMessage = this.directMessages.find(dm => dm.id === contact.id);
+    
+    if (directMessage) {
+      // Close the profile modal
+      this.closeContactProfile();
+      
+      // Select the direct message to open the chat
+      this.selectDirectMessage(directMessage);
+    }
+  }
+
   toggleChannels() {
     this.showChannels = !this.showChannels;
   }

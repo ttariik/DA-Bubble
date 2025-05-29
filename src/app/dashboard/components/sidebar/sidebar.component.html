@@ -206,6 +206,7 @@
       [isVisible]="showContactProfile"
       [contact]="selectedContact"
       (close)="closeContactProfile()"
+      (sendMessage)="sendMessageToContact($event)"
     >
     </app-contact-profile-modal>
   </div>
