@@ -271,12 +271,12 @@
       <div class="channel-name-container">
         <span class="channel-name-prefix">#</span>
         <span>{{ channelName }}</span>
-        <button class="edit-button" *ngIf="false">Bearbeiten</button>
+        <button class="edit-button" *ngIf="false"><span>Bearbeiten</span></button>
       </div>
       
       <h4>Beschreibung</h4>
       <p>{{ channelDescription || 'Dieser Channel ist für alles rund um #' + channelName + ' vorgesehen. Hier kannst du zusammen mit deinem Team Meetings abhalten, Dokumente teilen und Entscheidungen treffen.' }}</p>
-      <button class="edit-button" *ngIf="false">Bearbeiten</button>
+      <button class="edit-button" *ngIf="false"><span>Bearbeiten</span></button>
       
       <div class="channel-stats">
         <div class="stat-item">
@@ -326,8 +326,12 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button class="channel-leave-button" (click)="leaveChannel()">Channel verlassen</button>
-      <button class="close-button" (click)="closeChannelInfoModal()">Schließen</button>
+      <button class="channel-leave-button" (click)="leaveChannel()">
+        <span>Channel verlassen</span>
+      </button>
+      <button class="close-button" (click)="closeChannelInfoModal()">
+        <span>Schließen</span>
+      </button>
     </div>
   </div>
 </div>
