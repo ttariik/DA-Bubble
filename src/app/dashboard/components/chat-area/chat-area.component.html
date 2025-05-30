@@ -6,7 +6,7 @@
         <!-- Show hash for channels, avatar for direct messages -->
         <ng-container *ngIf="!isDirect">
           <span class="hash-symbol">#</span>
-          {{ channelName }}
+          <span class="clickable-channel-name" (click)="openChannelInfoModal()">{{ channelName }}</span>
         </ng-container>
         <ng-container *ngIf="isDirect && directContact">
           <div class="direct-contact-info">
@@ -254,6 +254,80 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Channel Description Modal -->
+<div class="channel-description-modal" *ngIf="showChannelDescriptionModal">
+  <div class="channel-description-backdrop" (click)="closeChannelInfoModal()"></div>
+  <div class="channel-description-content">
+    <div class="modal-header">
+      <h3>Channel-Info: #{{ channelName }}</h3>
+      <button class="close-button" (click)="closeChannelInfoModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <h4>Channel-Name</h4>
+      <div class="channel-name-container">
+        <span class="channel-name-prefix">#</span>
+        <span>{{ channelName }}</span>
+        <button class="edit-button" *ngIf="false">Bearbeiten</button>
+      </div>
+      
+      <h4>Beschreibung</h4>
+      <p>{{ channelDescription || 'Dieser Channel ist für alles rund um #' + channelName + ' vorgesehen. Hier kannst du zusammen mit deinem Team Meetings abhalten, Dokumente teilen und Entscheidungen treffen.' }}</p>
+      <button class="edit-button" *ngIf="false">Bearbeiten</button>
+      
+      <div class="channel-stats">
+        <div class="stat-item">
+          <div class="stat-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Mitglieder</span>
+            <span class="stat-value">{{ channelMembers.length }}</span>
+          </div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Nachrichten</span>
+            <span class="stat-value">{{ messageCount || '0' }}</span>
+          </div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Erstellt am</span>
+            <span class="stat-value">{{ channelCreatedAt ? (channelCreatedAt | date: 'dd.MM.yyyy') : 'Unbekannt' }}</span>
+          </div>
+        </div>
+      </div>
+      
+      <h4>Erstellt von</h4>
+      <div class="creator-info">
+        <span>{{ channelCreator || 'Noah Braun' }}</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="channel-leave-button" (click)="leaveChannel()">Channel verlassen</button>
+      <button class="close-button" (click)="closeChannelInfoModal()">Schließen</button>
     </div>
   </div>
 </div>

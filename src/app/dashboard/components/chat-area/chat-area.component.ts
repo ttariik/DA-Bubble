@@ -53,6 +53,13 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
   emojiPickerTargetMessage: Message | null = null;
   editingMessage: Message | null = null;
   
+  // Channel info modal
+  showChannelDescriptionModal: boolean = false;
+  channelDescription: string = '';
+  channelCreator: string = 'Noah Braun';
+  channelCreatedAt: Date = new Date();
+  messageCount: number = 0;
+  
   channelMembers: {id: string, name: string, avatar: string}[] = [
     { id: '1', name: 'Frederik Beck', avatar: 'assets/icons/avatars/user1.svg' },
     { id: '2', name: 'Sofia Müller', avatar: 'assets/icons/avatars/user2.svg' },
@@ -106,6 +113,9 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
     
     // Check if date labels need updating (e.g., if last opened yesterday)
     this.checkDateLabels();
+    
+    // Count messages in the current channel
+    this.messageCount = this.messages.length;
     
     console.log(`Loaded messages for channel ${this.channelName} (ID: ${this.channelId})`);
   }
@@ -648,5 +658,23 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
   // Add trackBy for message groups
   trackByGroup(index: number, group: DateGroup): string {
     return group.date.toISOString();
+  }
+
+  // Channel info modal methods
+  openChannelInfoModal() {
+    this.showChannelDescriptionModal = true;
+    // Update message count
+    this.messageCount = this.messages.length;
+  }
+  
+  closeChannelInfoModal() {
+    this.showChannelDescriptionModal = false;
+  }
+  
+  leaveChannel() {
+    // Implement channel leaving functionality here
+    console.log('Leaving channel:', this.channelName);
+    this.closeChannelInfoModal();
+    // You could emit an event here to notify parent components
   }
 } 
