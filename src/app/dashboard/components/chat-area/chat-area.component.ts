@@ -1,6 +1,7 @@
-import { Component, AfterViewInit, ViewChild, ElementRef, OnInit, Input, OnChanges, SimpleChanges, Output, EventEmitter } from '@angular/core';
+import { Component, AfterViewInit, ViewChild, ElementRef, OnInit, Input, OnChanges, SimpleChanges, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { FirestoreService } from '../../../services/firestore.service';
 
 interface Message {
   id: string;
@@ -46,6 +47,9 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
   @Input() directContact: any = null;
   @Output() mentionClicked = new EventEmitter<void>();
   @Output() threadOpened = new EventEmitter<Message>();
+  @Output() channelLeft = new EventEmitter<string>();
+
+  private firestoreService = inject(FirestoreService);
 
   messageInput: string = '';
   showEmojiPicker: boolean = false;
@@ -57,7 +61,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
   showChannelDescriptionModal: boolean = false;
   channelDescription: string = '';
   channelCreator: string = 'Noah Braun';
-  channelCreatedAt: Date = new Date();
+  channelCreatedAt: Date | null = null;
   messageCount: number = 0;
   
   channelMembers: {id: string, name: string, avatar: string}[] = [
@@ -116,6 +120,9 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
     
     // Count messages in the current channel
     this.messageCount = this.messages.length;
+
+    // Lade das Erstellungsdatum für den Channel
+    this.loadChannelCreationDate();
     
     console.log(`Loaded messages for channel ${this.channelName} (ID: ${this.channelId})`);
   }
@@ -662,6 +669,11 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
 
   // Channel info modal methods
   openChannelInfoModal() {
+    // Stelle sicher, dass das Erstellungsdatum geladen ist
+    if (!this.channelCreatedAt) {
+      this.loadChannelCreationDate();
+    }
+    
     this.showChannelDescriptionModal = true;
     // Update message count
     this.messageCount = this.messages.length;
@@ -672,9 +684,44 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
   }
   
   leaveChannel() {
-    // Implement channel leaving functionality here
-    console.log('Leaving channel:', this.channelName);
-    this.closeChannelInfoModal();
-    // You could emit an event here to notify parent components
+    // Führe die Logik aus, um den Channel zu verlassen
+    if (this.channelId === '1') {
+      // Der Hauptkanal "Entwicklerteam" kann nicht verlassen werden
+      alert('Der Hauptkanal "Entwicklerteam" kann nicht verlassen werden.');
+      this.closeChannelInfoModal();
+      return;
+    }
+
+    // Entferne den Benutzer aus dem Channel in Firestore
+    this.firestoreService.leaveChannel(this.channelId, this.currentUserId).then(() => {
+      console.log(`Channel ${this.channelName} (ID: ${this.channelId}) verlassen`);
+      
+      // Schließe das Modal
+      this.closeChannelInfoModal();
+      
+      // Lösche die Nachrichten des Channels aus dem lokalen Speicher
+      this.deleteChannelMessages(this.channelId);
+      
+      // Benachrichtige die übergeordnete Komponente, dass der Channel verlassen wurde
+      this.channelLeft.emit(this.channelId);
+    }).catch(error => {
+      console.error('Fehler beim Verlassen des Channels:', error);
+      alert('Beim Verlassen des Channels ist ein Fehler aufgetreten. Bitte versuche es später erneut.');
+      this.closeChannelInfoModal();
+    });
+  }
+
+  // Neue Methode: Lädt das Erstellungsdatum des Channels
+  loadChannelCreationDate() {
+    this.firestoreService.getChannelCreationDate(this.channelId).subscribe(
+      date => {
+        this.channelCreatedAt = date;
+      },
+      error => {
+        console.error('Error loading channel creation date:', error);
+        // Verwende das aktuelle Datum als Fallback für neue Channels
+        this.channelCreatedAt = new Date();
+      }
+    );
   }
 } 

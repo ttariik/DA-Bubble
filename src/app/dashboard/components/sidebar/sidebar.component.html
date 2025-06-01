@@ -49,7 +49,6 @@
           >
             <div class="channel-name" (click)="showChannelInfo(channel, $event)" title="Klicke um Beschreibung zu sehen">
               <span class="channel-icon">#</span>{{ channel.name }}
-              <img *ngIf="channel.description" src="assets/icons/info.svg" alt="Info" class="info-icon" title="Klicke um Beschreibung zu sehen">
             </div>
             <div class="channel-actions">
               <div class="unread-badge" *ngIf="channel.unread > 0">

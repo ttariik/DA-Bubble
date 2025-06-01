@@ -389,6 +389,32 @@ export class SidebarComponent implements OnInit {
     });
   }
 
+  /**
+   * Entfernt einen Channel aus der UI, wenn ein Benutzer ihn verlassen hat
+   * 
+   * @param channelId - Die ID des zu entfernenden Channels
+   */
+  removeChannelFromUI(channelId: string) {
+    // Entwicklerteam-Channel (ID 1) kann nicht entfernt werden
+    if (channelId === '1') {
+      return;
+    }
+    
+    // Channel aus der lokalen Liste entfernen
+    this.channels = this.channels.filter(channel => channel.id !== channelId);
+    
+    // In localStorage speichern
+    this.saveChannelsToStorage();
+    
+    // Wenn der entfernte Channel der aktuell ausgewählte war, wechsle zum Entwicklerteam-Channel
+    if (this.selectedChannelId === channelId) {
+      const defaultChannel = this.channels.find(c => c.id === '1') || this.channels[0];
+      this.selectedChannelId = defaultChannel.id;
+      localStorage.setItem('selectedChannelId', defaultChannel.id);
+      this.selectChannel(defaultChannel);
+    }
+  }
+
   ngOnInit() {
     // Laden der Channels aus Firestore mit Statistiken
     this.loadChannelsWithStats();

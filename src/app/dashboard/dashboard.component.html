@@ -103,6 +103,7 @@
         [channelId]="selectedChannel.id"
         (mentionClicked)="showUserTaggingInChat()"
         (threadOpened)="openThreadWithMessage($event)"
+        (channelLeft)="handleChannelLeft($event)"
       ></app-chat-area>
       
       <!-- Direct message chat using the same chat area component -->

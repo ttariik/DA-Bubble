@@ -234,6 +234,32 @@ export class DashboardComponent {
     }
   }
 
+  /**
+   * Wird aufgerufen, wenn ein Benutzer einen Channel verlässt
+   */
+  handleChannelLeft(channelId: string) {
+    console.log(`Channel mit ID ${channelId} wurde verlassen`);
+    
+    // Channel aus der Sidebar entfernen
+    if (this.sidebar) {
+      this.sidebar.removeChannelFromUI(channelId);
+    }
+    
+    // Wenn der verlassene Channel der ausgewählte war, wechsle zum Standardkanal
+    if (this.selectedChannel.id === channelId && this.sidebar.channels.length > 0) {
+      // Wähle den ersten verfügbaren Channel aus (normalerweise Entwicklerteam)
+      this.selectedChannel = this.sidebar.channels[0];
+      
+      // Aktualisiere den Chat-Bereich mit dem neuen ausgewählten Channel
+      if (this.chatArea) {
+        this.chatArea.changeChannel(this.selectedChannel.name, this.selectedChannel.id);
+      }
+      
+      // Speichere die Auswahl im lokalen Speicher
+      localStorage.setItem('selectedChannelId', this.selectedChannel.id);
+    }
+  }
+
   loadSelectedContent() {
     // First check if there's a selected direct message
     const savedDirectMessageId = localStorage.getItem('selectedDirectMessageId');

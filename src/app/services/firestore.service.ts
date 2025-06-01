@@ -241,13 +241,46 @@ export class FirestoreService {
         return timestamp.toDate();
       }
       
-      // Fallback für Entwicklerteam-Channel
-      return channelId === '1' 
-        ? new Date(2023, 4, 1) // 1. Mai 2023
-        : new Date(2023, 5, 15); // 15. Juni 2023
+      // Verwende das aktuelle Datum für neue Channels
+      return new Date();
     } catch (error) {
       console.error('Error fetching channel creation date:', error);
-      return null;
+      return new Date(); // Aktuelles Datum als Fallback
+    }
+  }
+
+  /**
+   * Lässt einen Benutzer einen Channel verlassen
+   * 
+   * @param channelId - Die ID des zu verlassenden Channels
+   * @param userId - Die ID des Benutzers, der den Channel verlassen möchte
+   * @returns Ein Promise, das aufgelöst wird, wenn der Channel erfolgreich verlassen wurde
+   */
+  async leaveChannel(channelId: string, userId: string): Promise<void> {
+    try {
+      // Referenz zum Channel-Dokument
+      const channelRef = doc(this.firestore, 'channels', channelId);
+      const channelDoc = await getDoc(channelRef);
+      
+      if (!channelDoc.exists()) {
+        console.error(`Channel mit ID ${channelId} existiert nicht.`);
+        return Promise.resolve();
+      }
+      
+      // Aktuelle Mitgliederliste holen
+      const data = channelDoc.data();
+      const members = data['members'] || [];
+      
+      // Benutzer aus der Mitgliederliste entfernen
+      const updatedMembers = members.filter((memberId: string) => memberId !== userId);
+      
+      // Mitgliederliste aktualisieren
+      await updateDoc(channelRef, { members: updatedMembers });
+      
+      return Promise.resolve();
+    } catch (error) {
+      console.error('Fehler beim Verlassen des Channels:', error);
+      return Promise.reject(error);
     }
   }
 }

@@ -281,23 +281,6 @@
   font-weight: bold;
 }
 
-.info-icon {
-  width: 14px;
-  height: 14px;
-  margin-left: 6px;
-  opacity: 0;
-  transition: opacity 0.2s ease, transform 0.2s ease;
-  
-  .channel-name:hover & {
-    opacity: 0.7;
-  }
-  
-  &:hover {
-    opacity: 1 !important;
-    transform: scale(1.2);
-  }
-}
-
 .user-avatar {
   position: relative;
   width: 28px;
