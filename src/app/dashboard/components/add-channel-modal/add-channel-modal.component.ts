@@ -30,22 +30,19 @@ import { AuthService } from '../../../services/auth.service';
   animations: [
     trigger('fadeInOut', [
       transition(':enter', [
-        style({ opacity: 0 }),
-        animate('200ms ease-out', style({ opacity: 1 })),
+        style({ opacity: 1 }),
+        animate('0ms', style({ opacity: 1 })),
       ]),
-      transition(':leave', [animate('150ms ease-in', style({ opacity: 0 }))]),
+      transition(':leave', [animate('50ms ease-in', style({ opacity: 0 }))]),
     ]),
     trigger('scaleInOut', [
       transition(':enter', [
-        style({ opacity: 0, transform: 'translateY(-20px) scale(0.95)' }),
-        animate(
-          '250ms cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-          style({ opacity: 1, transform: 'translateY(0) scale(1)' })
-        ),
+        style({ opacity: 1, transform: 'translateY(0) scale(1)' }),
+        animate('0ms', style({ opacity: 1, transform: 'translateY(0) scale(1)' })),
       ]),
       transition(':leave', [
         animate(
-          '150ms ease-in',
+          '50ms ease-in',
           style({ opacity: 0, transform: 'translateY(20px) scale(0.95)' })
         ),
       ]),
@@ -65,6 +62,7 @@ export class AddChannelModalComponent implements OnChanges {
   private authService = inject(AuthService);
 
   channelForm: FormGroup;
+  nameErrorMessage: string = '';
 
   constructor(private fb: FormBuilder,
     ) {
@@ -98,17 +96,21 @@ export class AddChannelModalComponent implements OnChanges {
     }
   }
 
-  closeModal(event: MouseEvent): void {
-    event.preventDefault();
-    this.channelForm.reset();
+  closeModal(event?: Event): void {
+    if (event) {
+      event.preventDefault();
+    }
+    
     this.close.emit();
+    
+    this.channelForm.reset();
+    this.nameErrorMessage = '';
   }
 
   createChannel(): void {
     if (this.channelForm.valid) {
       this.channelCreated.emit(this.channelForm.value);
       this.firestoreService.createChannelFirestore(this.channelForm.value, this.activUserId);
-      // this.firestoreService.readChannelFirestore();
       this.channelForm.reset();
       this.close.emit();
     } else {

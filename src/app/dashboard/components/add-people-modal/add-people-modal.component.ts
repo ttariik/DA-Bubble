@@ -8,6 +8,7 @@ import {
   Output,
   SimpleChanges,
   ViewChild,
+  OnInit,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -39,29 +40,26 @@ interface User {
   animations: [
     trigger('fadeInOut', [
       transition(':enter', [
-        style({ opacity: 0 }),
-        animate('200ms ease-out', style({ opacity: 1 })),
+        style({ opacity: 1 }),
+        animate('0ms', style({ opacity: 1 })),
       ]),
-      transition(':leave', [animate('150ms ease-in', style({ opacity: 0 }))]),
+      transition(':leave', [animate('100ms ease-in', style({ opacity: 0 }))]),
     ]),
     trigger('scaleInOut', [
       transition(':enter', [
-        style({ opacity: 0, transform: 'translateY(-20px) scale(0.95)' }),
-        animate(
-          '250ms cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-          style({ opacity: 1, transform: 'translateY(0) scale(1)' })
-        ),
+        style({ opacity: 1, transform: 'translateY(0) scale(1)' }),
+        animate('0ms', style({ opacity: 1, transform: 'translateY(0) scale(1)' })),
       ]),
       transition(':leave', [
         animate(
-          '150ms ease-in',
+          '100ms ease-in',
           style({ opacity: 0, transform: 'translateY(20px) scale(0.95)' })
         ),
       ]),
     ]),
   ],
 })
-export class AddPeopleModalComponent implements OnChanges {
+export class AddPeopleModalComponent implements OnChanges, OnInit {
   @Input() isVisible = false;
   @Input() channelId: string = '';
   @Input() channelName: string = '';
@@ -98,13 +96,27 @@ export class AddPeopleModalComponent implements OnChanges {
     this.filteredUsers = [...this.allUsers];
   }
   
+  ngOnInit(): void {
+    // Stelle sicher, dass die Benutzer beim ersten Laden initialisiert werden
+    this.filteredUsers = [...this.allUsers];
+  }
+  
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['isVisible'] && changes['isVisible'].currentValue) {
-      setTimeout(() => {
-        if (this.searchInput) {
-          this.searchInput.nativeElement.focus();
-        }
-      });
+      // Sofort den Fokus auf das Suchfeld setzen, ohne Timeout
+      if (this.searchInput) {
+        this.searchInput.nativeElement.focus();
+      } else {
+        // Falls das Element noch nicht verfügbar ist, verwenden wir requestAnimationFrame
+        requestAnimationFrame(() => {
+          if (this.searchInput) {
+            this.searchInput.nativeElement.focus();
+          }
+        });
+      }
+      
+      // Formular zurücksetzen, wenn Modal angezeigt wird
+      this.resetForm();
     }
   }
   
@@ -166,6 +178,12 @@ export class AddPeopleModalComponent implements OnChanges {
     // Die IDs der ausgewählten Benutzer extrahieren
     const userIds = this.selectedUsers.map(user => user.id);
     
+    // Wenn die Channel-ID temporär ist (beginnt mit 'temp_'), führen wir die Aktion 
+    // trotzdem aus, aber melden das Problem
+    if (this.channelId.startsWith('temp_')) {
+      console.warn('Channel wird mit temporärer ID aktualisiert. Später wird der Channel korrekt aktualisiert.');
+    }
+    
     // In einem realen Fall würden wir hier den Firestore-Service verwenden,
     // um die Benutzer zum Channel hinzuzufügen
     this.firestoreService.addPeopleToChannel(this.channelId, userIds)
@@ -177,6 +195,9 @@ export class AddPeopleModalComponent implements OnChanges {
       })
       .catch(error => {
         console.error('Fehler beim Hinzufügen von Benutzern zum Channel:', error);
+        // Trotz Fehler Modal schließen, um Benutzer nicht zu blockieren
+        this.resetForm();
+        this.close.emit();
       });
   }
 }

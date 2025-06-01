@@ -165,29 +165,48 @@ export class SidebarComponent implements OnInit {
   }
   
   handleChannelCreated(channelData: {name: string, description: string}) {
-    // Channel im Firestore erstellen und die ID zurückbekommen
+    // Generiere eine temporäre ID, falls Firestore nicht sofort antwortet
+    const tempId = `temp_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+    
+    // Erstelle den Channel lokal mit der temporären ID
+    const newChannel: Channel = {
+      id: tempId,
+      name: channelData.name,
+      unread: 0,
+      description: channelData.description
+    };
+    
+    // Speichere die neue Channel-ID und den Namen für das Add-People-Modal
+    this.newChannelId = tempId;
+    this.newChannelName = channelData.name;
+    
+    // Lokale Channels sofort aktualisieren
+    this.channels.push(newChannel);
+    this.saveChannelsToStorage();
+    
+    // WICHTIG: Zeige das neue Modal SOFORT an, BEVOR das alte geschlossen wird
+    this.showAddPeopleModal = true;
+    
+    // Erst DANACH das erste Modal schließen
+    this.closeAddChannelModal();
+    
+    // Starte den Firestore-Vorgang im Hintergrund
     this.firestoreService.createChannelFirestore(channelData, 'activeUserId')
       .then((channelId) => {
-        const newChannel: Channel = {
-          id: channelId || (this.channels.length + 1).toString(),
-          name: channelData.name,
-          unread: 0,
-          description: channelData.description
-        };
+        // Wenn wir die echte ID von Firestore bekommen, aktualisieren wir sie
+        if (channelId) {
+          // Finde den Channel mit der temporären ID
+          const index = this.channels.findIndex(c => c.id === tempId);
+          if (index !== -1) {
+            // Aktualisiere die ID
+            this.channels[index].id = channelId;
+            // Aktualisiere auch die ID für das Add-People-Modal
+            this.newChannelId = channelId;
+          }
+        }
         
-        // Lokale Channels aktualisieren
-        this.channels.push(newChannel);
+        // Aktualisiere die Channels im localStorage
         this.saveChannelsToStorage();
-        
-        // Speichere die neue Channel-ID und den Namen für das Add-People-Modal
-        this.newChannelId = newChannel.id;
-        this.newChannelName = newChannel.name;
-        
-        // Schließe das Channel-Erstellungs-Modal
-        this.closeAddChannelModal();
-        
-        // Öffne das Modal zum Hinzufügen von Personen
-        this.showAddPeopleModal = true;
       });
   }
   
