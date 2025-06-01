@@ -59,6 +59,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
   
   // Channel info modal
   showChannelDescriptionModal: boolean = false;
+  showLeaveConfirmDialog: boolean = false;
   channelDescription: string = '';
   channelCreator: string = 'Noah Braun';
   channelCreatedAt: Date | null = null;
@@ -684,7 +685,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
   }
   
   leaveChannel() {
-    // Führe die Logik aus, um den Channel zu verlassen
+    // Prüfe, ob es sich um den Hauptkanal "Entwicklerteam" handelt
     if (this.channelId === '1') {
       // Der Hauptkanal "Entwicklerteam" kann nicht verlassen werden
       alert('Der Hauptkanal "Entwicklerteam" kann nicht verlassen werden.');
@@ -692,11 +693,17 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
       return;
     }
 
+    // Zeige den Bestätigungsdialog an
+    this.showLeaveConfirmDialog = true;
+  }
+  
+  confirmLeaveChannel() {
     // Entferne den Benutzer aus dem Channel in Firestore
     this.firestoreService.leaveChannel(this.channelId, this.currentUserId).then(() => {
       console.log(`Channel ${this.channelName} (ID: ${this.channelId}) verlassen`);
       
-      // Schließe das Modal
+      // Schließe die Dialoge
+      this.showLeaveConfirmDialog = false;
       this.closeChannelInfoModal();
       
       // Lösche die Nachrichten des Channels aus dem lokalen Speicher
@@ -707,8 +714,14 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
     }).catch(error => {
       console.error('Fehler beim Verlassen des Channels:', error);
       alert('Beim Verlassen des Channels ist ein Fehler aufgetreten. Bitte versuche es später erneut.');
+      this.showLeaveConfirmDialog = false;
       this.closeChannelInfoModal();
     });
+  }
+  
+  cancelLeaveChannel() {
+    // Schließe nur den Bestätigungsdialog
+    this.showLeaveConfirmDialog = false;
   }
 
   // Neue Methode: Lädt das Erstellungsdatum des Channels
