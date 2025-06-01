@@ -333,5 +333,109 @@ export class FirestoreService {
       return Promise.resolve();
     }
   }
+
+  /**
+   * Ruft die Mitglieder eines Channels ab
+   * 
+   * @param channelId - Die ID des Channels
+   * @returns Ein Observable mit den Mitgliederdaten
+   */
+  getChannelMembers(channelId: string): Observable<any[]> {
+    return from(this.fetchChannelMembers(channelId));
+  }
+  
+  private async fetchChannelMembers(channelId: string): Promise<any[]> {
+    try {
+      // Hole die Channel-Daten
+      const channelRef = doc(this.firestore, 'channels', channelId);
+      const channelDoc = await getDoc(channelRef);
+      
+      if (!channelDoc.exists()) {
+        console.log(`Channel mit ID ${channelId} existiert nicht.`);
+        return [];
+      }
+      
+      // Hole die Mitglieder-IDs
+      const data = channelDoc.data();
+      const memberIds = data['members'] || [];
+      
+      if (memberIds.length === 0) {
+        // Fallback für Entwicklerteam-Channel
+        if (channelId === '1') {
+          return [
+            { id: '1', name: 'Max Mustermann', avatar: 'assets/icons/avatars/user2.svg', online: true },
+            { id: '2', name: 'Sofia Müller', avatar: 'assets/icons/avatars/user1.svg', online: true },
+            { id: '3', name: 'Noah Braun', avatar: 'assets/icons/avatars/user3.svg', online: true },
+            { id: '4', name: 'Elise Roth', avatar: 'assets/icons/avatars/user6.svg', online: false },
+            { id: '5', name: 'Elias Neumann', avatar: 'assets/icons/avatars/user5.svg', online: true }
+          ];
+        }
+        return [];
+      }
+      
+      // Hole die Benutzerdaten für jeden Mitglied
+      // In einer realen Anwendung würden wir hier einen batched Firestore-Request machen
+      const members = await Promise.all(
+        memberIds.map(async (memberId: string) => {
+          try {
+            const userRef = doc(this.firestore, 'users', memberId);
+            const userDoc = await getDoc(userRef);
+            
+            if (userDoc.exists()) {
+              const userData = userDoc.data();
+              return {
+                id: memberId,
+                name: userData['name'] || userData['displayName'] || 'Unbekannter Benutzer',
+                avatar: userData['avatar'] || userData['photoURL'] || 'assets/icons/avatars/user_default.svg',
+                online: userData['isActive'] || false,
+                email: userData['email'] || '',
+                title: userData['title'] || '',
+                department: userData['department'] || ''
+              };
+            } else {
+              // Wenn der Benutzer nicht gefunden wurde, verwenden wir Mockdaten basierend auf der ID
+              return this.getMockUserById(memberId);
+            }
+          } catch (error) {
+            console.error(`Fehler beim Abrufen des Benutzers ${memberId}:`, error);
+            return this.getMockUserById(memberId);
+          }
+        })
+      );
+      
+      return members;
+    } catch (error) {
+      console.error('Fehler beim Abrufen der Channel-Mitglieder:', error);
+      return [];
+    }
+  }
+  
+  /**
+   * Hilfsmethode, die Mock-Daten für einen Benutzer zurückgibt, wenn keine echten Daten vorhanden sind
+   */
+  private getMockUserById(userId: string): any {
+    const mockUsers = [
+      { id: '1', name: 'Max Mustermann', avatar: 'assets/icons/avatars/user2.svg', online: true },
+      { id: '2', name: 'Sofia Müller', avatar: 'assets/icons/avatars/user1.svg', online: true },
+      { id: '3', name: 'Noah Braun', avatar: 'assets/icons/avatars/user3.svg', online: true },
+      { id: '4', name: 'Elise Roth', avatar: 'assets/icons/avatars/user6.svg', online: false },
+      { id: '5', name: 'Elias Neumann', avatar: 'assets/icons/avatars/user5.svg', online: true },
+      { id: '6', name: 'Steffen Hoffmann', avatar: 'assets/icons/avatars/user2.svg', online: false },
+      { id: '7', name: 'Laura Schmidt', avatar: 'assets/icons/avatars/user1.svg', online: true }
+    ];
+    
+    const user = mockUsers.find(u => u.id === userId);
+    if (user) {
+      return user;
+    }
+    
+    // Falls keine übereinstimmende ID gefunden wurde, generiere einen zufälligen Benutzer
+    const randomIndex = Math.floor(Math.random() * mockUsers.length);
+    const randomUser = { ...mockUsers[randomIndex] };
+    randomUser.id = userId;
+    randomUser.name = `Benutzer ${userId.substring(0, 4)}`;
+    
+    return randomUser;
+  }
 }
 

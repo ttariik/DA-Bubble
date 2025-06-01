@@ -118,6 +118,11 @@ export class SidebarComponent implements OnInit {
   currentChannelStats: ChannelStats | null = null;
   newChannelId: string = '';
   newChannelName: string = '';
+  
+  // Für das Mitglieder-Panel
+  showMembersList: boolean = false;
+  currentChannelMembers: any[] = [];
+  currentChannelId: string = '';
 
   constructor(private firestoreService: FirestoreService) {}
 
@@ -317,6 +322,8 @@ export class SidebarComponent implements OnInit {
   showChannelInfo(channel: Channel, event: MouseEvent) {
     event.stopPropagation(); // Verhindert, dass der Channel ausgewählt wird
     
+    this.currentChannelId = channel.id;
+    
     if (channel.description) {
       this.currentChannelDescription = {
         name: channel.name,
@@ -325,6 +332,9 @@ export class SidebarComponent implements OnInit {
       
       // Statistiken für den Channel laden
       this.loadChannelStats(channel.id);
+      
+      // Channel-Mitglieder laden
+      this.loadChannelMembers(channel.id);
       
       this.showChannelDescriptionModal = true;
     }
@@ -345,6 +355,74 @@ export class SidebarComponent implements OnInit {
         };
       }
     );
+  }
+  
+  // Neue Methode: Lädt die Mitglieder eines Channels
+  loadChannelMembers(channelId: string) {
+    this.firestoreService.getChannelMembers(channelId).subscribe(
+      members => {
+        this.currentChannelMembers = members;
+      },
+      error => {
+        console.error('Error loading channel members:', error);
+        // Fallback zu Standard-Mitgliedern
+        this.currentChannelMembers = [
+          { id: '1', name: 'Max Mustermann', avatar: 'assets/icons/avatars/user2.svg', online: true },
+          { id: '2', name: 'Sofia Müller', avatar: 'assets/icons/avatars/user1.svg', online: true },
+          { id: '3', name: 'Noah Braun', avatar: 'assets/icons/avatars/user3.svg', online: true }
+        ];
+      }
+    );
+  }
+  
+  // Neue Methode: Zeigt oder versteckt die Mitgliederliste
+  toggleMembersList() {
+    console.log('Toggle Members List - vorher:', this.showMembersList);
+    this.showMembersList = !this.showMembersList;
+    console.log('Toggle Members List - nachher:', this.showMembersList);
+    
+    // Stelle sicher, dass die Mitgliederliste geladen wurde
+    if (this.showMembersList && this.currentChannelMembers.length === 0) {
+      this.loadChannelMembers(this.currentChannelId);
+    }
+  }
+  
+  // Neue Methode: Initiiert eine Direktnachricht an ein Mitglied
+  startDirectMessageWithMember(member: any) {
+    // Schließe das Modal
+    this.closeChannelInfoModal();
+    
+    // Prüfe, ob das Mitglied bereits in der Liste der Direktnachrichten ist
+    const existingDM = this.directMessages.find(dm => dm.id === member.id);
+    
+    if (existingDM) {
+      // Wenn ja, öffne den Chat
+      this.selectDirectMessage(existingDM);
+    } else {
+      // Wenn nicht, erstelle einen neuen Eintrag und öffne den Chat
+      const newDM: DirectMessage = {
+        id: member.id,
+        name: member.name,
+        avatar: member.avatar,
+        online: member.online,
+        unread: 0,
+        email: member.email,
+        title: member.title,
+        department: member.department
+      };
+      
+      this.directMessages.push(newDM);
+      this.saveDirectMessagesToStorage();
+      this.selectDirectMessage(newDM);
+    }
+  }
+  
+  closeChannelInfoModal() {
+    this.showChannelDescriptionModal = false;
+    this.currentChannelDescription = null;
+    this.currentChannelStats = null;
+    this.currentChannelMembers = [];
+    this.showMembersList = false;
   }
   
   // Lädt alle Channels mit ihren Statistiken
@@ -397,12 +475,6 @@ export class SidebarComponent implements OnInit {
     
     this.channels = combinedChannels;
     this.saveChannelsToStorage();
-  }
-  
-  closeChannelInfoModal() {
-    this.showChannelDescriptionModal = false;
-    this.currentChannelDescription = null;
-    this.currentChannelStats = null;
   }
   
   // Formatiert ein Datum für die Anzeige

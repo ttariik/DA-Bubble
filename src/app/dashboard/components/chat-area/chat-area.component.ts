@@ -60,15 +60,16 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
   // Channel info modal
   showChannelDescriptionModal: boolean = false;
   showLeaveConfirmDialog: boolean = false;
+  showMembersList: boolean = false;
   channelDescription: string = '';
   channelCreator: string = 'Noah Braun';
   channelCreatedAt: Date | null = null;
   messageCount: number = 0;
   
-  channelMembers: {id: string, name: string, avatar: string}[] = [
-    { id: '1', name: 'Frederik Beck', avatar: 'assets/icons/avatars/user1.svg' },
-    { id: '2', name: 'Sofia Müller', avatar: 'assets/icons/avatars/user2.svg' },
-    { id: '3', name: 'Noah Braun', avatar: 'assets/icons/avatars/user3.svg' }
+  channelMembers: {id: string, name: string, avatar: string, online?: boolean, title?: string, department?: string}[] = [
+    { id: '1', name: 'Frederik Beck', avatar: 'assets/icons/avatars/user1.svg', online: true, title: 'Developer', department: 'Engineering' },
+    { id: '2', name: 'Sofia Müller', avatar: 'assets/icons/avatars/user2.svg', online: true, title: 'UX Designer', department: 'Design' },
+    { id: '3', name: 'Noah Braun', avatar: 'assets/icons/avatars/user3.svg', online: false, title: 'Product Manager', department: 'Product' }
   ];
   
   // All messages across all channels
@@ -670,18 +671,20 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
 
   // Channel info modal methods
   openChannelInfoModal() {
-    // Stelle sicher, dass das Erstellungsdatum geladen ist
-    if (!this.channelCreatedAt) {
-      this.loadChannelCreationDate();
-    }
+    console.log('Öffne Channel-Info-Modal für:', this.channelName);
+    // Lade das Erstellungsdatum für den Channel
+    this.loadChannelCreationDate();
     
+    // Zeige die Hauptansicht (nicht die Mitgliederliste)
+    this.showMembersList = false;
+    
+    // Öffne das Modal
     this.showChannelDescriptionModal = true;
-    // Update message count
-    this.messageCount = this.messages.length;
   }
   
   closeChannelInfoModal() {
     this.showChannelDescriptionModal = false;
+    this.showMembersList = false; // Zurücksetzen auf die Hauptansicht
   }
   
   leaveChannel() {
@@ -736,5 +739,46 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
         this.channelCreatedAt = new Date();
       }
     );
+  }
+
+  // Öffnet oder schließt die Mitgliederliste im Channel-Info-Modal
+  toggleMembersList() {
+    console.log('Toggle Members List - vorher:', this.showMembersList);
+    this.showMembersList = !this.showMembersList;
+    console.log('Toggle Members List - nachher:', this.showMembersList);
+    
+    // Hier könnten wir weitere Mitglieder vom Server laden
+    this.loadChannelMembers();
+  }
+  
+  // Lädt die Channel-Mitglieder (könnte in einer realen App Daten vom Server holen)
+  loadChannelMembers() {
+    // In einer echten Anwendung würden wir hier eine API-Anfrage stellen
+    console.log('Lade Mitglieder für Channel:', this.channelId);
+    
+    // Hier nur Simulation - in einer echten App würden wir Daten vom Server laden
+    if (this.channelId === '1') { // Für den Entwicklerteam-Channel
+      this.channelMembers = [
+        { id: '1', name: 'Frederik Beck', avatar: 'assets/icons/avatars/user1.svg', online: true, title: 'Developer', department: 'Engineering' },
+        { id: '2', name: 'Sofia Müller', avatar: 'assets/icons/avatars/user2.svg', online: true, title: 'UX Designer', department: 'Design' },
+        { id: '3', name: 'Noah Braun', avatar: 'assets/icons/avatars/user3.svg', online: true, title: 'Product Manager', department: 'Product' },
+        { id: '4', name: 'Elise Roth', avatar: 'assets/icons/avatars/user6.svg', online: false, title: 'Backend Developer', department: 'Engineering' },
+        { id: '5', name: 'Elias Neumann', avatar: 'assets/icons/avatars/user5.svg', online: true, title: 'Marketing Specialist', department: 'Marketing' }
+      ];
+    }
+  }
+  
+  // Startet eine Direktnachricht mit einem Mitglied
+  startDirectMessageWithMember(member: {id: string, name: string, avatar: string}) {
+    console.log('Starte Direktnachricht mit:', member.name);
+    
+    // Modal schließen
+    this.closeChannelInfoModal();
+    
+    // In einer echten App würden wir hier zum DM-Chat navigieren
+    // Beispiel: this.router.navigate(['/dm', member.id]);
+    
+    // Hier machen wir einfach eine Konsolen-Ausgabe
+    alert(`Direktnachricht mit ${member.name} wird gestartet...`);
   }
 } 
