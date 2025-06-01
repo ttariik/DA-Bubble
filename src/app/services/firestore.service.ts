@@ -283,5 +283,40 @@ export class FirestoreService {
       return Promise.reject(error);
     }
   }
+
+  /**
+   * Fügt Benutzer zu einem Channel hinzu
+   * 
+   * @param channelId - Die ID des Channels
+   * @param userIds - Die IDs der Benutzer, die hinzugefügt werden sollen
+   * @returns Ein Promise, das aufgelöst wird, wenn die Benutzer erfolgreich hinzugefügt wurden
+   */
+  async addPeopleToChannel(channelId: string, userIds: string[]): Promise<void> {
+    try {
+      // Referenz zum Channel-Dokument
+      const channelRef = doc(this.firestore, 'channels', channelId);
+      const channelDoc = await getDoc(channelRef);
+      
+      if (!channelDoc.exists()) {
+        console.error(`Channel mit ID ${channelId} existiert nicht.`);
+        return Promise.resolve();
+      }
+      
+      // Aktuelle Mitgliederliste holen
+      const data = channelDoc.data();
+      const members = data['members'] || [];
+      
+      // Neue Benutzer hinzufügen, Duplikate vermeiden
+      const updatedMembers = [...new Set([...members, ...userIds])];
+      
+      // Mitgliederliste aktualisieren
+      await updateDoc(channelRef, { members: updatedMembers });
+      
+      return Promise.resolve();
+    } catch (error) {
+      console.error('Fehler beim Hinzufügen von Benutzern zum Channel:', error);
+      return Promise.reject(error);
+    }
+  }
 }
 

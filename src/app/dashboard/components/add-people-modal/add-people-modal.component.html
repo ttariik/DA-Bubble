@@ -1,0 +1,99 @@
+<div class="modal-backdrop" *ngIf="isVisible" (click)="closeModal($event)" [@fadeInOut]>
+  <div class="modal-container" (click)="$event.stopPropagation()" [@scaleInOut]>
+    <div class="modal-header">
+      <h2>Leute hinzufügen</h2>
+      <button class="close-button" (click)="closeModal($event)" aria-label="Schließen">
+        <span>×</span>
+      </button>
+    </div>
+    
+    <div class="modal-content">
+      <p class="modal-description">
+        Füge Personen zu deinem neuen Channel <strong>#{{ channelName }}</strong> hinzu.
+      </p>
+      
+      <div class="team-option">
+        <label class="option-container">
+          <input type="radio" name="peopleOption" [checked]="showAllTeamMembers" (change)="toggleSelectAllTeamMembers()">
+          <span class="checkmark"></span>
+          <span class="option-text">Alle Mitglieder von OfficeTeam hinzufügen</span>
+        </label>
+      </div>
+
+      <div class="specific-people-option">
+        <label class="option-container">
+          <input type="radio" name="peopleOption" [checked]="!showAllTeamMembers" (change)="toggleSelectAllTeamMembers()">
+          <span class="checkmark"></span>
+          <span class="option-text">Bestimmte Leute hinzufügen</span>
+        </label>
+      </div>
+
+      <div class="search-container" *ngIf="!showAllTeamMembers">
+        <div class="search-input-wrapper">
+          <input 
+            type="text" 
+            placeholder="Name eingeben" 
+            [(ngModel)]="searchText" 
+            (input)="filterUsers()" 
+            #searchInput
+            class="search-input"
+          >
+        </div>
+        
+        <div class="users-list" *ngIf="filteredUsers.length > 0">
+          <div 
+            *ngFor="let user of filteredUsers" 
+            class="user-item"
+            [class.selected]="isUserSelected(user.id)"
+            (click)="toggleUserSelection(user)"
+          >
+            <div class="user-avatar">
+              <img [src]="user.avatar" [alt]="user.name">
+              <div class="status-indicator" [class.online]="user.online"></div>
+            </div>
+            <div class="user-details">
+              <div class="user-name">{{ user.name }}</div>
+              <div class="user-email" *ngIf="user.email">{{ user.email }}</div>
+              <div class="user-title" *ngIf="user.title">{{ user.title }}</div>
+            </div>
+            <div class="checkbox-container">
+              <div class="checkbox" [class.checked]="isUserSelected(user.id)">
+                <span class="checkmark" *ngIf="isUserSelected(user.id)">✓</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="no-results" *ngIf="searchText && filteredUsers.length === 0">
+          Keine Benutzer gefunden, die zu deiner Suche passen.
+        </div>
+      </div>
+      
+      <div class="selected-users" *ngIf="selectedUsers.length > 0 && !showAllTeamMembers">
+        <h3>Ausgewählte Personen ({{ selectedUsers.length }})</h3>
+        <div class="selected-users-list">
+          <div *ngFor="let user of selectedUsers" class="selected-user">
+            <div class="user-avatar small">
+              <img [src]="user.avatar" [alt]="user.name">
+            </div>
+            <div class="user-name">{{ user.name }}</div>
+            <button class="remove-user" (click)="toggleUserSelection(user)" title="Entfernen">×</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="cancel-button" (click)="closeModal($event)">
+        Abbrechen
+      </button>
+      <button 
+        class="create-button" 
+        [disabled]="selectedUsers.length === 0 && !showAllTeamMembers"
+        (click)="addPeopleToChannel()"
+      >
+        <span class="button-text">Erstellen</span>
+      </button>
+    </div>
+  </div>
+</div>

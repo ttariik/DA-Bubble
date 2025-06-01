@@ -125,6 +125,16 @@
     >
     </app-add-channel-modal>
     
+    <!-- Add People Modal -->
+    <app-add-people-modal
+      [isVisible]="showAddPeopleModal"
+      [channelId]="newChannelId"
+      [channelName]="newChannelName"
+      (close)="closeAddPeopleModal()"
+      (peopleAdded)="handlePeopleAdded($event)"
+    >
+    </app-add-people-modal>
+    
     <!-- Delete Channel Confirmation Dialog -->
     <div class="delete-confirm-modal" *ngIf="showDeleteConfirm">
       <div class="delete-confirm-backdrop" (click)="cancelDelete()"></div>

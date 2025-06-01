@@ -6,6 +6,7 @@ import { FirestoreService, Channel, ChannelStats } from '../../../services/fires
 import { map, switchMap, tap } from 'rxjs/operators';
 import { Observable, forkJoin, of } from 'rxjs';
 import { ContactProfileModalComponent, ContactProfile } from '../contact-profile-modal/contact-profile-modal.component';
+import { AddPeopleModalComponent } from '../add-people-modal/add-people-modal.component';
 
 interface DirectMessage {
   id: string;
@@ -22,7 +23,7 @@ interface DirectMessage {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule, AddChannelModalComponent, ContactProfileModalComponent],
+  imports: [CommonModule, RouterModule, AddChannelModalComponent, ContactProfileModalComponent, AddPeopleModalComponent],
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.scss']
 })
@@ -36,6 +37,7 @@ export class SidebarComponent implements OnInit {
   showChannels: boolean = true;
   showDirectMessages: boolean = true;
   showAddChannelModal: boolean = false;
+  showAddPeopleModal: boolean = false;
   sidebarCollapsed: boolean = false;
   selectedChannelId: string = '1';
   selectedDirectMessageId: string | null = null;
@@ -114,6 +116,8 @@ export class SidebarComponent implements OnInit {
   showChannelDescriptionModal: boolean = false;
   currentChannelDescription: { name: string, description: string } | null = null;
   currentChannelStats: ChannelStats | null = null;
+  newChannelId: string = '';
+  newChannelName: string = '';
 
   constructor(private firestoreService: FirestoreService) {}
 
@@ -175,11 +179,15 @@ export class SidebarComponent implements OnInit {
         this.channels.push(newChannel);
         this.saveChannelsToStorage();
         
-        // Channel auswählen
-        this.selectChannel(newChannel);
+        // Speichere die neue Channel-ID und den Namen für das Add-People-Modal
+        this.newChannelId = newChannel.id;
+        this.newChannelName = newChannel.name;
         
-        // Alle Channel mit Statistiken neu laden
-        this.loadChannelsWithStats();
+        // Schließe das Channel-Erstellungs-Modal
+        this.closeAddChannelModal();
+        
+        // Öffne das Modal zum Hinzufügen von Personen
+        this.showAddPeopleModal = true;
       });
   }
   
@@ -512,5 +520,23 @@ export class SidebarComponent implements OnInit {
         this.selectChannel(channelToSelect);
       });
     }
+  }
+
+  closeAddPeopleModal() {
+    this.showAddPeopleModal = false;
+    
+    // Wähle den neuen Channel aus, wenn das Modal geschlossen wird
+    const newChannel = this.channels.find(channel => channel.id === this.newChannelId);
+    if (newChannel) {
+      this.selectChannel(newChannel);
+    }
+    
+    // Alle Channel mit Statistiken neu laden
+    this.loadChannelsWithStats();
+  }
+  
+  handlePeopleAdded(userIds: string[]) {
+    console.log(`${userIds.length} Benutzer zum Channel ${this.newChannelName} hinzugefügt`);
+    // Die Anzeige aktualisieren, falls nötig
   }
 } 
