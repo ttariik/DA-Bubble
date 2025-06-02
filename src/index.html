@@ -11,10 +11,14 @@
     <link rel="icon" type="image/x-icon" href="favicon.svg" />
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" href="assets/icons/icon-192x192.png" />
+    
+    <!-- Preconnect to domains we'll need resources from -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    
+    <!-- Preload critical fonts with media="print" to avoid render blocking -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap"
       rel="stylesheet"
       media="print"
       onload="this.media='all'"
@@ -25,9 +29,18 @@
       media="print"
       onload="this.media='all'"
     />
+    
+    <!-- Load only essential icons needed at startup -->
+    <style>
+      /* Minimal critical CSS for the initial render */
+      body { margin: 0; font-family: sans-serif; background-color: #f5f5f5; }
+      app-root { display: block; min-height: 100vh; }
+    </style>
+    
+    <!-- Fallback for browsers with JavaScript disabled -->
     <noscript>
       <link
-        href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap"
         rel="stylesheet"
       />
       <link

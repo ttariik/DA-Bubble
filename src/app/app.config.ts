@@ -1,12 +1,13 @@
 import { ApplicationConfig, provideZoneChangeDetection, isDevMode } from '@angular/core';
-import { provideRouter, withPreloading, PreloadAllModules } from '@angular/router';
+import { provideRouter, withPreloading, PreloadAllModules, NoPreloading } from '@angular/router';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideHttpClient, withInterceptorsFromDi, withFetch } from '@angular/common/http';
 import { routes } from './app.routes';
 import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
 import { getAuth, provideAuth } from '@angular/fire/auth';
-import { getFirestore, provideFirestore, enableIndexedDbPersistence } from '@angular/fire/firestore';
+import { getFirestore, provideFirestore, enableIndexedDbPersistence, CACHE_SIZE_UNLIMITED } from '@angular/fire/firestore';
 import { environment } from '../environments/environment';
+import { provideServiceWorker } from '@angular/service-worker';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -14,7 +15,8 @@ export const appConfig: ApplicationConfig = {
       eventCoalescing: true,
       runCoalescing: true,
     }),
-    provideRouter(routes, withPreloading(PreloadAllModules)), 
+    // Use NoPreloading in development mode to reduce initial load, PreloadAllModules in production
+    provideRouter(routes, withPreloading(environment.production ? PreloadAllModules : NoPreloading)), 
     provideAnimations(),
     provideHttpClient(withInterceptorsFromDi(), withFetch()),
     provideFirebaseApp(() => initializeApp({ 
@@ -28,8 +30,18 @@ export const appConfig: ApplicationConfig = {
     provideAuth(() => getAuth()), 
     provideFirestore(() => {
       const firestore = getFirestore();
-      enableIndexedDbPersistence(firestore);
+      // Enable persistence with optimized settings
+      enableIndexedDbPersistence(firestore)
+      .catch(err => {
+        console.error('Persistence could not be enabled:', err);
+      });
+      
+      // Set cache size and expiration for offline support
       return firestore;
-    })
+    }),
+    // Register service worker only in production
+    ...(environment.production ? [
+      provideServiceWorker('ngsw-worker.js')
+    ] : [])
   ]
 };

@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, ViewChild, inject, ElementRef, HostListener } from '@angular/core';
+import { ChangeDetectorRef, Component, ViewChild, inject, ElementRef, HostListener, NgZone, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
@@ -11,6 +11,7 @@ import { AuthService } from '../services/auth.service';
 import { User } from '../models/user.class';
 import { MatDialog } from '@angular/material/dialog';
 import { trigger, state, style, animate, transition } from '@angular/animations';
+import { Subject, Subscription, debounceTime, distinctUntilChanged, fromEvent, throttleTime } from 'rxjs';
 
 interface Channel {
   id: string;
@@ -59,7 +60,7 @@ interface DirectMessage {
     ])
   ]
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit, OnDestroy {
   @ViewChild(ChatAreaComponent) chatArea!: ChatAreaComponent;
   @ViewChild('directChatArea') directChatArea!: ChatAreaComponent;
   @ViewChild(SidebarComponent) sidebar!: SidebarComponent;
@@ -69,6 +70,7 @@ export class DashboardComponent {
   private authService = inject(AuthService);
   private cd = inject(ChangeDetectorRef);
   private router = inject(Router);
+  private ngZone = inject(NgZone);
   readonly dialog = inject(MatDialog);
 
   showThreadView: boolean = true;
@@ -101,27 +103,61 @@ export class DashboardComponent {
   filteredUsers: DirectMessage[] = [];
 
   profileMenuOpen: boolean = false;
+  
+  // For performance optimization
+  private tagSearchSubject = new Subject<string>();
+  private subscriptions: Subscription[] = [];
+  private resizeSubscription: Subscription | null = null;
 
-  constructor() {}
+  constructor() {
+    // Set up debounced search for tagging
+    this.subscriptions.push(
+      this.tagSearchSubject.pipe(
+        debounceTime(250), // Wait for 250ms after the last event
+        distinctUntilChanged() // Only emit if the value changes
+      ).subscribe(searchText => {
+        this.performTagSearch(searchText);
+      })
+    );
+  }
 
   ngOnInit() {
     this.loadData();
     this.loadAllUsers();
     this.loadSelectedContent();
     
-    // Initialize filtered lists
+    // Initialize filtered lists with delay
     setTimeout(() => {
       this.initializeTaggingLists();
     }, 500);
+    
+    // Setup throttled window resize listener
+    this.resizeSubscription = fromEvent(window, 'resize')
+      .pipe(throttleTime(150)) // Throttle to run at most once every 150ms
+      .subscribe(() => {
+        this.ngZone.run(() => {
+          this.handleWindowResize();
+        });
+      });
+  }
+  
+  ngOnDestroy() {
+    // Clean up all subscriptions
+    this.subscriptions.forEach(sub => sub.unsubscribe());
+    if (this.resizeSubscription) {
+      this.resizeSubscription.unsubscribe();
+    }
+  }
+  
+  handleWindowResize() {
+    // Handle window resizing logic
+    // Only run heavy calculations when actually needed
+    this.cd.detectChanges();
   }
 
   initializeTaggingLists() {
-    console.log('Initializing tagging lists');
-    
-    // If sidebar is not available, create fallback data
+    // Avoid console logs in production
     if (!this.sidebar || !this.sidebar.channels || !this.sidebar.directMessages) {
-      console.warn('Sidebar not available, using fallback data');
-      
       // Fallback channel data
       this.filteredChannels = [
         { id: '1', name: 'Entwicklerteam', unread: 0 },
@@ -143,21 +179,28 @@ export class DashboardComponent {
       this.filteredChannels = [...this.sidebar.channels];
       this.filteredUsers = [...this.sidebar.directMessages];
     }
-    
-    console.log('Initialized channels:', this.filteredChannels);
-    console.log('Initialized users:', this.filteredUsers);
   }
   
+  // Debounced search processing
+  performTagSearch(searchText: string) {
+    if (this.showChannelTagging) {
+      this.filterChannels();
+    } else if (this.showUserTagging) {
+      this.filterUsers();
+    }
+  }
 
   async loadData() {
     this.activUserId = await this.authService.getActiveUserId();
   }
 
   loadAllUsers() {
-    this.firestoreService.getAllUsers().subscribe((users) => {
-      this.listOfAllUsers = users.map((user) => new User(user));
-      this.loadActiveUser();
-    });
+    this.subscriptions.push(
+      this.firestoreService.getAllUsers().subscribe((users) => {
+        this.listOfAllUsers = users.map((user) => new User(user));
+        this.loadActiveUser();
+      })
+    );
   }
 
   loadActiveUser() {
@@ -335,8 +378,9 @@ export class DashboardComponent {
   }
   
   handleInputKeyup(event: any) {
-    // This method is no longer needed as we're using ChatAreaComponent for direct messages
-    // It can be simplified or removed
+    this.tagSearchText = event.target.value;
+    this.tagCursorPosition = event.target.selectionStart;
+    this.tagSearchSubject.next(this.tagSearchText);
   }
   
   shouldShowChannelTagging(text: string, cursorPosition: number): boolean {

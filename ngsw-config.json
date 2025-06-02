@@ -37,8 +37,8 @@
       "cacheConfig": {
         "strategy": "freshness",
         "maxSize": 100,
-        "maxAge": "1h",
-        "timeout": "10s"
+        "maxAge": "3h",
+        "timeout": "15s"
       }
     },
     {
@@ -49,8 +49,20 @@
       ],
       "cacheConfig": {
         "strategy": "performance",
-        "maxSize": 100,
-        "maxAge": "1d"
+        "maxSize": 200,
+        "maxAge": "3d"
+      }
+    },
+    {
+      "name": "firebase-data",
+      "urls": [
+        "https://firestore.googleapis.com/google.firestore.v1.Firestore/**"
+      ],
+      "cacheConfig": {
+        "strategy": "performance",
+        "maxSize": 300,
+        "maxAge": "1d",
+        "timeout": "10s"
       }
     }
   ]
