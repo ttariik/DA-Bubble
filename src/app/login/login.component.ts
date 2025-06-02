@@ -7,7 +7,8 @@ import {
   Validators,
 } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
-import { AuthService } from '../services/auth.service';
+// import { AuthService } from '../services/auth.service';
+import { AuthService } from '../../app/auth.service';
 import { HeaderComponent } from '../shared';
 import { FooterComponent } from '../shared/footer/footer.component';
 import { FirestoreService } from '../services/firestore.service';
@@ -31,6 +32,7 @@ export class LoginComponent {
   private firestoreService = inject(FirestoreService);
   isLoading = false;
   hidePassword = true;
+  userName: string | null = null;
 
   emailFormControl = new FormControl('', [
     Validators.required,
@@ -48,6 +50,35 @@ export class LoginComponent {
     rememberMe: new FormControl(false),
   });
 
+  login() {
+    this.authService.loginWithGoogle().subscribe(user => {
+      this.userName = user.displayName;
+      console.log('Eingeloggt als:', this.userName);
+    });
+  }
+
+  logout() {
+    this.authService.logout().subscribe(() => {
+      this.userName = null;
+      console.log('Abgemeldet');
+    });
+  }
+
+   loginWithGoogle() {
+    this.isLoading = true;
+    this.authService.loginWithGoogle().subscribe({
+      next: (user) => {
+        console.log('Google-Login erfolgreich:', user.displayName);
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('Google-Login fehlgeschlagen:', err);
+        this.isLoading = false;
+      }
+    });
+  }
+
+
   ngOnInit() {
     // Fügt die Klasse auth-page zum Body hinzu
     document.body.classList.add('auth-page');
@@ -56,6 +87,23 @@ export class LoginComponent {
   ngOnDestroy() {
     // Entfernt die Klasse auth-page vom Body
     document.body.classList.remove('auth-page');
+  }
+
+    loginAsGuest() {
+    this.testLogin();
+    this.router.navigate(['/dashboard']);
+  }
+
+  navigateToForgotPassword() {
+    // Navigation zur "Passwort vergessen"-Seite
+  }
+
+  get email() {
+    return this.loginForm.get('email');
+  }
+
+  get password() {
+    return this.loginForm.get('password');
   }
 
   async onSubmit() {
@@ -79,28 +127,28 @@ export class LoginComponent {
     }
   }
 
-  togglePasswordVisibility(): void {
-    this.hidePassword = !this.hidePassword;
-  }
+  // togglePasswordVisibility(): void {
+  //   this.hidePassword = !this.hidePassword;
+  // }
 
-  navigateToForgotPassword(): void {
-    this.router.navigate(['/forgot-password']);
-  }
+  // navigateToForgotPassword(): void {
+  //   this.router.navigate(['/forgot-password']);
+  // }
 
-  get email() {
-    return this.emailFormControl;
-  }
+  // get email() {
+  //   return this.emailFormControl;
+  // }
 
-  get password() {
-    return this.passwordFormControl;
-  }
+  // get password() {
+  //   return this.passwordFormControl;
+  // }
 
-  loginAsGuest() {
-    this.testLogin();
-    // this.router.navigate(['/dashboard']);
-  }
+  // loginAsGuest() {
+  //   this.testLogin();
+  //   // this.router.navigate(['/dashboard']);
+  // }
 
-  // Nur für Entwicklung
+  // // Nur für Entwicklung
   testUsers = [
     { mail: 'test1@mail.de', pw: '123456' },
     { mail: 'test2@mail.de', pw: '123456' },

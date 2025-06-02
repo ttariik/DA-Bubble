@@ -9,7 +9,7 @@
       verwendest.
     </p>
 
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+    <form [formGroup]="loginForm" class="login-form">
       <!-- Email -->
       <div class="input-container">
         <div class="icon-input">
@@ -28,9 +28,10 @@
           />
         </div>
         <div class="error-box">
-          @if (email.hasError('required') && (email.touched || email.dirty)) {
+          @if (email?.hasError('required') && (email?.touched || email?.dirty))
+          {
           <div class="error">Email ist <strong>erforderlich</strong></div>
-          } @if (email.hasError('email') && !email.hasError('required')) {
+          } @if (email?.hasError('email') && !email?.hasError('required')) {
           <div class="error">Bitte gib eine gültige E-Mail-Adresse ein</div>
           }
         </div>
@@ -54,13 +55,13 @@
           />
         </div>
         <div class="error-box">
-          @if (password.hasError('required') && (password.touched ||
-          password.dirty)) {
+          @if (password?.hasError('required') && (password?.touched ||
+          password?.dirty)) {
           <div class="error">Passwort ist <strong>erforderlich</strong></div>
-          } @if (password.hasError('minlength') &&
-          !password.hasError('required')) {
+          } @if (password?.hasError('minlength') &&
+          !password?.hasError('required')) {
           <div class="error">
-            Minimum {{ password.errors?.['minlength'].requiredLength }} Zeichen
+            Minimum {{ password?.errors?.['minlength'].requiredLength }} Zeichen
           </div>
           }
         </div>
@@ -77,7 +78,7 @@
       <div class="divider"><span>ODER</span></div>
 
       <!-- Google Login -->
-      <button type="button" class="btn google-btn">
+      <button type="button" class="btn google-btn" (click)="loginWithGoogle()">
         <img src="assets/svg/Google.svg" alt="Google" />
         Anmelden mit Google
       </button>
@@ -108,3 +109,4 @@
 </div>
 
 <app-footer></app-footer>
+<!-- (ngSubmit)="onSubmit()"  -->
