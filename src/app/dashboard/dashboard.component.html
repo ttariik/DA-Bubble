@@ -7,9 +7,13 @@
 
     <div class="search-container">
       <input
+        #searchInput
         type="text"
         class="search-input"
         placeholder="Devspace durchsuchen"
+        [(ngModel)]="searchQuery"
+        (input)="onSearchInputChange($event)"
+        (keydown)="handleSearchKeydown($event)"
       />
       <div class="search-icon">
         <svg
@@ -25,6 +29,108 @@
             d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
           />
         </svg>
+      </div>
+      
+      <!-- Search Results Dropdown -->
+      <div class="search-results-dropdown" *ngIf="showSearchDropdown" [@searchDropdownAnimation]="showSearchDropdown ? 'open' : 'closed'">
+        <div class="search-results-header">
+          <span>Suchergebnisse für "{{ lastSearchQuery }}"</span>
+          <button class="close-search-btn" (click)="closeSearchDropdowns()">×</button>
+        </div>
+        
+        <div class="search-results-content">
+          <div *ngIf="isSearching" class="search-loading">
+            <div class="loading-spinner"></div>
+            <span>Suche läuft...</span>
+          </div>
+          
+          <div *ngIf="!isSearching && searchResults.length === 0" class="no-results">
+            <span>Keine Ergebnisse gefunden.</span>
+          </div>
+          
+          <div *ngIf="!isSearching && searchResults.length > 0" class="results-list">
+            <!-- Channel Results -->
+            <ng-container *ngIf="getChannelResults().length > 0">
+              <div class="result-section">
+                <div class="section-title">Channels</div>
+                <div 
+                  *ngFor="let result of getChannelResults(); let i = index" 
+                  class="result-item channel-result" 
+                  [class.selected]="selectedSearchResultIndex === searchResults.indexOf(result)"
+                  (click)="selectSearchResult(result)"
+                >
+                  <div class="result-icon">#</div>
+                  <div class="result-content">
+                    <div class="result-name" [innerHTML]="result.highlight ? result.highlight[0] : result.name"></div>
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+            
+            <!-- User Results -->
+            <ng-container *ngIf="getUserResults().length > 0">
+              <div class="result-section">
+                <div class="section-title">Personen</div>
+                <div 
+                  *ngFor="let result of getUserResults(); let i = index" 
+                  class="result-item user-result"
+                  [class.selected]="selectedSearchResultIndex === searchResults.indexOf(result)"
+                  (click)="selectSearchResult(result)"
+                >
+                  <div class="result-avatar">
+                    <img [src]="result.avatar" [alt]="result.name" />
+                  </div>
+                  <div class="result-content">
+                    <div class="result-name" [innerHTML]="result.highlight ? result.highlight[0] : result.name"></div>
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+            
+            <!-- Message Results -->
+            <ng-container *ngIf="getMessageResults().length > 0">
+              <div class="result-section">
+                <div class="section-title">Nachrichten</div>
+                <div 
+                  *ngFor="let result of getMessageResults(); let i = index" 
+                  class="result-item message-result"
+                  [class.selected]="selectedSearchResultIndex === searchResults.indexOf(result)"
+                  (click)="selectSearchResult(result)"
+                >
+                  <div class="result-content">
+                    <div class="message-meta">
+                      <span class="message-sender">{{ result.sender }}</span>
+                      <span class="message-channel"># {{ result.channelName }}</span>
+                      <span class="message-time">{{ result.timestamp | date:'short' }}</span>
+                    </div>
+                    <div class="message-text" [innerHTML]="result.highlight ? result.highlight[0] : result.messageText"></div>
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Mention Dropdown -->
+      <div class="mention-dropdown" *ngIf="showMentionDropdown" [@searchDropdownAnimation]="showMentionDropdown ? 'open' : 'closed'">
+        <div class="mention-header">
+          <span>Erwähne einen Kontakt</span>
+        </div>
+        <div class="mention-results">
+          <div 
+            *ngFor="let user of mentionResults; let i = index" 
+            class="mention-item"
+            [class.selected]="selectedSearchResultIndex === i"
+            (click)="selectMention(user)"
+          >
+            <div class="mention-avatar">
+              <img [src]="user.avatar" [alt]="user.name" />
+              <div class="status-indicator" [class.online]="user.online"></div>
+            </div>
+            <div class="mention-name">{{ user.name }}</div>
+          </div>
+        </div>
       </div>
     </div>
 

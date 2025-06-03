@@ -5,8 +5,8 @@ import { AddChannelModalComponent } from '../add-channel-modal/add-channel-modal
 import { FirestoreService, Channel, ChannelStats } from '../../../services/firestore.service';
 import { map, switchMap, tap } from 'rxjs/operators';
 import { Observable, forkJoin, of } from 'rxjs';
-import { ContactProfileModalComponent, ContactProfile } from '../contact-profile-modal/contact-profile-modal.component';
 import { AddPeopleModalComponent } from '../add-people-modal/add-people-modal.component';
+import { ContactProfileModalComponent, ContactProfile } from '../contact-profile-modal/contact-profile-modal.component';
 
 interface DirectMessage {
   id: string;
@@ -23,7 +23,7 @@ interface DirectMessage {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule, AddChannelModalComponent, ContactProfileModalComponent, AddPeopleModalComponent],
+  imports: [CommonModule, RouterModule, AddChannelModalComponent, AddPeopleModalComponent, ContactProfileModalComponent],
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.scss']
 })
@@ -110,12 +110,6 @@ export class SidebarComponent implements OnInit {
     }
   ];
   
-  hoverChannelId: string | null = null;
-  showDeleteConfirm: boolean = false;
-  channelToDelete: Channel | null = null;
-  showChannelDescriptionModal: boolean = false;
-  currentChannelDescription: { name: string, description: string } | null = null;
-  currentChannelStats: ChannelStats | null = null;
   newChannelId: string = '';
   newChannelName: string = '';
   
@@ -237,72 +231,30 @@ export class SidebarComponent implements OnInit {
     this.sidebarCollapsed = !this.sidebarCollapsed;
   }
   
-  showDeleteButton(channelId: string) {
-    this.hoverChannelId = channelId;
-  }
-  
-  hideDeleteButton() {
-    this.hoverChannelId = null;
-  }
-  
-  confirmDeleteChannel(channel: Channel, event: MouseEvent) {
-    event.stopPropagation();
+  removeChannelFromUI(channelId: string) {
+    // Entferne den Channel aus dem lokalen Array
+    this.channels = this.channels.filter(channel => channel.id !== channelId);
     
-    if (channel.id === '1') {
-      return;
-    }
-    
-    this.channelToDelete = channel;
-    this.showDeleteConfirm = true;
-  }
-  
-  cancelDelete() {
-    this.showDeleteConfirm = false;
-    this.channelToDelete = null;
-  }
-  
-  deleteChannel() {
-    if (!this.channelToDelete) return;
-    
-    const channelId = this.channelToDelete.id;
-    
-    // Zusätzliche Sicherheit: Entwicklerteam-Channel kann nicht gelöscht werden
-    if (channelId === '1') {
-      this.showDeleteConfirm = false;
-      this.channelToDelete = null;
-      return;
-    }
-    
-    this.channels = this.channels.filter(c => c.id !== channelId);
-    
-    // Sicherstellen, dass der Entwicklerteam-Channel immer existiert
-    if (!this.channels.some(channel => channel.id === '1')) {
-      this.channels.unshift({ id: '1', name: 'Entwicklerteam', unread: 0, description: 'Der Hauptkanal für alle Entwickler. Hier werden wichtige Updates und allgemeine Entwicklungsthemen besprochen.' });
-    }
-    
+    // Speichere die aktualisierte Channel-Liste im Local Storage
     this.saveChannelsToStorage();
     
-    this.channelDeleted.emit(channelId);
-    
+    // Wenn der gelöschte Channel der aktuell ausgewählte war, wähle stattdessen den ersten Channel aus
     if (this.selectedChannelId === channelId && this.channels.length > 0) {
-      const newSelectedChannel = this.channels[0];
-      this.selectedChannelId = newSelectedChannel.id;
-      
-      localStorage.setItem('selectedChannelId', newSelectedChannel.id);
-      
-      this.selectChannel(newSelectedChannel);
+      this.selectChannel(this.channels[0]);
     }
     
-    this.showDeleteConfirm = false;
-    this.channelToDelete = null;
+    // Benachrichtige den übergeordneten Komponenten über die Löschung
+    this.channelDeleted.emit(channelId);
   }
   
   selectDirectMessage(directMessage: DirectMessage) {
     this.selectedDirectMessageId = directMessage.id;
-    this.selectedChannelId = ''; // Deselect any channel
+    this.selectedChannelId = '';
     this.directMessageSelected.emit(directMessage);
     
     localStorage.setItem('selectedDirectMessageId', directMessage.id);
+    // Clear any selected channel
+    localStorage.removeItem('selectedChannelId');
     
     if (directMessage.unread > 0) {
       directMessage.unread = 0;
@@ -314,248 +266,111 @@ export class SidebarComponent implements OnInit {
     localStorage.setItem('directMessages', JSON.stringify(this.directMessages));
   }
   
-  showChannelInfo(channel: Channel, event: MouseEvent) {
-    event.stopPropagation(); // Verhindert, dass der Channel ausgewählt wird
-    
-    if (channel.description) {
-      this.currentChannelDescription = {
-        name: channel.name,
-        description: channel.description
-      };
-      
-      // Statistiken für den Channel laden
-      this.loadChannelStats(channel.id);
-      
-      this.showChannelDescriptionModal = true;
-    }
-  }
-  
-  loadChannelStats(channelId: string) {
-    this.firestoreService.getChannelStats(channelId).subscribe(
-      stats => {
-        this.currentChannelStats = stats;
-      },
-      error => {
-        console.error('Error loading channel stats:', error);
-        // Fallback zu Standard-Werten
-        this.currentChannelStats = {
-          memberCount: channelId === '1' ? 5 : 3,
-          messageCount: channelId === '1' ? 124 : 37,
-          createdAt: channelId === '1' ? new Date(2023, 4, 1) : new Date(2023, 5, 15)
-        };
-      }
-    );
-  }
-  
-  closeChannelInfoModal() {
-    this.showChannelDescriptionModal = false;
-    this.currentChannelDescription = null;
-    this.currentChannelStats = null;
-  }
-  
-  // Lädt alle Channels mit ihren Statistiken
-  loadChannelsWithStats() {
-    this.firestoreService.getAllChannelsWithStats().subscribe(
-      channels => {
-        // Channels aus Firestore mit lokalen Channels zusammenführen
-        this.mergeChannelsWithLocalStorage(channels);
-      },
-      error => {
-        console.error('Error loading channels with stats:', error);
-        // Fallback auf lokale Daten
-        this.loadChannelsFromLocalStorage();
-      }
-    );
-  }
-  
-  // Lokale Channels mit Firestore-Channels zusammenführen
-  mergeChannelsWithLocalStorage(firestoreChannels: Channel[]) {
-    const savedChannels = localStorage.getItem('channels');
-    let localChannels: Channel[] = [];
-    
-    if (savedChannels) {
-      try {
-        localChannels = JSON.parse(savedChannels);
-      } catch (e) {
-        console.error('Error parsing saved channels:', e);
-      }
-    }
-    
-    // Kombiniere Firestore und lokale Channels
-    const combinedChannels = [...firestoreChannels];
-    
-    // Füge lokale Channels hinzu, die nicht in Firestore sind
-    localChannels.forEach(localChannel => {
-      if (!combinedChannels.some(c => c.id === localChannel.id)) {
-        combinedChannels.push(localChannel);
-      }
-    });
-    
-    // Stelle sicher, dass der Entwicklerteam-Channel existiert
-    if (!combinedChannels.some(channel => channel.id === '1' && channel.name === 'Entwicklerteam')) {
-      combinedChannels.unshift({
-        id: '1',
-        name: 'Entwicklerteam',
-        unread: 0,
-        description: 'Der Hauptkanal für alle Entwickler. Hier werden wichtige Updates und allgemeine Entwicklungsthemen besprochen.'
-      });
-    }
-    
-    this.channels = combinedChannels;
-    this.saveChannelsToStorage();
-  }
-  
-  // Formatiert ein Datum für die Anzeige
   formatDate(date: Date | null): string {
-    if (!date) return 'Unbekannt';
+    if (!date) return '';
     
-    return date.toLocaleDateString('de-DE', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
+    // Convert Firestore timestamp to Date if needed
+    const jsDate = date instanceof Date ? date : new Date(date);
+    
+    // Format date as DD.MM.YYYY
+    const day = jsDate.getDate().toString().padStart(2, '0');
+    const month = (jsDate.getMonth() + 1).toString().padStart(2, '0'); // +1 because months are 0-indexed
+    const year = jsDate.getFullYear();
+    
+    return `${day}.${month}.${year}`;
   }
-
-  /**
-   * Entfernt einen Channel aus der UI, wenn ein Benutzer ihn verlassen hat
-   * 
-   * @param channelId - Die ID des zu entfernenden Channels
-   */
-  removeChannelFromUI(channelId: string) {
-    // Entwicklerteam-Channel (ID 1) kann nicht entfernt werden
-    if (channelId === '1') {
-      return;
-    }
-    
-    // Channel aus der lokalen Liste entfernen
-    this.channels = this.channels.filter(channel => channel.id !== channelId);
-    
-    // In localStorage speichern
-    this.saveChannelsToStorage();
-    
-    // Wenn der entfernte Channel der aktuell ausgewählte war, wechsle zum Entwicklerteam-Channel
-    if (this.selectedChannelId === channelId) {
-      const defaultChannel = this.channels.find(c => c.id === '1') || this.channels[0];
-      this.selectedChannelId = defaultChannel.id;
-      localStorage.setItem('selectedChannelId', defaultChannel.id);
-      this.selectChannel(defaultChannel);
-    }
-  }
-
+  
   ngOnInit() {
-    // Laden der Channels aus Firestore mit Statistiken
-    this.loadChannelsWithStats();
-    
-    // Fallback: Lokale Channels laden, falls Firestore-Ladeprozess fehlschlägt
-    this.loadChannelsFromLocalStorage();
-    
-    const savedDirectMessages = localStorage.getItem('directMessages');
-    if (savedDirectMessages) {
-      try {
-        this.directMessages = JSON.parse(savedDirectMessages);
-      } catch (e) {
-        console.error('Error parsing saved direct messages:', e);
-      }
+    // Load settings from localStorage
+    const showChannelsSetting = localStorage.getItem('showChannels');
+    if (showChannelsSetting !== null) {
+      this.showChannels = showChannelsSetting === 'true';
     }
     
+    const showDirectMessagesSetting = localStorage.getItem('showDirectMessages');
+    if (showDirectMessagesSetting !== null) {
+      this.showDirectMessages = showDirectMessagesSetting === 'true';
+    }
+    
+    // Load content
+    this.loadChannelsFromLocalStorage();
     this.loadSelectedContent();
   }
   
   loadChannelsFromLocalStorage() {
-    const savedChannels = localStorage.getItem('channels');
-    if (savedChannels) {
+    const storedChannels = localStorage.getItem('channels');
+    if (storedChannels) {
       try {
-        this.channels = JSON.parse(savedChannels);
+        this.channels = JSON.parse(storedChannels);
+      } catch (e) {
+        console.error('Failed to parse stored channels:', e);
+      }
+    }
+    
+    const storedDirectMessages = localStorage.getItem('directMessages');
+    if (storedDirectMessages) {
+      try {
+        // Ensure we don't lose our defaults if localStorage doesn't have all properties
+        const parsedDMs = JSON.parse(storedDirectMessages);
         
-        // Sicherstellen, dass der "Entwicklerteam"-Channel immer existiert
-        if (!this.channels.some(channel => channel.id === '1' && channel.name === 'Entwicklerteam')) {
-          this.channels.unshift({ 
-            id: '1', 
-            name: 'Entwicklerteam', 
-            unread: 0,
-            description: 'Der Hauptkanal für alle Entwickler. Hier werden wichtige Updates und allgemeine Entwicklungsthemen besprochen.'
+        // If the parsed array is empty, keep using our defaults
+        if (parsedDMs && parsedDMs.length > 0) {
+          // For each direct message in the storage
+          parsedDMs.forEach((storedDM: DirectMessage) => {
+            // Find matching DM in our defaults
+            const existingDMIndex = this.directMessages.findIndex(dm => dm.id === storedDM.id);
+            
+            if (existingDMIndex >= 0) {
+              // If found, merge stored data with default
+              this.directMessages[existingDMIndex] = {
+                ...this.directMessages[existingDMIndex],
+                ...storedDM
+              };
+            } else {
+              // If not found, add it
+              this.directMessages.push(storedDM);
+            }
           });
-          this.saveChannelsToStorage();
-        } else {
-          // Stelle sicher, dass der Entwicklerteam-Channel eine Beschreibung hat
-          const entwicklerteamChannel = this.channels.find(channel => channel.id === '1' && channel.name === 'Entwicklerteam');
-          if (entwicklerteamChannel && !entwicklerteamChannel.description) {
-            entwicklerteamChannel.description = 'Der Hauptkanal für alle Entwickler. Hier werden wichtige Updates und allgemeine Entwicklungsthemen besprochen.';
-            this.saveChannelsToStorage();
-          }
         }
       } catch (e) {
-        console.error('Error parsing saved channels:', e);
-        // Setze auf Default-Channel zurück, wenn etwas schief geht
-        this.channels = [{ 
-          id: '1', 
-          name: 'Entwicklerteam', 
-          unread: 0,
-          description: 'Der Hauptkanal für alle Entwickler. Hier werden wichtige Updates und allgemeine Entwicklungsthemen besprochen.'
-        }];
-        this.saveChannelsToStorage();
+        console.error('Failed to parse stored direct messages:', e);
       }
-    } else {
-      // Wenn keine Kanäle gefunden wurden, stelle sicher, dass der Standard-Kanal vorhanden ist
-      this.channels = [{ 
-        id: '1', 
-        name: 'Entwicklerteam', 
-        unread: 0,
-        description: 'Der Hauptkanal für alle Entwickler. Hier werden wichtige Updates und allgemeine Entwicklungsthemen besprochen.'
-      }];
-      this.saveChannelsToStorage();
     }
   }
   
   loadSelectedContent() {
-    const savedDirectMessageId = localStorage.getItem('selectedDirectMessageId');
-    if (savedDirectMessageId) {
-      this.selectedDirectMessageId = savedDirectMessageId;
-      this.selectedChannelId = ''; 
-      
-      const directMessageToSelect = this.directMessages.find(dm => dm.id === savedDirectMessageId);
-      if (directMessageToSelect) {
-        requestAnimationFrame(() => {
-          this.selectDirectMessage(directMessageToSelect);
-        });
-        return; 
+    // Try to load the previously selected channel or direct message
+    const selectedChannelId = localStorage.getItem('selectedChannelId');
+    const selectedDirectMessageId = localStorage.getItem('selectedDirectMessageId');
+    
+    if (selectedChannelId) {
+      const channel = this.channels.find(c => c.id === selectedChannelId);
+      if (channel) {
+        this.selectChannel(channel);
+        return; // Exit early if we found a channel
       }
     }
     
-    const savedChannelId = localStorage.getItem('selectedChannelId');
-    if (savedChannelId) {
-      this.selectedChannelId = savedChannelId;
+    if (selectedDirectMessageId) {
+      const directMessage = this.directMessages.find(dm => dm.id === selectedDirectMessageId);
+      if (directMessage) {
+        this.selectDirectMessage(directMessage);
+        return; // Exit early if we found a direct message
+      }
     }
     
+    // Fallback: Select the first channel if nothing was selected before
     if (this.channels.length > 0) {
-      const channelToSelect = this.channels.find(c => c.id === this.selectedChannelId) || this.channels[0];
-      
-      if (channelToSelect.id !== this.selectedChannelId) {
-        this.selectedChannelId = channelToSelect.id;
-        localStorage.setItem('selectedChannelId', channelToSelect.id);
-      }
-      
-      requestAnimationFrame(() => {
-        this.selectChannel(channelToSelect);
-      });
+      this.selectChannel(this.channels[0]);
     }
   }
-
+  
   closeAddPeopleModal() {
     this.showAddPeopleModal = false;
-    
-    // Wähle den neuen Channel aus, wenn das Modal geschlossen wird
-    const newChannel = this.channels.find(channel => channel.id === this.newChannelId);
-    if (newChannel) {
-      this.selectChannel(newChannel);
-    }
-    
-    // Alle Channel mit Statistiken neu laden
-    this.loadChannelsWithStats();
   }
   
   handlePeopleAdded(userIds: string[]) {
-    console.log(`${userIds.length} Benutzer zum Channel ${this.newChannelName} hinzugefügt`);
-    // Die Anzeige aktualisieren, falls nötig
+    console.log('People added to channel:', userIds);
+    this.closeAddPeopleModal();
   }
 } 
