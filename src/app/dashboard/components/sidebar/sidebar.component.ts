@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Inject, Output, OnInit } from '@angular/core';
+import { Component, EventEmitter, Inject, Output, OnInit, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AddChannelModalComponent } from '../add-channel-modal/add-channel-modal.component';
@@ -32,6 +32,8 @@ export class SidebarComponent implements OnInit {
   @Output() channelSelected = new EventEmitter<Channel>();
   @Output() channelDeleted = new EventEmitter<string>();
   @Output() directMessageSelected = new EventEmitter<DirectMessage>();
+  @Input() channels!: Channel[];
+  @Input() directMessages!: DirectMessage[];
   
   workspaceName: string = 'Devspace';
   showChannels: boolean = true;
@@ -46,69 +48,69 @@ export class SidebarComponent implements OnInit {
   showContactProfile: boolean = false;
   selectedContact: ContactProfile | null = null;
   
-  channels: Channel[] = [
-    { id: '1', name: 'Entwicklerteam', unread: 0, description: 'Der Hauptkanal für alle Entwickler. Hier werden wichtige Updates und allgemeine Entwicklungsthemen besprochen.' }
-  ];
+  // channels: Channel[] = [
+  //   { id: '1', name: 'Entwicklerteam', unread: 0, description: 'Der Hauptkanal für alle Entwickler. Hier werden wichtige Updates und allgemeine Entwicklungsthemen besprochen.' }
+  // ];
   
-  directMessages: DirectMessage[] = [
-    { 
-      id: '1', 
-      name: 'Max Mustermann (Du)', 
-      avatar: 'assets/icons/avatars/user2.svg', 
-      online: true, 
-      unread: 0,
-      email: 'max.mustermann@beispiel.com',
-      title: 'Senior Developer',
-      department: 'Engineering'
-    },
-    { 
-      id: '2', 
-      name: 'Sofia Müller', 
-      avatar: 'assets/icons/avatars/user1.svg', 
-      online: true, 
-      unread: 0,
-      email: 'sofia.mueller@beispiel.com',
-      title: 'UX Designer',
-      department: 'Design'
-    },
-    { 
-      id: '3', 
-      name: 'Noah Braun', 
-      avatar: 'assets/icons/avatars/user3.svg', 
-      online: true, 
-      unread: 0,
-      email: 'noah.braun@beispiel.com',
-      title: 'Product Manager',
-      department: 'Product'
-    },
-    { 
-      id: '4', 
-      name: 'Elise Roth', 
-      avatar: 'assets/icons/avatars/user6.svg', 
-      online: false, 
-      unread: 0,
-      email: 'elise.roth@beispiel.com',
-      title: 'Backend Developer',
-      department: 'Engineering'
-    },
-    { 
-      id: '5', 
-      name: 'Elias Neumann', 
-      avatar: 'assets/icons/avatars/user5.svg', 
-      online: true, 
-      unread: 0,
-      email: 'elias.neumann@beispiel.com',
-      department: 'Marketing'
-    },
-    { 
-      id: '6', 
-      name: 'Steffen Hoffmann', 
-      avatar: 'assets/icons/avatars/user2.svg', 
-      online: false, 
-      unread: 0,
-      phone: '+49 176 12345678'
-    }
-  ];
+  // directMessages: DirectMessage[] = [
+  //   { 
+  //     id: '1', 
+  //     name: 'Max Mustermann (Du)', 
+  //     avatar: 'assets/icons/avatars/user2.svg', 
+  //     online: true, 
+  //     unread: 0,
+  //     email: 'max.mustermann@beispiel.com',
+  //     title: 'Senior Developer',
+  //     department: 'Engineering'
+  //   },
+  //   { 
+  //     id: '2', 
+  //     name: 'Sofia Müller', 
+  //     avatar: 'assets/icons/avatars/user1.svg', 
+  //     online: true, 
+  //     unread: 0,
+  //     email: 'sofia.mueller@beispiel.com',
+  //     title: 'UX Designer',
+  //     department: 'Design'
+  //   },
+  //   { 
+  //     id: '3', 
+  //     name: 'Noah Braun', 
+  //     avatar: 'assets/icons/avatars/user3.svg', 
+  //     online: true, 
+  //     unread: 0,
+  //     email: 'noah.braun@beispiel.com',
+  //     title: 'Product Manager',
+  //     department: 'Product'
+  //   },
+  //   { 
+  //     id: '4', 
+  //     name: 'Elise Roth', 
+  //     avatar: 'assets/icons/avatars/user6.svg', 
+  //     online: false, 
+  //     unread: 0,
+  //     email: 'elise.roth@beispiel.com',
+  //     title: 'Backend Developer',
+  //     department: 'Engineering'
+  //   },
+  //   { 
+  //     id: '5', 
+  //     name: 'Elias Neumann', 
+  //     avatar: 'assets/icons/avatars/user5.svg', 
+  //     online: true, 
+  //     unread: 0,
+  //     email: 'elias.neumann@beispiel.com',
+  //     department: 'Marketing'
+  //   },
+  //   { 
+  //     id: '6', 
+  //     name: 'Steffen Hoffmann', 
+  //     avatar: 'assets/icons/avatars/user2.svg', 
+  //     online: false, 
+  //     unread: 0,
+  //     phone: '+49 176 12345678'
+  //   }
+  // ];
   
   newChannelId: string = '';
   newChannelName: string = '';

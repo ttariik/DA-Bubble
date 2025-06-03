@@ -76,6 +76,9 @@ export class LoginComponent {
         this.isLoading = false;
       }
     });
+
+
+    
   }
 
 
@@ -89,22 +92,22 @@ export class LoginComponent {
     document.body.classList.remove('auth-page');
   }
 
-    loginAsGuest() {
-    this.testLogin();
-    this.router.navigate(['/dashboard']);
-  }
+  //   loginAsGuest() {
+  //   this.testLogin();
+  //   this.router.navigate(['/dashboard']);
+  // }
 
-  navigateToForgotPassword() {
-    // Navigation zur "Passwort vergessen"-Seite
-  }
+  // navigateToForgotPassword() {
+  //   // Navigation zur "Passwort vergessen"-Seite
+  // }
 
-  get email() {
-    return this.loginForm.get('email');
-  }
+  // get email() {
+  //   return this.loginForm.get('email');
+  // }
 
-  get password() {
-    return this.loginForm.get('password');
-  }
+  // get password() {
+  //   return this.loginForm.get('password');
+  // }
 
   async onSubmit() {
     if (this.loginForm.valid) {
@@ -127,26 +130,26 @@ export class LoginComponent {
     }
   }
 
-  // togglePasswordVisibility(): void {
-  //   this.hidePassword = !this.hidePassword;
-  // }
+  togglePasswordVisibility(): void {
+    this.hidePassword = !this.hidePassword;
+  }
 
-  // navigateToForgotPassword(): void {
-  //   this.router.navigate(['/forgot-password']);
-  // }
+  navigateToForgotPassword(): void {
+    this.router.navigate(['/forgot-password']);
+  }
 
-  // get email() {
-  //   return this.emailFormControl;
-  // }
+  get email() {
+    return this.emailFormControl;
+  }
 
-  // get password() {
-  //   return this.passwordFormControl;
-  // }
+  get password() {
+    return this.passwordFormControl;
+  }
 
-  // loginAsGuest() {
-  //   this.testLogin();
-  //   // this.router.navigate(['/dashboard']);
-  // }
+  loginAsGuest() {
+    this.testLogin();
+    // this.router.navigate(['/dashboard']);
+  }
 
   // // Nur für Entwicklung
   testUsers = [

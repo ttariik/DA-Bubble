@@ -11,7 +11,7 @@ import { AuthService } from '../services/auth.service';
 import { User } from '../models/user.class';
 import { MatDialog } from '@angular/material/dialog';
 import { trigger, state, style, animate, transition } from '@angular/animations';
-import { Subject, Subscription, debounceTime, distinctUntilChanged, fromEvent, throttleTime } from 'rxjs';
+import { Observable, Subject, Subscription, debounceTime, distinctUntilChanged, fromEvent, throttleTime } from 'rxjs';
 import { FilterPipe } from './pipes/filter.pipe';
 
 interface Channel {
@@ -49,7 +49,7 @@ interface SearchResult {
     SidebarComponent,
     ChatAreaComponent,
     ThreadViewComponent,
-    FilterPipe
+    // FilterPipe
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
@@ -147,6 +147,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   searchCursorPosition: number = 0;
   lastSearchQuery: string = '';
   selectedSearchResultIndex: number = -1;
+  directMessages$!: Observable<DirectMessage[]>;
+  channels$!: Observable<Channel[]>;
   
   // For performance optimization
   private tagSearchSubject = new Subject<string>();
@@ -177,6 +179,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    this.channels$ = this.firestoreService.getUserChannels();
+    this.directMessages$ = this.firestoreService.getUserDirectMessages();
     this.loadData();
     this.loadAllUsers();
     this.loadSelectedContent();

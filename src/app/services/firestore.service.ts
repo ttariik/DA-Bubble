@@ -22,6 +22,8 @@ import {
 } from '@angular/fire/firestore';
 import { User } from '../models/user.class';
 import { map, Observable, from, of, forkJoin } from 'rxjs';
+import { Auth } from '@angular/fire/auth';
+
 
 export interface ChannelStats {
   memberCount: number;
@@ -37,11 +39,39 @@ export interface Channel {
   stats?: ChannelStats;
 }
 
+export interface DirectMessage {
+  id: string;
+  name: string;
+  avatar: string;
+  online: boolean;
+  unread: number;
+  email?: string;
+  phone?: string;
+  title?: string;
+  department?: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
 export class FirestoreService {
-  constructor(private firestore: Firestore) {}
+  constructor(private firestore: Firestore, private auth: Auth) {}
+
+
+getUserChannels(): Observable<Channel[]> {
+  const userId = this.auth.currentUser?.uid;
+  const ref = collection(this.firestore, 'channels');
+  const q = query(ref, where('members', 'array-contains', userId));
+  return collectionData(q, { idField: 'id' }) as Observable<Channel[]>;
+}
+
+getUserDirectMessages(): Observable<DirectMessage[]> {
+  const userId = this.auth.currentUser?.uid;
+  const ref = collection(this.firestore, 'directMessages');
+  const q = query(ref, where('users', 'array-contains', userId));
+  return collectionData(q, { idField: 'id' }) as Observable<DirectMessage[]>;
+}
+
 
   /**
    * Creates a new user with the specified ID in the "users" collection.
