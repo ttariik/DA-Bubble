@@ -6,6 +6,7 @@ import { FirestoreService, Channel, ChannelStats } from '../../../services/fires
 import { map, switchMap, tap } from 'rxjs/operators';
 import { Observable, forkJoin, of } from 'rxjs';
 import { AddPeopleModalComponent } from '../add-people-modal/add-people-modal.component';
+import { ContactProfileModalComponent, ContactProfile } from '../contact-profile-modal/contact-profile-modal.component';
 
 interface DirectMessage {
   id: string;
@@ -22,7 +23,7 @@ interface DirectMessage {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule, AddChannelModalComponent, AddPeopleModalComponent],
+  imports: [CommonModule, RouterModule, AddChannelModalComponent, AddPeopleModalComponent, ContactProfileModalComponent],
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.scss']
 })
@@ -40,6 +41,10 @@ export class SidebarComponent implements OnInit {
   sidebarCollapsed: boolean = false;
   selectedChannelId: string = '1';
   selectedDirectMessageId: string | null = null;
+  
+  // Contact profile modal properties
+  showContactProfile: boolean = false;
+  selectedContact: ContactProfile | null = null;
   
   channels: Channel[] = [
     { id: '1', name: 'Entwicklerteam', unread: 0, description: 'Der Hauptkanal für alle Entwickler. Hier werden wichtige Updates und allgemeine Entwicklungsthemen besprochen.' }
@@ -109,6 +114,33 @@ export class SidebarComponent implements OnInit {
   newChannelName: string = '';
   
   constructor(private firestoreService: FirestoreService) {}
+
+  // Show contact profile when avatar is clicked
+  showContactProfileModal(contact: DirectMessage, event: MouseEvent): void {
+    event.stopPropagation(); // Prevent selecting the direct message
+    this.selectedContact = contact;
+    this.showContactProfile = true;
+  }
+  
+  // Close contact profile modal
+  closeContactProfile(): void {
+    this.showContactProfile = false;
+    this.selectedContact = null;
+  }
+
+  // Send message to contact from profile modal
+  sendMessageToContact(contact: ContactProfile): void {
+    // Find the matching direct message by ID
+    const directMessage = this.directMessages.find(dm => dm.id === contact.id);
+    
+    if (directMessage) {
+      // Close the profile modal
+      this.closeContactProfile();
+      
+      // Select the direct message to open the chat
+      this.selectDirectMessage(directMessage);
+    }
+  }
 
   toggleChannels() {
     this.showChannels = !this.showChannels;
