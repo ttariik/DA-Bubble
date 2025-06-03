@@ -105,9 +105,6 @@ export class SidebarComponent implements OnInit {
     }
   ];
   
-  hoverChannelId: string | null = null;
-  showDeleteConfirm: boolean = false;
-  channelToDelete: Channel | null = null;
   newChannelId: string = '';
   newChannelName: string = '';
   
@@ -202,36 +199,20 @@ export class SidebarComponent implements OnInit {
     this.sidebarCollapsed = !this.sidebarCollapsed;
   }
   
-  showDeleteButton(channelId: string) {
-    this.hoverChannelId = channelId;
-  }
-  
-  hideDeleteButton() {
-    this.hoverChannelId = null;
-  }
-  
-  confirmDeleteChannel(channel: Channel, event: MouseEvent) {
-    event.stopPropagation();
+  removeChannelFromUI(channelId: string) {
+    // Entferne den Channel aus dem lokalen Array
+    this.channels = this.channels.filter(channel => channel.id !== channelId);
     
-    this.channelToDelete = channel;
-    this.showDeleteConfirm = true;
-  }
-  
-  cancelDelete() {
-    this.showDeleteConfirm = false;
-    this.channelToDelete = null;
-  }
-  
-  deleteChannel() {
-    if (this.channelToDelete) {
-      const channelId = this.channelToDelete.id;
-      
-      // Entferne den Channel direkt aus der UI
-      this.removeChannelFromUI(channelId);
-      
-      // Cleanup
-      this.cancelDelete();
+    // Speichere die aktualisierte Channel-Liste im Local Storage
+    this.saveChannelsToStorage();
+    
+    // Wenn der gelöschte Channel der aktuell ausgewählte war, wähle stattdessen den ersten Channel aus
+    if (this.selectedChannelId === channelId && this.channels.length > 0) {
+      this.selectChannel(this.channels[0]);
     }
+    
+    // Benachrichtige den übergeordneten Komponenten über die Löschung
+    this.channelDeleted.emit(channelId);
   }
   
   selectDirectMessage(directMessage: DirectMessage) {
@@ -265,22 +246,6 @@ export class SidebarComponent implements OnInit {
     const year = jsDate.getFullYear();
     
     return `${day}.${month}.${year}`;
-  }
-  
-  removeChannelFromUI(channelId: string) {
-    // Entferne den Channel aus dem lokalen Array
-    this.channels = this.channels.filter(channel => channel.id !== channelId);
-    
-    // Speichere die aktualisierte Channel-Liste im Local Storage
-    this.saveChannelsToStorage();
-    
-    // Wenn der gelöschte Channel der aktuell ausgewählte war, wähle stattdessen den ersten Channel aus
-    if (this.selectedChannelId === channelId && this.channels.length > 0) {
-      this.selectChannel(this.channels[0]);
-    }
-    
-    // Benachrichtige den übergeordneten Komponenten über die Löschung
-    this.channelDeleted.emit(channelId);
   }
   
   ngOnInit() {
