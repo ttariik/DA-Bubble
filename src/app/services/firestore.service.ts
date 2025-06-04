@@ -21,7 +21,7 @@ import {
   QuerySnapshot
 } from '@angular/fire/firestore';
 import { User } from '../models/user.class';
-import { map, Observable, from, of, forkJoin } from 'rxjs';
+import { map, Observable, from, of, forkJoin, combineLatest, switchMap } from 'rxjs';
 import { Auth } from '@angular/fire/auth';
 
 
@@ -51,6 +51,33 @@ export interface DirectMessage {
   department?: string;
 }
 
+export interface Message {
+  id: string;
+  text: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  channelId: string;
+  channelName?: string;
+  timestamp: Date;
+  reactions?: any[];
+  threadId?: string;
+  isThreadMessage?: boolean;
+}
+
+export interface SearchResult {
+  type: 'channel' | 'user' | 'message';
+  id: string;
+  name?: string;
+  avatar?: string;
+  channelName?: string;
+  channelId?: string;
+  messageText?: string;
+  sender?: string;
+  timestamp?: Date;
+  highlight?: string[];
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -62,7 +89,14 @@ getUserChannels(): Observable<Channel[]> {
   const userId = this.auth.currentUser?.uid;
   const ref = collection(this.firestore, 'channels');
   const q = query(ref, where('members', 'array-contains', userId));
-  return collectionData(q, { idField: 'id' }) as Observable<Channel[]>;
+  return collectionData(q, { idField: 'id' }).pipe(
+    map(channels => channels.map((channel: any) => ({
+      id: channel.id,
+      name: channel.channelName || 'Unbenannter Channel',
+      description: channel.channelDescription || '',
+      unread: 0
+    })))
+  );
 }
 
 getUserDirectMessages(): Observable<DirectMessage[]> {
@@ -362,6 +396,185 @@ getUserDirectMessages(): Observable<DirectMessage[]> {
       // In einer realen Anwendung würde man hier eine Fehlerbehandlung implementieren
       return Promise.resolve();
     }
+  }
+
+  /**
+   * Holt alle Nachrichten für einen bestimmten Channel
+   * @param channelId Die ID des Channels
+   * @returns Observable mit einem Array von Message-Objekten
+   */
+  getChannelMessages(channelId: string): Observable<Message[]> {
+    const messagesRef = collection(this.firestore, 'messages');
+    const q = query(
+      messagesRef, 
+      where('channelId', '==', channelId),
+      orderBy('timestamp', 'desc'),
+      limit(100)
+    );
+
+    return collectionData(q, { idField: 'id' }).pipe(
+      map(messages => messages.map((msg: any) => ({
+        id: msg.id,
+        text: msg.text || '',
+        userId: msg.userId || '',
+        userName: msg.userName || 'Unbekannter Benutzer',
+        userAvatar: msg.userAvatar || '',
+        channelId: channelId,
+        timestamp: msg.timestamp ? (msg.timestamp as Timestamp).toDate() : new Date(),
+        reactions: msg.reactions || [],
+        threadId: msg.threadId || '',
+        isThreadMessage: msg.isThreadMessage || false
+      })))
+    );
+  }
+
+  /**
+   * Sucht in allen Kanälen, Benutzern und Nachrichten nach dem Suchbegriff
+   * @param query Der Suchbegriff
+   * @returns Observable mit einem Array von SearchResult-Objekten
+   */
+  searchEverything(query: string): Observable<SearchResult[]> {
+    if (!query || query.trim() === '') {
+      return of([]);
+    }
+
+    const lowercaseQuery = query.toLowerCase();
+
+    return combineLatest([
+      this.searchChannels(lowercaseQuery),
+      this.searchUsers(lowercaseQuery),
+      this.searchMessages(lowercaseQuery)
+    ]).pipe(
+      map(([channelResults, userResults, messageResults]) => {
+        // Kombiniere alle Ergebnisse
+        return [...channelResults, ...userResults, ...messageResults];
+      })
+    );
+  }
+
+  /**
+   * Sucht in allen Kanälen nach dem Suchbegriff
+   * @param query Der Suchbegriff
+   * @returns Observable mit einem Array von SearchResult-Objekten vom Typ 'channel'
+   */
+  private searchChannels(query: string): Observable<SearchResult[]> {
+    return this.getAllChannels().pipe(
+      map(channels => channels
+        .filter(channel => 
+          channel.name.toLowerCase().includes(query) || 
+          (channel.description && channel.description.toLowerCase().includes(query))
+        )
+        .map(channel => ({
+          type: 'channel' as const,
+          id: channel.id,
+          name: channel.name,
+          highlight: [this.getHighlightedText(channel.name, query)]
+        }))
+      )
+    );
+  }
+
+  /**
+   * Sucht in allen Benutzern nach dem Suchbegriff
+   * @param query Der Suchbegriff
+   * @returns Observable mit einem Array von SearchResult-Objekten vom Typ 'user'
+   */
+  private searchUsers(query: string): Observable<SearchResult[]> {
+    return this.getAllUsers().pipe(
+      map(users => users
+        .filter(user => 
+          `${user.firstName} ${user.lastName}`.toLowerCase().includes(query) ||
+          (user.email && user.email.toLowerCase().includes(query))
+        )
+        .map(user => ({
+          type: 'user' as const,
+          id: user.userId,
+          name: `${user.firstName} ${user.lastName}`,
+          avatar: user.avatar || '',
+          highlight: [this.getHighlightedText(`${user.firstName} ${user.lastName}`, query)]
+        }))
+      )
+    );
+  }
+
+  /**
+   * Sucht in allen Nachrichten nach dem Suchbegriff
+   * @param query Der Suchbegriff
+   * @returns Observable mit einem Array von SearchResult-Objekten vom Typ 'message'
+   */
+  private searchMessages(query: string): Observable<SearchResult[]> {
+    // Erst alle Channels holen, um die Channelnamen zu erhalten
+    return this.getAllChannels().pipe(
+      map(channels => {
+        const channelMap = new Map<string, string>();
+        channels.forEach(channel => channelMap.set(channel.id, channel.name));
+        return channelMap;
+      }),
+      // Dann alle Nachrichten durchsuchen
+      switchMap(channelMap => from(this.fetchAllMessages(query, channelMap)))
+    );
+  }
+
+  /**
+   * Sucht in allen Nachrichten nach dem Suchbegriff
+   * @param query Der Suchbegriff
+   * @param channelMap Eine Map von Channel-IDs zu Channel-Namen
+   * @returns Promise mit einem Array von SearchResult-Objekten vom Typ 'message'
+   */
+  private async fetchAllMessages(query: string, channelMap: Map<string, string>): Promise<SearchResult[]> {
+    try {
+      const messagesRef = collection(this.firestore, 'messages');
+      const querySnapshot = await getDocs(messagesRef);
+      
+      const results: SearchResult[] = [];
+      
+      querySnapshot.forEach(doc => {
+        const message = doc.data();
+        const messageText = message['text'] || '';
+        
+        if (messageText.toLowerCase().includes(query)) {
+          const channelId = message['channelId'] || '';
+          const channelName = channelMap.get(channelId) || 'Unbekannter Channel';
+          
+          results.push({
+            type: 'message',
+            id: doc.id,
+            messageText: messageText,
+            sender: message['userName'] || 'Unbekannter Benutzer',
+            channelName: channelName,
+            channelId: channelId,
+            timestamp: message['timestamp'] ? (message['timestamp'] as Timestamp).toDate() : new Date(),
+            highlight: [this.getHighlightedText(messageText, query)]
+          });
+        }
+      });
+      
+      // Sortiere nach Datum, neueste zuerst
+      return results.sort((a, b) => {
+        if (!a.timestamp || !b.timestamp) return 0;
+        return b.timestamp.getTime() - a.timestamp.getTime();
+      });
+    } catch (error) {
+      console.error('Fehler beim Suchen von Nachrichten:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Hebt den Suchbegriff im Text hervor
+   * @param text Der vollständige Text
+   * @param query Der Suchbegriff
+   * @returns String mit dem hervorgehobenen Suchbegriff
+   */
+  private getHighlightedText(text: string, query: string): string {
+    const index = text.toLowerCase().indexOf(query.toLowerCase());
+    if (index === -1) return text;
+    
+    const before = text.substring(0, index);
+    const highlight = text.substring(index, index + query.length);
+    const after = text.substring(index + query.length);
+    
+    return `${before}<span class="highlight">${highlight}</span>${after}`;
   }
 }
 

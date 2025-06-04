@@ -34,6 +34,7 @@ interface SearchResult {
   name?: string;
   avatar?: string;
   channelName?: string;
+  channelId?: string;
   messageText?: string;
   sender?: string;
   timestamp?: Date;
@@ -49,7 +50,7 @@ interface SearchResult {
     SidebarComponent,
     ChatAreaComponent,
     ThreadViewComponent,
-    // FilterPipe
+    FilterPipe
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
@@ -634,80 +635,30 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.isSearching = true;
     this.lastSearchQuery = query;
     
-    // Here you would normally call your search service
-    // For now, we'll mock some results
-    setTimeout(() => {
-      this.searchResults = this.mockSearchResults(query);
-      this.isSearching = false;
-      
-      // If there are results, show the dropdown
-      if (this.searchResults.length > 0) {
-        this.showSearchDropdown = true;
-      }
-      
-      this.cd.detectChanges();
-    }, 300);
-  }
-  
-  // Mock search results for demo purposes
-  mockSearchResults(query: string): SearchResult[] {
-    const lowercaseQuery = query.toLowerCase();
-    let results: SearchResult[] = [];
-    
-    // Search in channels
-    if (this.sidebar && this.sidebar.channels) {
-      const channelResults = this.sidebar.channels
-        .filter(channel => channel.name.toLowerCase().includes(lowercaseQuery))
-        .map(channel => ({
-          type: 'channel' as const,
-          id: channel.id,
-          name: channel.name,
-          highlight: [this.getHighlightedText(channel.name, lowercaseQuery)]
-        }));
-      
-      results = [...results, ...channelResults];
-    }
-    
-    // Search in users
-    if (this.sidebar && this.sidebar.directMessages) {
-      const userResults = this.sidebar.directMessages
-        .filter(user => user.name.toLowerCase().includes(lowercaseQuery))
-        .map(user => ({
-          type: 'user' as const,
-          id: user.id,
-          name: user.name,
-          avatar: user.avatar,
-          highlight: [this.getHighlightedText(user.name, lowercaseQuery)]
-        }));
-      
-      results = [...results, ...userResults];
-    }
-    
-    // Mock messages with the search term
-    const messageResults: SearchResult[] = [
-      {
-        type: 'message',
-        id: 'm1',
-        messageText: `Hier ist eine Nachricht mit ${query} darin enthalten.`,
-        sender: 'Frederik Beck',
-        channelName: 'Entwicklerteam',
-        timestamp: new Date(Date.now() - 3600000), // 1 hour ago
-        highlight: [`Hier ist eine Nachricht mit <span class="highlight">${query}</span> darin enthalten.`]
-      },
-      {
-        type: 'message',
-        id: 'm2',
-        messageText: `${query} wurde im Meeting besprochen.`,
-        sender: 'Sofia Müller',
-        channelName: 'Allgemein',
-        timestamp: new Date(Date.now() - 86400000), // 1 day ago
-        highlight: [`<span class="highlight">${query}</span> wurde im Meeting besprochen.`]
-      }
-    ];
-    
-    results = [...results, ...messageResults];
-    
-    return results;
+    // Use the FirestoreService to search everything
+    this.subscriptions.push(
+      this.firestoreService.searchEverything(query).subscribe(
+        (results) => {
+          this.searchResults = results;
+          this.isSearching = false;
+          
+          // If there are results, show the dropdown
+          if (this.searchResults.length > 0) {
+            this.showSearchDropdown = true;
+          } else {
+            this.showSearchDropdown = true; // Still show dropdown to display "No results" message
+          }
+          
+          this.cd.detectChanges();
+        },
+        (error) => {
+          console.error('Error searching:', error);
+          this.isSearching = false;
+          this.searchResults = [];
+          this.cd.detectChanges();
+        }
+      )
+    );
   }
   
   // Get highlighted text for search results
@@ -731,23 +682,67 @@ export class DashboardComponent implements OnInit, OnDestroy {
       const channel = this.sidebar.channels.find(c => c.id === result.id);
       if (channel) {
         this.handleChannelSelected(channel);
+      } else {
+        // Try to fetch from the observable if not found in sidebar
+        this.subscriptions.push(
+          this.channels$.subscribe(channels => {
+            const channel = channels.find(c => c.id === result.id);
+            if (channel) {
+              this.handleChannelSelected(channel);
+            }
+          })
+        );
       }
     } else if (result.type === 'user') {
       // Find and select the user for direct message
       const user = this.sidebar.directMessages.find(u => u.id === result.id);
       if (user) {
         this.handleDirectMessageSelected(user);
+      } else {
+        // Try to fetch from the observable if not found in sidebar
+        this.subscriptions.push(
+          this.directMessages$.subscribe(users => {
+            const user = users.find(u => u.id === result.id);
+            if (user) {
+              this.handleDirectMessageSelected(user);
+            }
+          })
+        );
       }
     } else if (result.type === 'message') {
       // Navigate to the specific message
-      // This would normally find the channel and scroll to the message
-      const channelName = result.channelName || 'Entwicklerteam';
-      const channel = this.sidebar.channels.find(c => c.name === channelName);
-      if (channel) {
-        this.handleChannelSelected(channel);
-        // In a real implementation, you would scroll to the specific message
-        // For now, just log it
-        console.log(`Navigating to message: ${result.messageText}`);
+      const channelId = result.channelId;
+      if (channelId) {
+        // First, find the channel by ID
+        const channel = this.sidebar.channels.find(c => c.id === channelId);
+        if (channel) {
+          this.handleChannelSelected(channel);
+          
+          // Highlight the message in chat
+          setTimeout(() => {
+            if (this.chatArea) {
+              // If there's a method in chat-area to highlight a message, call it here
+              console.log(`Navigating to message: ${result.messageText} in channel ${result.channelName}`);
+            }
+          }, 500);
+        } else {
+          // Try to fetch from the observable if not found in sidebar
+          this.subscriptions.push(
+            this.channels$.subscribe(channels => {
+              const channel = channels.find(c => c.id === channelId);
+              if (channel) {
+                this.handleChannelSelected(channel);
+                
+                // Highlight the message in chat
+                setTimeout(() => {
+                  if (this.chatArea) {
+                    console.log(`Navigating to message: ${result.messageText} in channel ${result.channelName}`);
+                  }
+                }, 500);
+              }
+            })
+          );
+        }
       }
     }
     
@@ -788,11 +783,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
       case 'ArrowDown':
         event.preventDefault();
         this.selectedSearchResultIndex = Math.min(this.selectedSearchResultIndex + 1, maxIndex);
+        this.scrollToSelectedResult();
         break;
         
       case 'ArrowUp':
         event.preventDefault();
         this.selectedSearchResultIndex = Math.max(this.selectedSearchResultIndex - 1, -1);
+        this.scrollToSelectedResult();
         break;
         
       case 'Enter':
@@ -811,6 +808,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.closeSearchDropdowns();
         break;
     }
+  }
+  
+  // Scroll to the selected result to ensure it's visible
+  scrollToSelectedResult() {
+    setTimeout(() => {
+      const selectedElement = document.querySelector('.result-item.selected');
+      if (selectedElement) {
+        selectedElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }, 10);
   }
   
   // Close all search dropdowns
