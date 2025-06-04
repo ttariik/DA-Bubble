@@ -7,8 +7,8 @@ import {
   Validators,
 } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
-// import { AuthService } from '../services/auth.service';
-import { AuthService } from '../../app/auth.service';
+import { AuthService } from '../services/auth.service';
+// import { AuthService } from '../../app/auth.service';
 import { HeaderComponent } from '../shared';
 import { FooterComponent } from '../shared/footer/footer.component';
 import { FirestoreService } from '../services/firestore.service';
@@ -58,7 +58,7 @@ export class LoginComponent {
   }
 
   logout() {
-    this.authService.logout().subscribe(() => {
+    this.authService.logoutGoogle().subscribe(() => {
       this.userName = null;
       console.log('Abgemeldet');
     });

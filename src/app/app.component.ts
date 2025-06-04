@@ -3,9 +3,10 @@ import { RouterLink, RouterOutlet } from '@angular/router';
 import { onAuthStateChanged } from 'firebase/auth'
 import { Observable } from 'rxjs';
 import { User } from '@angular/fire/auth';
-import { AuthService } from './auth.service';
+// import { AuthService } from './auth.service';
 import { Auth } from '@angular/fire/auth';
 import { RouterModule, Router } from '@angular/router';
+import { AuthService } from './services/auth.service';
 
 @Component({
   selector: 'app-root',

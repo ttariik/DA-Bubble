@@ -12,7 +12,9 @@ import { User } from '../models/user.class';
 import { MatDialog } from '@angular/material/dialog';
 import { trigger, state, style, animate, transition } from '@angular/animations';
 import { Observable, Subject, Subscription, debounceTime, distinctUntilChanged, fromEvent, throttleTime } from 'rxjs';
+// import { AuthService } from '../../app/auth.service';
 import { FilterPipe } from './pipes/filter.pipe';
+import { LoginComponent } from '../login/login.component';
 
 interface Channel {
   id: string;
@@ -156,7 +158,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription[] = [];
   private resizeSubscription: Subscription | null = null;
 
-  constructor() {
+  constructor(public auth : AuthService) {
     // Set up debounced search for tagging
     this.subscriptions.push(
       this.tagSearchSubject.pipe(

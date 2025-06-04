@@ -7,57 +7,60 @@ import { async, from, Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class AuthService {
+  google: boolean | undefined 
 
   constructor(private auth: Auth, private firestore: Firestore) {}
 
-loginWithGoogle(): Observable<User> {
-  const provider = new GoogleAuthProvider();
+// loginWithGoogle(): Observable<User> {
+//   const provider = new GoogleAuthProvider();
+//   this.google = true
 
-  return from(
-    signInWithPopup(this.auth, provider).then(async result => {
-      const user = result.user;
-      const displayName = user.displayName || '';
-      const [firstName, lastName] = displayName.split(' ');
+//   return from(
+//     signInWithPopup(this.auth, provider).then(async result => {
+//       const user = result.user;
+//       const displayName = user.displayName || '';
+//       const [firstName, lastName] = displayName.split(' ');
 
-      const userRef = doc(this.firestore, `users/${user.uid}`);
-      const userSnap = await getDoc(userRef);
+//       const userRef = doc(this.firestore, `users/${user.uid}`);
+//       const userSnap = await getDoc(userRef);
 
-      if (!userSnap.exists()) {
-        await setDoc(userRef, {
-          id: user.uid,
-          firstName: firstName,
-          lastName: lastName || '',
-          email: user.email,
-          avatar: user.photoURL
-        });
-      }
+//       if (!userSnap.exists()) {
+//         await setDoc(userRef, {
+//           id: user.uid,
+//           firstName: firstName,
+//           lastName: lastName || '',
+//           email: user.email,
+//           avatar: user.photoURL,
+//           isaActive: true,
+//         });
+//       }
 
-      return user;
-    })
-  );
-}
+//       return user;
+//     })
+//   );
+// }
 
 
-  logout(): Observable<void> {
-    return from(signOut(this.auth));
-  }
+//   logout(): Observable<void> {
+//     return from(signOut(this.auth));
+//   }
 
-  get currentUser(): User | null {
-    return this.auth.currentUser;
-  }
+//   get currentUser(): User | null {
+//     return this.auth.currentUser;
+//   }
 
-    async signIn(email: string, password: string) {
-      return signInWithEmailAndPassword(this.auth, email, password)
-        .then((userCredential) => {
-          return userCredential.user;
-        })
-        .catch((error) => {
-          return Promise.reject(error.code);
-        });
-    }
+//     async signIn(email: string, password: string) {
+//       return signInWithEmailAndPassword(this.auth, email, password)
+//         .then((userCredential) => {
+//           return userCredential.user;
+//         })
+//         .catch((error) => {
+//           return Promise.reject(error.code);
+//         });
+//     }
 
-  get user$(): Observable<User | null> {
-    return authState(this.auth); // 🔁 Reagiert auf Login/Logout
-  }
+//   get user$(): Observable<User | null> {
+//     return authState(this.auth); // 🔁 Reagiert auf Login/Logout
+//   }
   
 }
