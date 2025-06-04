@@ -2,19 +2,19 @@
 
 .forgot-password-container {
   text-align: center;
-  margin: 1rem 0;
+  margin: clamp(0.5rem, 2vw, 1rem) 0;
   display: flex;
   justify-content: center;
 }
 
 .forgot-password-link {
   color: #444df2;
-  font-size: 0.9rem;
+  font-size: clamp(0.8rem, 2.5vw, 0.9rem);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 12px;
+  padding: clamp(6px, 2vw, 8px) clamp(8px, 3vw, 12px);
   border-radius: 50px;
   transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
   position: relative;
@@ -79,7 +79,7 @@
   display: flex;
   align-items: center;
   text-align: center;
-  margin: 2rem 0;
+  margin: clamp(1.5rem, 4vw, 2rem) 0;
   color: #757575;
 
   &::before,
@@ -90,7 +90,7 @@
   }
 
   span {
-    margin: 0 1.3rem;
+    margin: 0 clamp(1rem, 3vw, 1.3rem);
     font-weight: 500;
   }
 }
@@ -102,12 +102,12 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 10px;
+  gap: clamp(6px, 2vw, 10px);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 
   img {
-    width: 20px;
-    height: 20px;
+    width: clamp(16px, 4vw, 20px);
+    height: clamp(16px, 4vw, 20px);
     transition: transform 0.3s ease;
   }
 
@@ -130,5 +130,22 @@
   &:hover {
     background-color: rgba(68, 77, 242, 0.05);
     box-shadow: 0 2px 8px rgba(68, 77, 242, 0.15);
+  }
+}
+
+// Medienabfragen für mehr Responsivität
+@media (max-width: 480px) {
+  .google-btn {
+    font-size: clamp(0.75rem, 4vw, 0.875rem);
+  }
+}
+
+@media (max-width: 350px) {
+  .forgot-password-link {
+    font-size: 0.75rem;
+  }
+  
+  .divider span {
+    font-size: 0.75rem;
   }
 }

@@ -1,10 +1,9 @@
 .login-card {
-  width: 450px;
-  max-width: 90%;
-  margin: 50px auto;
-  padding: 2.5rem 2rem;
+  width: clamp(280px, 90%, 450px);
+  margin: clamp(1.5rem, 5vh, 3.125rem) auto;
+  padding: clamp(1.5rem, 4vw, 2.5rem) clamp(1rem, 3vw, 2rem);
   background-color: #ffffff;
-  border-radius: 24px;
+  border-radius: clamp(16px, 3vw, 24px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   font-family: "Nunito", sans-serif;
   position: relative;
@@ -21,10 +20,10 @@
     color: #444df2;
     font-family: "Nunito", sans-serif;
     font-weight: 700;
-    font-size: 2.5rem;
+    font-size: clamp(1.75rem, 5vw, 2.5rem);
     text-align: center;
     margin-bottom: 0.5rem;
-    max-width: 80%;
+    max-width: 100%;
   }
 
   .back-button {
@@ -32,14 +31,14 @@
     left: 0;
     top: 0;
     bottom: 0;
-    width: 30px;
+    width: clamp(24px, 5vw, 30px);
     display: flex;
     align-items: center;
     justify-content: center;
 
     .hover {
-      width: 30px;
-      height: 30px;
+      width: clamp(24px, 5vw, 30px);
+      height: clamp(24px, 5vw, 30px);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -56,9 +55,9 @@
 p {
   text-align: center;
   color: #555;
-  font-size: 0.95rem;
-  margin-bottom: 2rem;
-  max-width: 400px;
+  font-size: clamp(0.875rem, 2.5vw, 0.95rem);
+  margin-bottom: clamp(1rem, 4vw, 2rem);
+  max-width: 100%;
   margin-left: auto;
   margin-right: auto;
 }
@@ -68,7 +67,7 @@ p {
   margin-top: 0.3rem;
   .error {
     color: #e53935;
-    font-size: 0.8rem;
+    font-size: clamp(0.7rem, 2vw, 0.8rem);
     padding-left: 10px;
     transition: all 0.3s ease;
     animation: fieldFadeIn 0.3s ease forwards;
@@ -91,9 +90,9 @@ p {
   position: relative;
 
   .input-icon {
-    width: 20px;
-    height: 20px;
-    margin: 0 12px;
+    width: clamp(16px, 4vw, 20px);
+    height: clamp(16px, 4vw, 20px);
+    margin: 0 clamp(8px, 2vw, 12px);
     object-fit: contain;
     opacity: 0.6;
     transition: all 0.3s ease;
@@ -104,7 +103,7 @@ p {
     display: flex;
     align-items: center;
     background-color: #eceefe;
-    border-radius: 23px;
+    border-radius: clamp(18px, 4vw, 23px);
     overflow: hidden;
     transition: all 0.3s ease;
     border: 2px solid transparent;
@@ -130,9 +129,9 @@ p {
 
 .form-control {
   width: 100%;
-  padding: 15px 15px;
+  padding: clamp(0.75rem, 3vw, 0.9375rem) clamp(0.75rem, 3vw, 0.9375rem);
   border: none;
-  font-size: 1rem;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
   background-color: transparent;
   font-family: "Nunito", sans-serif;
   color: #333;
@@ -165,11 +164,11 @@ p {
 .btn {
   display: block;
   width: 100%;
-  padding: 15px 0;
+  padding: clamp(0.75rem, 3vw, 0.9375rem) 0;
   border: none;
-  border-radius: 10px;
+  border-radius: clamp(8px, 2vw, 10px);
   font-weight: 600;
-  font-size: 1rem;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
   cursor: pointer;
   font-family: "Nunito", sans-serif;
   transition: all 0.3s ease;
@@ -232,21 +231,42 @@ p {
 .button-group {
   display: flex;
   justify-content: space-between;
-  gap: 1rem;
-  margin-top: 1rem;
+  gap: clamp(0.5rem, 2vw, 1rem);
+  margin-top: clamp(0.75rem, 2vw, 1rem);
 
   .btn {
     flex: 1;
     max-width: 48%;
-    padding: 10px 0;
-    border-radius: 24px;
-    font-size: 0.95rem;
+    padding: clamp(0.5rem, 2vw, 0.625rem) 0;
+    border-radius: clamp(16px, 4vw, 24px);
+    font-size: clamp(0.8125rem, 2.5vw, 0.95rem);
   }
 }
 
 .button-group-right {
   justify-content: flex-end;
   .btn {
-    max-width: 30%;
+    max-width: clamp(100px, 30%, 150px);
+  }
+}
+
+// Neue Media Queries für bessere Anpassung
+@media (max-width: 480px) {
+  .button-group {
+    flex-direction: column;
+    
+    .btn {
+      max-width: 100%;
+    }
+  }
+}
+
+@media (max-width: 350px) {
+  .login-card {
+    padding: 1rem 0.75rem;
+  }
+  
+  .form-control {
+    font-size: 0.8125rem;
   }
 }
