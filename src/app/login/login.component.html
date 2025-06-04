@@ -9,7 +9,7 @@
       verwendest.
     </p>
 
-    <form [formGroup]="loginForm" class="login-form">
+    <form [formGroup]="loginForm" class="login-form" (ngSubmit)="onSubmit()">
       <!-- Email -->
       <div class="input-container">
         <div class="icon-input">

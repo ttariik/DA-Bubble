@@ -76,11 +76,7 @@ export class LoginComponent {
         this.isLoading = false;
       }
     });
-
-
-    
   }
-
 
   ngOnInit() {
     // Fügt die Klasse auth-page zum Body hinzu
