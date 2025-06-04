@@ -1,21 +1,25 @@
 .footer {
-  margin-top: 20px;
-  padding: 10px 0;
+  margin-top: clamp(1rem, 4vw, 1.25rem);
+  padding: clamp(0.5rem, 2vw, 0.625rem) 0;
   text-align: center;
+  width: 100%;
   
   .footer-links {
     display: flex;
     justify-content: center;
-    gap: 20px;
+    gap: clamp(0.75rem, 3vw, 1.25rem);
+    flex-wrap: wrap;
+    padding: 0 clamp(0.5rem, 2vw, 1rem);
     
     a {
       color: #444df2;
       text-decoration: none;
-      font-size: 14px;
+      font-size: clamp(0.75rem, 2.5vw, 0.875rem);
       font-weight: 500;
       position: relative;
       cursor: pointer;
       transition: all 0.3s ease;
+      padding: clamp(0.25rem, 1vw, 0.5rem);
       
       &::after {
         content: '';
@@ -38,5 +42,12 @@
         }
       }
     }
+  }
+}
+
+@media (max-width: 350px) {
+  .footer .footer-links {
+    flex-direction: column;
+    gap: 0.5rem;
   }
 } 

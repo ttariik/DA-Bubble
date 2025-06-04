@@ -1,6 +1,6 @@
 .header {
-  width: 100vw;
-  height: 80px;
+  width: 100%;
+  height: clamp(60px, 10vh, 80px);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -15,12 +15,12 @@
 .logo-container {
   display: flex;
   align-items: center;
-  padding-left: 40px;
+  padding-left: clamp(1rem, 5vw, 2.5rem);
   cursor: pointer;
 }
 
 .logo {
-  height: 40px;
+  height: clamp(30px, 5vw, 40px);
   width: auto;
   transition: transform 0.3s ease;
   
@@ -34,19 +34,19 @@
   flex-direction: column;
   align-items: flex-end;
   text-align: right;
-  padding-right: 40px;
+  padding-right: clamp(1rem, 5vw, 2.5rem);
 }
 
 .signup-text {
-  font-size: 0.9rem;
+  font-size: clamp(0.75rem, 2.5vw, 0.9rem);
   color: #555;
-  margin-bottom: 5px;
+  margin-bottom: clamp(3px, 1vw, 5px);
 }
 
 .create-account {
   color: #444df2;
   font-weight: 600;
-  font-size: 1rem;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
   text-decoration: none;
   position: relative;
   cursor: pointer;
@@ -71,5 +71,21 @@
     &::after {
       transform: scaleX(1);
     }
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    height: clamp(50px, 8vh, 60px);
+  }
+  
+  .signup-container {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .signup-text {
+    margin-bottom: 0;
   }
 } 
