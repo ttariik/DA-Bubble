@@ -7,24 +7,24 @@
   
   .content {
     flex: 1;
-    max-width: 800px;
-    margin: 100px auto 50px;
-    padding: 40px;
+    max-width: clamp(280px, 90%, 800px);
+    margin: clamp(80px, 15vh, 100px) auto clamp(30px, 5vh, 50px);
+    padding: clamp(20px, 5vw, 40px);
     background-color: white;
-    border-radius: 20px;
+    border-radius: clamp(12px, 3vw, 20px);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
     
     h1 {
-      margin-bottom: 30px;
+      margin-bottom: clamp(20px, 5vw, 30px);
       color: #444df2;
-      font-size: 32px;
+      font-size: clamp(1.5rem, 5vw, 2rem);
       font-weight: 700;
       text-align: center;
     }
     
     section {
-      margin-bottom: 30px;
-      padding-bottom: 20px;
+      margin-bottom: clamp(20px, 5vw, 30px);
+      padding-bottom: clamp(15px, 4vw, 20px);
       border-bottom: 1px solid #eaeaea;
       
       &:last-child {
@@ -33,8 +33,8 @@
       
       h2 {
         color: #333;
-        margin-bottom: 15px;
-        font-size: 22px;
+        margin-bottom: clamp(10px, 3vw, 15px);
+        font-size: clamp(1.125rem, 4vw, 1.375rem);
         font-weight: 600;
         position: relative;
         padding-left: 15px;
@@ -55,22 +55,22 @@
       p {
         color: #555;
         line-height: 1.7;
-        margin-bottom: 15px;
-        font-size: 16px;
+        margin-bottom: clamp(10px, 3vw, 15px);
+        font-size: clamp(0.875rem, 3vw, 1rem);
       }
     }
     
     .back-button {
-      margin-top: 40px;
+      margin-top: clamp(25px, 6vw, 40px);
       text-align: center;
       
       .btn {
-        padding: 12px 28px;
+        padding: clamp(8px, 2vw, 12px) clamp(20px, 4vw, 28px);
         border: none;
         border-radius: 30px;
         cursor: pointer;
         font-weight: 600;
-        font-size: 16px;
+        font-size: clamp(0.875rem, 3vw, 1rem);
         transition: all 0.3s ease;
         
         &.primary {
@@ -90,6 +90,21 @@
           }
         }
       }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .datenschutz-container .content {
+    padding: 15px;
+    margin-top: 70px;
+    
+    h1 {
+      font-size: 1.5rem;
+    }
+    
+    section h2 {
+      font-size: 1.125rem;
     }
   }
 }
