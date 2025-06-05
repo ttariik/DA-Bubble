@@ -1,109 +1,111 @@
 <app-header></app-header>
-<div class="login-card">
-  <div>
-    <div class="title-container">
-      <h2>Anmeldung</h2>
-    </div>
-    <p>
-      Wir empfehlen dir, die E-Mail-Adresse zu nutzen, die du bei der Arbeit
-      verwendest.
-    </p>
-
-    <form [formGroup]="loginForm" class="login-form" (ngSubmit)="onSubmit()">
-      <!-- Email -->
-      <div class="input-container">
-        <div class="icon-input">
-          <img
-            class="input-icon"
-            src="assets/icons/mail.svg"
-            alt="Email Icon"
-          />
-          <input
-            type="email"
-            id="email"
-            formControlName="email"
-            class="form-control"
-            placeholder="beispielname@email.com"
-            required
-          />
-        </div>
-        <div class="error-box">
-          @if (email.hasError('required') && (email.touched || email.dirty)) {
-          <div class="error">Email ist <strong>erforderlich</strong></div>
-          } @if (email.hasError('email') && !email.hasError('required')) {
-          <div class="error">Bitte gib eine gültige E-Mail-Adresse ein</div>
-          }
-        </div>
+<div class="login-wrapper">
+  <div class="login-card">
+    <div>
+      <div class="title-container">
+        <h2>Anmeldung</h2>
       </div>
+      <p>
+        Wir empfehlen dir, die E-Mail-Adresse zu nutzen, die du bei der Arbeit
+        verwendest.
+      </p>
 
-      <!-- Password -->
-      <div class="input-container">
-        <div class="icon-input">
-          <img
-            class="input-icon"
-            src="assets/icons/lock.svg"
-            alt="Passwort Icon"
-          />
-          <input
-            [type]="hidePassword ? 'password' : 'text'"
-            id="password"
-            formControlName="password"
-            class="form-control"
-            placeholder="Passwort"
-            required
-          />
-        </div>
-        <div class="error-box">
-          @if (password.hasError('required') && (password.touched ||
-          password.dirty)) {
-          <div class="error">Passwort ist <strong>erforderlich</strong></div>
-          } @if (password.hasError('minlength') &&
-          !password.hasError('required')) {
-          <div class="error">
-            Minimum {{ password.errors?.['minlength'].requiredLength }} Zeichen
+      <form [formGroup]="loginForm" class="login-form" (ngSubmit)="onSubmit()">
+        <!-- Email -->
+        <div class="input-container">
+          <div class="icon-input">
+            <img
+              class="input-icon"
+              src="assets/icons/mail.svg"
+              alt="Email Icon"
+            />
+            <input
+              type="email"
+              id="email"
+              formControlName="email"
+              class="form-control"
+              placeholder="beispielname@email.com"
+              required
+            />
           </div>
-          }
+          <div class="error-box">
+            @if (email.hasError('required') && (email.touched || email.dirty)) {
+            <div class="error">Email ist <strong>erforderlich</strong></div>
+            } @if (email.hasError('email') && !email.hasError('required')) {
+            <div class="error">Bitte gib eine gültige E-Mail-Adresse ein</div>
+            }
+          </div>
         </div>
-      </div>
 
-      <!-- Forgot Password -->
-      <div class="forgot-password-container">
-        <div class="forgot-password-link" (click)="navigateToForgotPassword()">
-          <span>Passwort vergessen?</span>
+        <!-- Password -->
+        <div class="input-container">
+          <div class="icon-input">
+            <img
+              class="input-icon"
+              src="assets/icons/lock.svg"
+              alt="Passwort Icon"
+            />
+            <input
+              [type]="hidePassword ? 'password' : 'text'"
+              id="password"
+              formControlName="password"
+              class="form-control"
+              placeholder="Passwort"
+              required
+            />
+          </div>
+          <div class="error-box">
+            @if (password.hasError('required') && (password.touched ||
+            password.dirty)) {
+            <div class="error">Passwort ist <strong>erforderlich</strong></div>
+            } @if (password.hasError('minlength') &&
+            !password.hasError('required')) {
+            <div class="error">
+              Minimum {{ password.errors?.['minlength'].requiredLength }} Zeichen
+            </div>
+            }
+          </div>
         </div>
-      </div>
 
-      <!-- Divider -->
-      <div class="divider"><span>ODER</span></div>
+        <!-- Forgot Password -->
+        <div class="forgot-password-container">
+          <div class="forgot-password-link" (click)="navigateToForgotPassword()">
+            <span>Passwort vergessen?</span>
+          </div>
+        </div>
 
-      <!-- Google Login -->
-      <button type="button" class="btn google-btn" (click)="loginWithGoogle()">
-        <img src="assets/svg/Google.svg" alt="Google" />
-        Anmelden mit Google
-      </button>
+        <!-- Divider -->
+        <div class="divider"><span>ODER</span></div>
 
-      <div class="button-group">
-        <button
-          type="submit"
-          class="btn primary small-btn"
-          [disabled]="loginForm.invalid || isLoading"
-        >
-          @if (isLoading) {
-          <span>Laden...</span>
-          } @else {
-          <span>Anmelden</span>
-          }
+        <!-- Google Login -->
+        <button type="button" class="btn google-btn" (click)="loginWithGoogle()">
+          <img src="assets/svg/Google.svg" alt="Google" />
+          Anmelden mit Google
         </button>
 
-        <button
-          type="button"
-          class="btn guest-btn small-btn"
-          (click)="loginAsGuest()"
-        >
-          Gäste-Login
-        </button>
-      </div>
-    </form>
+        <div class="button-group">
+          <button
+            type="submit"
+            class="btn primary small-btn"
+            [disabled]="loginForm.invalid || isLoading"
+          >
+            @if (isLoading) {
+            <span>Laden...</span>
+            } @else {
+            <span>Anmelden</span>
+            }
+          </button>
+
+          <button
+            type="button"
+            class="btn guest-btn small-btn"
+            (click)="loginAsGuest()"
+          >
+            Gäste-Login
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 </div>
 

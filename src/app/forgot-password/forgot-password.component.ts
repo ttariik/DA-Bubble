@@ -7,14 +7,14 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { HeaderComponent } from '../shared';
+import { HeaderComponent, FooterComponent } from '../shared';
 import { AuthService } from '../services/auth.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-forgot-password',
   standalone: true,
-  imports: [CommonModule, RouterModule, ReactiveFormsModule, HeaderComponent],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, HeaderComponent, FooterComponent],
   templateUrl: './forgot-password.component.html',
   styleUrls: ['./forgot-password.component.scss'],
 })
