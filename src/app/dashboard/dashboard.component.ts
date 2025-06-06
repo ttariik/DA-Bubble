@@ -13,7 +13,6 @@ import { MatDialog } from '@angular/material/dialog';
 import { trigger, state, style, animate, transition } from '@angular/animations';
 import { Observable, Subject, Subscription, debounceTime, distinctUntilChanged, fromEvent, throttleTime } from 'rxjs';
 // import { AuthService } from '../../app/auth.service';
-import { FilterPipe } from './pipes/filter.pipe';
 import { LoginComponent } from '../login/login.component';
 
 interface Channel {
@@ -52,7 +51,7 @@ interface SearchResult {
     SidebarComponent,
     ChatAreaComponent,
     ThreadViewComponent,
-    FilterPipe
+    ProfileModalComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],

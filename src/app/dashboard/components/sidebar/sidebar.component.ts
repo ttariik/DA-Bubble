@@ -2,11 +2,12 @@ import { Component, EventEmitter, Inject, Output, OnInit, Input } from '@angular
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AddChannelModalComponent } from '../add-channel-modal/add-channel-modal.component';
-import { FirestoreService, Channel, ChannelStats } from '../../../services/firestore.service';
+import { FirestoreService, Channel, ChannelStats, Contact } from '../../../services/firestore.service';
 import { map, switchMap, tap } from 'rxjs/operators';
 import { Observable, forkJoin, of } from 'rxjs';
 import { AddPeopleModalComponent } from '../add-people-modal/add-people-modal.component';
 import { ContactProfileModalComponent, ContactProfile } from '../contact-profile-modal/contact-profile-modal.component';
+import { AddContactModalComponent } from '../add-contact-modal/add-contact-modal.component';
 
 interface DirectMessage {
   id: string;
@@ -20,10 +21,26 @@ interface DirectMessage {
   department?: string;
 }
 
+interface NewContact {
+  name: string;
+  email: string;
+  avatar: string;
+  title?: string;
+  department?: string;
+  phone?: string;
+}
+
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule, AddChannelModalComponent, AddPeopleModalComponent, ContactProfileModalComponent],
+  imports: [
+    CommonModule, 
+    RouterModule, 
+    AddChannelModalComponent, 
+    AddPeopleModalComponent, 
+    ContactProfileModalComponent,
+    AddContactModalComponent
+  ],
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.scss']
 })
@@ -114,6 +131,8 @@ export class SidebarComponent implements OnInit {
   
   newChannelId: string = '';
   newChannelName: string = '';
+  
+  showAddContactModal = false;
   
   constructor(private firestoreService: FirestoreService) {}
 
@@ -374,5 +393,40 @@ export class SidebarComponent implements OnInit {
   handlePeopleAdded(userIds: string[]) {
     console.log('People added to channel:', userIds);
     this.closeAddPeopleModal();
+  }
+
+  openAddContactModal() {
+    this.showAddContactModal = true;
+  }
+
+  closeAddContactModal() {
+    this.showAddContactModal = false;
+  }
+
+  handleContactAdded(newContact: NewContact) {
+    // Erstelle eine neue ID für den Kontakt
+    const newId = 'contact_' + Date.now();
+    
+    // Füge den neuen Kontakt zu den Direktnachrichten hinzu
+    const contact: Contact = {
+      id: newId,
+      name: newContact.name,
+      avatar: newContact.avatar,
+      online: true, // Standard: online
+      unread: 0,
+      email: newContact.email,
+      title: newContact.title,
+      department: newContact.department,
+      phone: newContact.phone
+    };
+    
+    this.directMessages = [...this.directMessages, contact];
+    
+    // Speichere den neuen Kontakt in Firestore
+    this.firestoreService.addContact(contact).then(() => {
+      console.log('Kontakt erfolgreich hinzugefügt');
+    }).catch((error: Error) => {
+      console.error('Fehler beim Hinzufügen des Kontakts:', error);
+    });
   }
 } 

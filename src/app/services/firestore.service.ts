@@ -26,17 +26,20 @@ import { Auth } from '@angular/fire/auth';
 
 
 export interface ChannelStats {
-  memberCount: number;
   messageCount: number;
-  createdAt: Date | null;
+  lastActivity?: Date;
+  activeMembers?: number;
 }
 
 export interface Channel {
   id: string;
   name: string;
   description?: string;
+  members?: string[];
+  createdAt?: Date;
+  createdBy?: string;
+  isPrivate?: boolean;
   unread: number;
-  stats?: ChannelStats;
 }
 
 export interface DirectMessage {
@@ -76,6 +79,18 @@ export interface SearchResult {
   sender?: string;
   timestamp?: Date;
   highlight?: string[];
+}
+
+export interface Contact {
+  id: string;
+  name: string;
+  avatar: string;
+  online: boolean;
+  unread: number;
+  email: string;
+  title?: string;
+  department?: string;
+  phone?: string;
 }
 
 @Injectable({
@@ -575,6 +590,17 @@ getUserDirectMessages(): Observable<DirectMessage[]> {
     const after = text.substring(index + query.length);
     
     return `${before}<span class="highlight">${highlight}</span>${after}`;
+  }
+
+  async addContact(contact: Contact): Promise<void> {
+    try {
+      const contactsRef = collection(this.firestore, 'contacts');
+      const contactDoc = doc(contactsRef, contact.id);
+      await setDoc(contactDoc, contact);
+    } catch (error: any) {
+      console.error('Error adding contact:', error);
+      throw error;
+    }
   }
 }
 
