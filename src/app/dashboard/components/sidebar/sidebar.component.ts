@@ -2,24 +2,12 @@ import { Component, EventEmitter, Inject, Output, OnInit, Input } from '@angular
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AddChannelModalComponent } from '../add-channel-modal/add-channel-modal.component';
-import { FirestoreService, Channel, ChannelStats, Contact } from '../../../services/firestore.service';
+import { FirestoreService, Channel, ChannelStats, Contact, DirectMessage } from '../../../services/firestore.service';
 import { map, switchMap, tap } from 'rxjs/operators';
 import { Observable, forkJoin, of } from 'rxjs';
 import { AddPeopleModalComponent } from '../add-people-modal/add-people-modal.component';
 import { ContactProfileModalComponent, ContactProfile } from '../contact-profile-modal/contact-profile-modal.component';
 import { AddContactModalComponent } from '../add-contact-modal/add-contact-modal.component';
-
-interface DirectMessage {
-  id: string;
-  name: string;
-  avatar: string;
-  online: boolean;
-  unread: number;
-  email?: string;
-  phone?: string;
-  title?: string;
-  department?: string;
-}
 
 interface NewContact {
   name: string;
@@ -49,8 +37,6 @@ export class SidebarComponent implements OnInit {
   @Output() channelSelected = new EventEmitter<Channel>();
   @Output() channelDeleted = new EventEmitter<string>();
   @Output() directMessageSelected = new EventEmitter<DirectMessage>();
-  @Input() channels!: Channel[];
-  @Input() directMessages!: DirectMessage[];
   
   workspaceName: string = 'Devspace';
   showChannels: boolean = true;
@@ -65,69 +51,20 @@ export class SidebarComponent implements OnInit {
   showContactProfile: boolean = false;
   selectedContact: ContactProfile | null = null;
   
-  // channels: Channel[] = [
-  //   { id: '1', name: 'Entwicklerteam', unread: 0, description: 'Der Hauptkanal für alle Entwickler. Hier werden wichtige Updates und allgemeine Entwicklungsthemen besprochen.' }
-  // ];
+  // Default values for channels and direct messages
+  channels: Channel[] = [
+    { id: '1', name: 'Entwicklerteam', description: 'Team Channel', unread: 0 },
+    { id: '2', name: 'Allgemein', description: 'General Channel', unread: 0 },
+    { id: '3', name: 'Ankündigungen', description: 'Announcements', unread: 0 }
+  ];
   
-  // directMessages: DirectMessage[] = [
-  //   { 
-  //     id: '1', 
-  //     name: 'Max Mustermann (Du)', 
-  //     avatar: 'assets/icons/avatars/user2.svg', 
-  //     online: true, 
-  //     unread: 0,
-  //     email: 'max.mustermann@beispiel.com',
-  //     title: 'Senior Developer',
-  //     department: 'Engineering'
-  //   },
-  //   { 
-  //     id: '2', 
-  //     name: 'Sofia Müller', 
-  //     avatar: 'assets/icons/avatars/user1.svg', 
-  //     online: true, 
-  //     unread: 0,
-  //     email: 'sofia.mueller@beispiel.com',
-  //     title: 'UX Designer',
-  //     department: 'Design'
-  //   },
-  //   { 
-  //     id: '3', 
-  //     name: 'Noah Braun', 
-  //     avatar: 'assets/icons/avatars/user3.svg', 
-  //     online: true, 
-  //     unread: 0,
-  //     email: 'noah.braun@beispiel.com',
-  //     title: 'Product Manager',
-  //     department: 'Product'
-  //   },
-  //   { 
-  //     id: '4', 
-  //     name: 'Elise Roth', 
-  //     avatar: 'assets/icons/avatars/user6.svg', 
-  //     online: false, 
-  //     unread: 0,
-  //     email: 'elise.roth@beispiel.com',
-  //     title: 'Backend Developer',
-  //     department: 'Engineering'
-  //   },
-  //   { 
-  //     id: '5', 
-  //     name: 'Elias Neumann', 
-  //     avatar: 'assets/icons/avatars/user5.svg', 
-  //     online: true, 
-  //     unread: 0,
-  //     email: 'elias.neumann@beispiel.com',
-  //     department: 'Marketing'
-  //   },
-  //   { 
-  //     id: '6', 
-  //     name: 'Steffen Hoffmann', 
-  //     avatar: 'assets/icons/avatars/user2.svg', 
-  //     online: false, 
-  //     unread: 0,
-  //     phone: '+49 176 12345678'
-  //   }
-  // ];
+  directMessages: DirectMessage[] = [
+    { id: '1', name: 'Frederik Beck', avatar: 'assets/icons/avatars/avatar1.png', online: true, unread: 0 },
+    { id: '2', name: 'Sofia Müller', avatar: 'assets/icons/avatars/avatar2.png', online: true, unread: 0 },
+    { id: '3', name: 'Noah Braun', avatar: 'assets/icons/avatars/avatar3.png', online: true, unread: 0 },
+    { id: '4', name: 'Elise Roth', avatar: 'assets/icons/avatars/avatar4.png', online: false, unread: 0 },
+    { id: '5', name: 'Elias Neumann', avatar: 'assets/icons/avatars/avatar5.png', online: true, unread: 0 }
+  ];
   
   newChannelId: string = '';
   newChannelName: string = '';
