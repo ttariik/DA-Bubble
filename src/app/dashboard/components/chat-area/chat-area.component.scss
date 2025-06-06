@@ -70,6 +70,39 @@
 .channel-actions {
   display: flex;
   align-items: center;
+  
+  .add-people-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: white;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-left: 12px;
+    
+    svg {
+      transition: all 0.3s ease;
+    }
+    
+    span {
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    &:hover {
+      background-color: #f0f3ff;
+      border-color: #444df2;
+      color: #444df2;
+      
+      svg {
+        stroke: #444df2;
+      }
+    }
+  }
 }
 
 .members-avatars {

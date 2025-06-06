@@ -2,6 +2,7 @@ import { Component, AfterViewInit, ViewChild, ElementRef, OnInit, Input, OnChang
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FirestoreService } from '../../../services/firestore.service';
+import { AddPeopleModalComponent } from '../add-people-modal/add-people-modal.component';
 
 interface Message {
   id: string;
@@ -35,7 +36,7 @@ interface DateGroup {
 @Component({
   selector: 'app-chat-area',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AddPeopleModalComponent],
   templateUrl: './chat-area.component.html',
   styleUrls: ['./chat-area.component.scss']
 })
@@ -85,6 +86,9 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
   tagCursorPosition: number = 0;
   filteredUsers: any[] = [];
   originalUsers: any[] = [];
+  
+  // Add People Modal
+  showAddPeopleModal: boolean = false;
   
   ngAfterViewInit() {
     setTimeout(() => {
@@ -780,5 +784,20 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
     
     // Hier machen wir einfach eine Konsolen-Ausgabe
     alert(`Direktnachricht mit ${member.name} wird gestartet...`);
+  }
+
+  openAddPeopleModal() {
+    this.showAddPeopleModal = true;
+  }
+
+  closeAddPeopleModal() {
+    this.showAddPeopleModal = false;
+  }
+
+  handlePeopleAdded(userIds: string[]) {
+    console.log('People added to channel:', userIds);
+    this.closeAddPeopleModal();
+    // Optional: Refresh the channel members list
+    this.loadChannelMembers();
   }
 } 
