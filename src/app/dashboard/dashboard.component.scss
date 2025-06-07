@@ -53,10 +53,12 @@
     background-color: white;
     font-size: 14px;
     outline: none;
-
+    transition: all 0.3s ease;
+    
     &:focus {
-      border-color: #ccc;
-      box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.05);
+      border-color: #444df2;
+      box-shadow: 0 0 0 2px rgba(68, 77, 242, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1);
+      transform: translateY(-2px);
     }
   }
 
