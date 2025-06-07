@@ -10,8 +10,8 @@
 }
 
 .thread-header {
-  height: clamp(3rem, 8vh, 4rem);
-  padding: 0 clamp(0.75rem, 2vw, 1rem);
+  height: 64px;
+  padding: 0 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -23,37 +23,35 @@
 .thread-info {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
 }
 
 .thread-title {
-  font-size: clamp(1rem, 1.5vw, 1.125rem);
+  font-size: 18px;
   font-weight: 700;
   color: #323232;
 }
 
 .channel-reference {
-  font-size: clamp(0.75rem, 1vw, 0.8125rem);
+  font-size: 13px;
   color: #666;
 }
 
 .thread-actions {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
 }
 
 .close-button {
   background: none;
   border: none;
-  width: clamp(1.5rem, 3vw, 2rem);
-  height: clamp(1.5rem, 3vw, 2rem);
-  border-radius: 0.25rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  font-size: clamp(0.875rem, 1.2vw, 1rem);
+  font-size: 16px;
   color: #666;
   
   &:hover {
@@ -63,14 +61,14 @@
 }
 
 .original-message {
-  padding: clamp(0.75rem, 2vw, 1rem);
+  padding: 16px;
   border-bottom: 1px solid #e0e0e0;
   flex-shrink: 0;
 }
 
 .replies-count {
-  padding: clamp(0.5rem, 1.5vw, 0.75rem) clamp(0.75rem, 2vw, 1rem);
-  font-size: clamp(0.8125rem, 1.2vw, 0.875rem);
+  padding: 12px 16px;
+  font-size: 14px;
   font-weight: 600;
   color: #444;
   border-bottom: 1px solid #e0e0e0;
@@ -84,7 +82,7 @@
   flex-direction: column;
   overflow: hidden;
   position: relative;
-  height: calc(100% - 9.375rem);
+  height: calc(100% - 150px);
 }
 
 .replies-container {
@@ -94,17 +92,16 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  height: calc(100% - 5.625rem);
+  height: calc(100% - 90px);
   min-height: 0;
 }
 
 .replies-scroll-area {
-  padding: clamp(0.75rem, 2vw, 1rem);
+  padding: 16px;
   overflow-y: scroll;
-  height: 100%;
+  height: 300px;
   display: flex;
   flex-direction: column;
-  gap: clamp(0.5rem, 1vw, 0.75rem);
   
   /* Firefox */
   scrollbar-width: thin;
@@ -112,20 +109,20 @@
 
   /* Chrome, Edge, Safari */
   &::-webkit-scrollbar {
-    width: 0.625rem;
-    height: 0.625rem;
-    display: block;
+    width: 10px;
+    height: 10px;
+    display: block; /* Ensure scrollbar is displayed */
   }
 
   &::-webkit-scrollbar-track {
     background: transparent;
-    margin: 0.25rem 0;
+    margin: 4px 0;
   }
 
   &::-webkit-scrollbar-thumb {
     background-color: rgba(0, 0, 0, 0.3);
-    border-radius: 0.625rem;
-    border: 0.125rem solid white;
+    border-radius: 10px;
+    border: 2px solid white;
     transition: background-color 0.3s;
     
     &:hover {
@@ -142,7 +139,6 @@
   display: flex;
   align-items: flex-start;
   width: 100%;
-  gap: clamp(0.5rem, 1.5vw, 0.75rem);
   
   &.own-message {
     flex-direction: row-reverse;
@@ -169,8 +165,8 @@
 }
 
 .message-avatar {
-  width: clamp(2rem, 4vw, 2.5rem);
-  height: clamp(2rem, 4vw, 2.5rem);
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
@@ -194,10 +190,9 @@
 
 .message-content {
   flex: 0 1 auto;
-  max-width: 75%;
+  max-width: 65%;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
   position: relative;
   
   &.own-message-content {
@@ -208,7 +203,7 @@
     
     .message-bubble {
       background-color: #8794FF;
-      border-radius: 1rem 1rem 0 1rem;
+      border-radius: 16px 16px 0 16px;
       align-self: flex-end;
       color: white;
     }
@@ -228,42 +223,47 @@
 .message-header {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  margin-bottom: 4px;
+  width: 100%;
 }
 
 .message-sender {
   font-weight: 700;
-  font-size: clamp(0.875rem, 1.2vw, 0.9375rem);
+  font-size: 15px;
   color: #333;
   font-family: "Nunito";
 }
 
 .message-time {
-  font-size: clamp(0.75rem, 1vw, 0.8125rem);
+  margin-left: 8px;
+  font-size: 12px;
   color: #666;
   
-  .edited-tag, .deleted-tag {
-    margin-left: 0.25rem;
+  .edited-tag {
+    margin-left: 4px;
     font-style: italic;
     opacity: 0.8;
   }
 
   .deleted-tag {
+    margin-left: 4px;
+    font-style: italic;
+    opacity: 0.8;
     color: #e74c3c;
   }
 }
 
 .message-bubble {
-  font-size: clamp(0.875rem, 1.2vw, 0.9375rem);
+  font-size: 15px;
   line-height: 1.4;
   color: #333;
   word-break: break-word;
   background-color: #F3F3F3;
-  padding: clamp(0.5rem, 1.5vw, 0.75rem) clamp(0.75rem, 2vw, 1rem);
-  border-radius: 1rem 1rem 1rem 0;
+  padding: 12px 16px;
+  border-radius: 16px 16px 16px 0;
   display: inline-block;
   max-width: 100%;
-  box-shadow: 0 0.0625rem 0.125rem rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 
   &.deleted-message {
     font-style: italic;
@@ -337,47 +337,47 @@
 }
 
 .reply-input-container {
-  padding: clamp(0.75rem, 2vw, 1rem);
+  padding: 16px;
   border-top: 1px solid #e0e0e0;
   background-color: #fff;
   flex-shrink: 0;
   z-index: 10;
-  min-height: 4.75rem;
+  min-height: 76px;
   position: sticky;
   bottom: 0;
   width: 100%;
-  display: block;
-  box-shadow: 0 -0.125rem 0.3125rem rgba(0, 0, 0, 0.05);
-  margin-bottom: clamp(0.75rem, 2vw, 1rem);
+  display: block; 
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05); 
+  margin-bottom: 13.5rem;
 }
 
 .reply-input-wrapper {
   border: 1px solid #e0e0e0;
-  border-radius: 1.25rem;
-  padding: clamp(0.375rem, 1vw, 0.5rem);
+  border-radius: 20px;
+  padding: 8px;
   background-color: #fff;
   display: flex;
   flex-direction: column;
   transition: all 0.3s ease;
-  box-shadow: 0 0.0625rem 0.1875rem rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   
   &:focus-within {
     border-color: #444df2;
-    box-shadow: 0 0 0 0.125rem rgba(68, 77, 242, 0.2), 0 0.125rem 0.5rem rgba(0, 0, 0, 0.1);
-    transform: translateY(-0.125rem);
+    box-shadow: 0 0 0 2px rgba(68, 77, 242, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
   }
 }
 
 .reply-input {
   width: 100%;
-  min-height: 2.5rem;
-  max-height: 7.5rem;
+  min-height: 40px;
+  max-height: 120px;
   border: none;
   resize: none;
   outline: none;
-  font-size: clamp(0.875rem, 1.2vw, 0.9375rem);
+  font-size: 15px;
   font-family: inherit;
-  padding: clamp(0.5rem, 1vw, 0.625rem);
+  padding: 10px 0px 8px 8px;;
   
   &::placeholder {
     color: #999;
@@ -964,29 +964,4 @@
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
-}
-
-// Media queries for smaller screens
-@media (max-width: 48rem) { // 768px
-  .message-content {
-    max-width: 85%;
-  }
-  
-  .replies-scroll-area {
-    padding: clamp(0.5rem, 1.5vw, 0.75rem);
-  }
-}
-
-@media (max-width: 30rem) { // 480px
-  .message-content {
-    max-width: 90%;
-  }
-  
-  .message-bubble {
-    padding: clamp(0.375rem, 1.2vw, 0.5rem) clamp(0.5rem, 1.5vw, 0.75rem);
-  }
-  
-  .reply-input-container {
-    padding: clamp(0.5rem, 1.5vw, 0.75rem);
-  }
 } 

@@ -573,26 +573,26 @@
 }
 
 .thread-section {
-  width: clamp(18.75rem, 30vw, 25rem); // 300px - 400px
-  min-width: clamp(18.75rem, 30vw, 25rem);
+  width: 400px;
+  min-width: 400px;
   height: 100%;
   max-height: 100%;
   background-color: #ffffff;
   display: flex;
   flex-direction: column;
   border: 1px solid #e1e1e1;
-  border-radius: 1rem;
-  box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.05);
+  border-radius: 16px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
   overflow: hidden;
   transition: transform 0.3s ease, opacity 0.3s ease, width 0.3s ease,
     min-width 0.3s ease;
 
   &.hidden {
-    transform: translateX(3.125rem);
+    transform: translateX(50px);
     opacity: 0;
     width: 0;
     min-width: 0;
-    margin-left: -1.25rem;
+    margin-left: -20px;
     border: none;
     box-shadow: none;
   }
@@ -601,19 +601,19 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: clamp(0.75rem, 2vw, 1.25rem) clamp(1rem, 2.5vw, 1.5rem);
+    padding: 15px 20px;
     border-bottom: 1px solid #e1e1e1;
     background-color: white;
 
     .thread-title {
-      font-size: clamp(0.875rem, 1.5vw, 1rem);
+      font-size: 16px;
       font-weight: 600;
       font-family: "Nunito";
 
       .thread-channel {
         font-weight: normal;
         color: #666;
-        margin-left: 0.3125rem;
+        margin-left: 5px;
       }
     }
 
@@ -622,24 +622,11 @@
       border: none;
       color: #666;
       cursor: pointer;
-      padding: 0.3125rem;
+      padding: 5px;
       line-height: 0;
-      width: clamp(1.5rem, 2.5vw, 2rem);
-      height: clamp(1.5rem, 2.5vw, 2rem);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 50%;
-      transition: all 0.2s ease;
 
       &:hover {
         color: #333;
-        background-color: rgba(0, 0, 0, 0.05);
-      }
-
-      svg {
-        width: clamp(1rem, 2vw, 1.5rem);
-        height: clamp(1rem, 2vw, 1.5rem);
       }
     }
   }
