@@ -1340,6 +1340,17 @@
 }
 
 @media (min-width: 320px) and (max-width: 500px) {
+
+  .app-container{
+    background-color: white;
+  }
+
+  .sidebar{
+    margin: 4rem 0 0 0;
+    border: none;
+    box-shadow: none;
+  }
+
   .thread-section, .chat-area, .workspace-menu {
     display: none;
   }
@@ -1386,7 +1397,6 @@
     }
 
     .search-container {
-      width: 100%;
       margin: 16px 0 0 0;
       order: 2;
 
@@ -1398,6 +1408,7 @@
         padding: 0 44px 0 20px;
         font-size: 16px;
         box-shadow: none;
+        width: 250px;
 
         &:focus {
           border-color: #444df2;
@@ -1428,7 +1439,7 @@
 
   .main-header{
     width: 100%;
-    max-width: 200px;
   }
+
 }
 
