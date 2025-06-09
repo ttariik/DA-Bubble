@@ -66,6 +66,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
   channelCreator: string = 'Noah Braun';
   channelCreatedAt: Date | null = null;
   messageCount: number = 0;
+  memberCount: number = 0;
   
   channelMembers: {id: string, name: string, avatar: string, online?: boolean, title?: string, department?: string}[] = [];
   
@@ -127,8 +128,10 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
     // Lade das Erstellungsdatum für den Channel
     this.loadChannelCreationDate();
 
-    // Lade die Channel-Mitglieder
-    this.loadChannelMembers();
+    // Lade die Channel-Mitglieder sofort beim Start
+    if (!this.isDirect && this.channelId) {
+      this.loadChannelMembers();
+    }
     
     console.log(`Loaded messages for channel ${this.channelName} (ID: ${this.channelId})`);
   }
@@ -757,18 +760,19 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
   
   // Lädt die Channel-Mitglieder
   loadChannelMembers() {
-    // In einer echten Anwendung würden wir hier eine API-Anfrage stellen
-    console.log('Lade Mitglieder für Channel:', this.channelId);
-    
-    // Hier die tatsächlichen Mitglieder vom Firestore Service laden
-    this.firestoreService.getChannelMembers(this.channelId).subscribe(
-      members => {
-        this.channelMembers = members;
-      },
-      error => {
-        console.error('Error loading channel members:', error);
-      }
-    );
+    if (!this.isDirect && this.channelId) {
+      // Lade die vollständige Mitgliederliste
+      this.firestoreService.getChannelMembers(this.channelId).subscribe(
+        members => {
+          this.channelMembers = members;
+          // Aktualisiere die Mitgliederzahl direkt aus der Mitgliederliste
+          this.memberCount = members.length;
+        },
+        error => {
+          console.error('Error loading channel members:', error);
+        }
+      );
+    }
   }
   
   // Startet eine Direktnachricht mit einem Mitglied

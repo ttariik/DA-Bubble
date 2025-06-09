@@ -21,7 +21,7 @@
       <div class="channel-details">
         <div class="member-count" *ngIf="!isDirect">
           <span class="member-count-icon">👥</span>
-          <span class="member-count-text">{{ channelMembers.length }}</span>
+          <span class="member-count-text">{{ memberCount }}</span>
         </div>
       </div>
     </div>
@@ -301,7 +301,7 @@
             </div>
             <div class="stat-info">
               <span class="stat-label">Mitglieder</span>
-              <span class="stat-value">{{ channelMembers.length }}</span>
+              <span class="stat-value">{{ memberCount }}</span>
             </div>
             <div class="view-more">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -351,7 +351,7 @@
             </svg>
             Zurück
           </button>
-          <h4>Mitglieder ({{ channelMembers.length }})</h4>
+          <h4>Mitglieder ({{ memberCount }})</h4>
         </div>
         
         <div class="members-list">
