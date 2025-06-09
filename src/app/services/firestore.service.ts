@@ -602,5 +602,46 @@ getUserDirectMessages(): Observable<DirectMessage[]> {
       throw error;
     }
   }
+
+  getChannelMembers(channelId: string): Observable<{id: string, name: string, avatar: string, online: boolean, title?: string, department?: string}[]> {
+    const channelRef = doc(this.firestore, 'channels', channelId);
+    
+    return from(getDoc(channelRef)).pipe(
+      switchMap(channelDoc => {
+        if (!channelDoc.exists()) {
+          return of([]);
+        }
+        
+        const memberIds: string[] = channelDoc.data()?.['members'] || [];
+        if (memberIds.length === 0) {
+          return of([]);
+        }
+
+        // Get user documents for all members
+        const userPromises = memberIds.map((userId: string) => {
+          const userRef = doc(this.firestore, 'users', userId);
+          return getDoc(userRef);
+        });
+
+        return from(Promise.all(userPromises)).pipe(
+          map(userDocs => {
+            return userDocs
+              .filter(doc => doc.exists())
+              .map(doc => {
+                const userData = doc.data();
+                return {
+                  id: doc.id,
+                  name: userData?.['name'] || 'Unknown User',
+                  avatar: userData?.['avatar'] || 'assets/icons/avatars/default.svg',
+                  online: userData?.['online'] || false,
+                  title: userData?.['title'],
+                  department: userData?.['department']
+                };
+              });
+          })
+        );
+      })
+    );
+  }
 }
 
