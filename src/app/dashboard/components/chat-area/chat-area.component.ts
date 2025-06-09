@@ -70,7 +70,9 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
   channelMembers: {id: string, name: string, avatar: string, online?: boolean, title?: string, department?: string}[] = [
     { id: '1', name: 'Frederik Beck', avatar: 'assets/icons/avatars/user1.svg', online: true, title: 'Developer', department: 'Engineering' },
     { id: '2', name: 'Sofia Müller', avatar: 'assets/icons/avatars/user2.svg', online: true, title: 'UX Designer', department: 'Design' },
-    { id: '3', name: 'Noah Braun', avatar: 'assets/icons/avatars/user3.svg', online: false, title: 'Product Manager', department: 'Product' }
+    { id: '3', name: 'Noah Braun', avatar: 'assets/icons/avatars/user3.svg', online: true, title: 'Product Manager', department: 'Product' },
+    { id: '4', name: 'Elise Roth', avatar: 'assets/icons/avatars/user6.svg', online: false, title: 'Backend Developer', department: 'Engineering' },
+    { id: '5', name: 'Elias Neumann', avatar: 'assets/icons/avatars/user5.svg', online: true, title: 'Marketing Specialist', department: 'Marketing' }
   ];
   
   // All messages across all channels
