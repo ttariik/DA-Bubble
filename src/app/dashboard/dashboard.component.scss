@@ -1341,6 +1341,7 @@
 
 @media (min-width: 320px) and (max-width: 500px) {
 
+
   .app-container{
     background-color: white;
   }
@@ -1364,8 +1365,7 @@
   .main-header {
     width: 100%;
     flex-wrap: wrap;
-    padding: 16px;
-    height: auto;
+    padding: 0 16px;
     background-color: #eceefe;
     border-bottom: none;
 
@@ -1374,7 +1374,7 @@
       padding-left: 0;
       
       .logo {
-        height: 32px;
+        height: 35px;
       }
     }
 
@@ -1408,7 +1408,7 @@
         padding: 0 44px 0 20px;
         font-size: 16px;
         box-shadow: none;
-        width: 250px;
+        width: 287px;
 
         &:focus {
           border-color: #444df2;
@@ -1432,6 +1432,8 @@
   }
 
   .dashboard-container{
+    display: flex;
+    justify-content: center;
     width: 100%;
     max-width: 1440px;
     margin: 0;
