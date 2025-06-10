@@ -34,7 +34,6 @@ export interface ChannelStats {
 export interface Channel {
   id: string;
   name: string;
-  members: string[];
   description?: string;
   members?: string[];
   createdAt?: Date;
