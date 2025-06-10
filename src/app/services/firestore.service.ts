@@ -26,9 +26,9 @@ import { Auth } from '@angular/fire/auth';
 
 
 export interface ChannelStats {
-  memberCount: number;
   messageCount: number;
-  createdAt: Date | null;
+  lastActivity?: Date;
+  activeMembers?: number;
 }
 
 export interface Channel {
@@ -36,8 +36,11 @@ export interface Channel {
   name: string;
   members: string[];
   description?: string;
+  members?: string[];
+  createdAt?: Date;
+  createdBy?: string;
+  isPrivate?: boolean;
   unread: number;
-  stats?: ChannelStats;
 }
 
 export interface DirectMessage {
@@ -77,6 +80,18 @@ export interface SearchResult {
   sender?: string;
   timestamp?: Date;
   highlight?: string[];
+}
+
+export interface Contact {
+  id: string;
+  name: string;
+  avatar: string;
+  online: boolean;
+  unread: number;
+  email: string;
+  title?: string;
+  department?: string;
+  phone?: string;
 }
 
 @Injectable({
@@ -569,6 +584,58 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
     const after = text.substring(index + query.length);
     
     return `${before}<span class="highlight">${highlight}</span>${after}`;
+  }
+
+  async addContact(contact: Contact): Promise<void> {
+    try {
+      const contactsRef = collection(this.firestore, 'contacts');
+      const contactDoc = doc(contactsRef, contact.id);
+      await setDoc(contactDoc, contact);
+    } catch (error: any) {
+      console.error('Error adding contact:', error);
+      throw error;
+    }
+  }
+
+  getChannelMembers(channelId: string): Observable<{id: string, name: string, avatar: string, online: boolean, title?: string, department?: string}[]> {
+    const channelRef = doc(this.firestore, 'channels', channelId);
+    
+    return from(getDoc(channelRef)).pipe(
+      switchMap(channelDoc => {
+        if (!channelDoc.exists()) {
+          return of([]);
+        }
+        
+        const memberIds: string[] = channelDoc.data()?.['members'] || [];
+        if (memberIds.length === 0) {
+          return of([]);
+        }
+
+        // Get user documents for all members
+        const userPromises = memberIds.map((userId: string) => {
+          const userRef = doc(this.firestore, 'users', userId);
+          return getDoc(userRef);
+        });
+
+        return from(Promise.all(userPromises)).pipe(
+          map(userDocs => {
+            return userDocs
+              .filter(doc => doc.exists())
+              .map(doc => {
+                const userData = doc.data();
+                return {
+                  id: doc.id,
+                  name: userData?.['name'] || 'Unknown User',
+                  avatar: userData?.['avatar'] || 'assets/icons/avatars/default.svg',
+                  online: userData?.['online'] || false,
+                  title: userData?.['title'],
+                  department: userData?.['department']
+                };
+              });
+          })
+        );
+      })
+    );
   }
 }
 

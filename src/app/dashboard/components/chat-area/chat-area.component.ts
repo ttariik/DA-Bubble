@@ -2,6 +2,7 @@ import { Component, AfterViewInit, ViewChild, ElementRef, OnInit, Input, OnChang
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FirestoreService } from '../../../services/firestore.service';
+import { AddPeopleModalComponent } from '../add-people-modal/add-people-modal.component';
 
 interface Message {
   id: string;
@@ -35,7 +36,7 @@ interface DateGroup {
 @Component({
   selector: 'app-chat-area',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AddPeopleModalComponent],
   templateUrl: './chat-area.component.html',
   styleUrls: ['./chat-area.component.scss']
 })
@@ -65,12 +66,9 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
   channelCreator: string = 'Noah Braun';
   channelCreatedAt: Date | null = null;
   messageCount: number = 0;
+  memberCount: number = 0;
   
-  channelMembers: {id: string, name: string, avatar: string, online?: boolean, title?: string, department?: string}[] = [
-    { id: '1', name: 'Frederik Beck', avatar: 'assets/icons/avatars/user1.svg', online: true, title: 'Developer', department: 'Engineering' },
-    { id: '2', name: 'Sofia Müller', avatar: 'assets/icons/avatars/user2.svg', online: true, title: 'UX Designer', department: 'Design' },
-    { id: '3', name: 'Noah Braun', avatar: 'assets/icons/avatars/user3.svg', online: false, title: 'Product Manager', department: 'Product' }
-  ];
+  channelMembers: {id: string, name: string, avatar: string, online?: boolean, title?: string, department?: string}[] = [];
   
   // All messages across all channels
   allMessages: Message[] = [];
@@ -85,6 +83,9 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
   tagCursorPosition: number = 0;
   filteredUsers: any[] = [];
   originalUsers: any[] = [];
+  
+  // Add People Modal
+  showAddPeopleModal: boolean = false;
   
   ngAfterViewInit() {
     setTimeout(() => {
@@ -101,6 +102,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
     // If the channel has changed, update the messages
     if (changes['channelId'] && !changes['channelId'].firstChange) {
       this.loadMessages();
+      this.loadChannelMembers(); // Lade die Mitglieder neu wenn sich der Channel ändert
     }
   }
   
@@ -125,6 +127,11 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
 
     // Lade das Erstellungsdatum für den Channel
     this.loadChannelCreationDate();
+
+    // Lade die Channel-Mitglieder sofort beim Start
+    if (!this.isDirect && this.channelId) {
+      this.loadChannelMembers();
+    }
     
     console.log(`Loaded messages for channel ${this.channelName} (ID: ${this.channelId})`);
   }
@@ -751,20 +758,20 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
     this.loadChannelMembers();
   }
   
-  // Lädt die Channel-Mitglieder (könnte in einer realen App Daten vom Server holen)
+  // Lädt die Channel-Mitglieder
   loadChannelMembers() {
-    // In einer echten Anwendung würden wir hier eine API-Anfrage stellen
-    console.log('Lade Mitglieder für Channel:', this.channelId);
-    
-    // Hier nur Simulation - in einer echten App würden wir Daten vom Server laden
-    if (this.channelId === '1') { // Für den Entwicklerteam-Channel
-      this.channelMembers = [
-        { id: '1', name: 'Frederik Beck', avatar: 'assets/icons/avatars/user1.svg', online: true, title: 'Developer', department: 'Engineering' },
-        { id: '2', name: 'Sofia Müller', avatar: 'assets/icons/avatars/user2.svg', online: true, title: 'UX Designer', department: 'Design' },
-        { id: '3', name: 'Noah Braun', avatar: 'assets/icons/avatars/user3.svg', online: true, title: 'Product Manager', department: 'Product' },
-        { id: '4', name: 'Elise Roth', avatar: 'assets/icons/avatars/user6.svg', online: false, title: 'Backend Developer', department: 'Engineering' },
-        { id: '5', name: 'Elias Neumann', avatar: 'assets/icons/avatars/user5.svg', online: true, title: 'Marketing Specialist', department: 'Marketing' }
-      ];
+    if (!this.isDirect && this.channelId) {
+      // Lade die vollständige Mitgliederliste
+      this.firestoreService.getChannelMembers(this.channelId).subscribe(
+        members => {
+          this.channelMembers = members;
+          // Aktualisiere die Mitgliederzahl direkt aus der Mitgliederliste
+          this.memberCount = members.length;
+        },
+        error => {
+          console.error('Error loading channel members:', error);
+        }
+      );
     }
   }
   
@@ -780,5 +787,20 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
     
     // Hier machen wir einfach eine Konsolen-Ausgabe
     alert(`Direktnachricht mit ${member.name} wird gestartet...`);
+  }
+
+  openAddPeopleModal() {
+    this.showAddPeopleModal = true;
+  }
+
+  closeAddPeopleModal() {
+    this.showAddPeopleModal = false;
+  }
+
+  handlePeopleAdded(userIds: string[]) {
+    console.log('People added to channel:', userIds);
+    this.closeAddPeopleModal();
+    // Aktualisiere die Mitgliederliste
+    this.loadChannelMembers();
   }
 } 

@@ -1,6 +1,6 @@
-/* Füge einen Wrapper für die Login-Komponenten hinzu */
+
 .login-wrapper {
-  min-height: calc(100vh - clamp(60px, 10vh, 80px) - clamp(40px, 6vh, 60px)); /* Viewport Höhe minus Header und Footer */
+  min-height: calc(100vh - clamp(60px, 10vh, 80px) - clamp(40px, 6vh, 60px)); 
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -10,7 +10,7 @@
 
 .login-card {
   width: clamp(280px, 90%, 450px);
-  margin: 4rem 0 auto; /* Entfernt den vertikalen Abstand, da wir jetzt den Wrapper für die Zentrierung nutzen */
+  margin: 4rem 0 auto; 
   padding: clamp(1.5rem, 4vw, 2.5rem) clamp(1rem, 3vw, 2rem);
   background-color: #ffffff;
   border-radius: clamp(16px, 3vw, 24px);
