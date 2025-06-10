@@ -79,8 +79,18 @@
           class="section-icon"
         />
         <div class="section-title">Direktnachrichten</div>
-        <button class="add-contact-button" (click)="openAddContactModal()" title="Neuen Kontakt hinzufügen">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button class="add-contact-button" title="Neuen Kontakt hinzufügen">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
             <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
             <circle cx="8.5" cy="7" r="4"></circle>
             <line x1="20" y1="8" x2="20" y2="14"></line>
@@ -148,11 +158,11 @@
     </app-contact-profile-modal>
 
     <!-- Add Contact Modal -->
-    <app-add-contact-modal
+    <!-- <app-add-contact-modal
       [isVisible]="showAddContactModal"
       (close)="closeAddContactModal()"
       (contactAdded)="handleContactAdded($event)"
     >
-    </app-add-contact-modal>
+    </app-add-contact-modal> -->
   </div>
 </div>
