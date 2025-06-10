@@ -7,7 +7,7 @@ import { async, from, Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class AuthService {
-  google: boolean | undefined 
+  // google: boolean | undefined 
 
   constructor(private auth: Auth, private firestore: Firestore) {}
 

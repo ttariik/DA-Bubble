@@ -106,17 +106,22 @@ export class AddChannelModalComponent implements OnChanges {
     this.channelForm.reset();
     this.nameErrorMessage = '';
   }
+  
+createChannel(): void {
+  if (this.channelForm.valid) {
+    const channelData = this.channelForm.value;
 
-  createChannel(): void {
-    if (this.channelForm.valid) {
-      this.channelCreated.emit(this.channelForm.value);
-      this.firestoreService.createChannelFirestore(this.channelForm.value, this.activUserId);
-      this.channelForm.reset();
-      this.close.emit();
-    } else {
-      this.markFormGroupTouched(this.channelForm);
-    }
+    this.firestoreService.createChannelFirestore(channelData, this.activUserId).then(channelId => {
+      // Optional: Event senden oder UI aktualisieren
+      this.channelCreated.emit({ ...channelData, id: channelId });
+    });
+
+    this.channelForm.reset();
+    this.close.emit();
+  } else {
+    this.markFormGroupTouched(this.channelForm);
   }
+}
   markFormGroupTouched(formGroup: FormGroup) {
     Object.values(formGroup.controls).forEach((control) => {
       control.markAsTouched();

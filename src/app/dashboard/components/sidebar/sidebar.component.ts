@@ -3,10 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AddChannelModalComponent } from '../add-channel-modal/add-channel-modal.component';
 import { FirestoreService, Channel, ChannelStats } from '../../../services/firestore.service';
-import { map, switchMap, tap } from 'rxjs/operators';
+import { filter, map, switchMap, tap } from 'rxjs/operators';
 import { Observable, forkJoin, of } from 'rxjs';
 import { AddPeopleModalComponent } from '../add-people-modal/add-people-modal.component';
 import { ContactProfileModalComponent, ContactProfile } from '../contact-profile-modal/contact-profile-modal.component';
+import { AuthService } from '../../../services/auth.service';
+import { User } from '@angular/fire/auth';
 
 interface DirectMessage {
   id: string;
@@ -43,6 +45,7 @@ export class SidebarComponent implements OnInit {
   sidebarCollapsed: boolean = false;
   selectedChannelId: string = '1';
   selectedDirectMessageId: string | null = null;
+
   
   // Contact profile modal properties
   showContactProfile: boolean = false;
@@ -114,8 +117,9 @@ export class SidebarComponent implements OnInit {
   
   newChannelId: string = '';
   newChannelName: string = '';
-  
-  constructor(private firestoreService: FirestoreService) {}
+  channels$!: Observable<any[]>;
+
+  constructor(private firestoreService: FirestoreService, private authService: AuthService) {}
 
   // Show contact profile when avatar is clicked
   showContactProfileModal(contact: DirectMessage, event: MouseEvent): void {
@@ -169,7 +173,8 @@ export class SidebarComponent implements OnInit {
       id: tempId,
       name: channelData.name,
       unread: 0,
-      description: channelData.description
+      description: channelData.description,
+      members: []
     };
     
     // Speichere die neue Channel-ID und den Namen für das Add-People-Modal
@@ -193,12 +198,12 @@ export class SidebarComponent implements OnInit {
         if (channelId) {
           // Finde den Channel mit der temporären ID
           const index = this.channels.findIndex(c => c.id === tempId);
-          if (index !== -1) {
-            // Aktualisiere die ID
-            this.channels[index].id = channelId;
-            // Aktualisiere auch die ID für das Add-People-Modal
-            this.newChannelId = channelId;
-          }
+          // if (index !== -1) {
+          //   // Aktualisiere die ID
+          //   this.channels[index].id = channelId;
+          //   // Aktualisiere auch die ID für das Add-People-Modal
+          //   this.newChannelId = channelId;
+          // }
         }
         
         // Aktualisiere die Channels im localStorage
@@ -283,6 +288,11 @@ export class SidebarComponent implements OnInit {
   }
   
   ngOnInit() {
+  this.channels$ = this.authService.user$.pipe(
+    filter((user): user is User => !!user),
+    switchMap((user) => this.firestoreService.getUserChannels(user.uid))
+  );
+
     // Load settings from localStorage
     const showChannelsSetting = localStorage.getItem('showChannels');
     if (showChannelsSetting !== null) {

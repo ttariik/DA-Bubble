@@ -37,7 +37,7 @@
         </div>
       </div>
 
-      <div class="section-content" *ngIf="showChannels">
+      <div class="section-content" *ngIf="channels$ | async as channels">
         <div class="channel-list">
           <div
             *ngFor="let channel of channels"
@@ -46,7 +46,7 @@
             (click)="selectChannel(channel)"
           >
             <div class="channel-name">
-              <span class="channel-icon">#</span>{{ channel.name }}
+              <span class="channel-icon">#</span>{{ channel.channelName }}
             </div>
             <div class="channel-actions">
               <div class="unread-badge" *ngIf="channel.unread > 0">
@@ -54,6 +54,7 @@
               </div>
             </div>
           </div>
+
           <div class="add-channel-button" (click)="addChannel()">
             <img
               src="assets/icons/add_circle.svg"
@@ -83,13 +84,17 @@
       <div class="section-content" *ngIf="showDirectMessages">
         <div class="dm-list">
           <ng-container *ngFor="let dm of directMessages; let i = index">
-            <div 
-              class="dm-item" 
+            <div
+              class="dm-item"
               [class.active]="dm.id === selectedDirectMessageId"
               (click)="selectDirectMessage(dm)"
             >
               <div class="user-info">
-                <div class="user-avatar" (click)="showContactProfileModal(dm, $event)" title="Profilinfo anzeigen">
+                <div
+                  class="user-avatar"
+                  (click)="showContactProfileModal(dm, $event)"
+                  title="Profilinfo anzeigen"
+                >
                   <img [src]="dm.avatar" [alt]="dm.name" />
                   <div
                     class="status-indicator"
@@ -114,7 +119,7 @@
       (channelCreated)="handleChannelCreated($event)"
     >
     </app-add-channel-modal>
-    
+
     <!-- Add People Modal -->
     <app-add-people-modal
       [isVisible]="showAddPeopleModal"
@@ -124,7 +129,7 @@
       (peopleAdded)="handlePeopleAdded($event)"
     >
     </app-add-people-modal>
-    
+
     <!-- Add Contact Profile Modal -->
     <app-contact-profile-modal
       [isVisible]="showContactProfile"

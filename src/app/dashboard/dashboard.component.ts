@@ -182,11 +182,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.channels$ = this.firestoreService.getUserChannels();
+    // this.channels$ = this.firestoreService.getUserChannels();
+    // this.channels$.subscribe(channels => {
+    //   console.log('channels$', channels);
+    // });
     this.directMessages$ = this.firestoreService.getUserDirectMessages();
     this.loadData();
     this.loadAllUsers();
     this.loadSelectedContent();
+    console.log(this.auth.google);
+    
     
     // Initialize filtered lists with delay
     setTimeout(() => {

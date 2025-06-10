@@ -34,6 +34,7 @@ export interface ChannelStats {
 export interface Channel {
   id: string;
   name: string;
+  members: string[];
   description?: string;
   unread: number;
   stats?: ChannelStats;
@@ -85,19 +86,11 @@ export class FirestoreService {
   constructor(private firestore: Firestore, private auth: Auth) {}
 
 
-getUserChannels(): Observable<Channel[]> {
-  const userId = this.auth.currentUser?.uid;
-  const ref = collection(this.firestore, 'channels');
-  const q = query(ref, where('members', 'array-contains', userId));
-  return collectionData(q, { idField: 'id' }).pipe(
-    map(channels => channels.map((channel: any) => ({
-      id: channel.id,
-      name: channel.channelName || 'Unbenannter Channel',
-      description: channel.channelDescription || '',
-      unread: 0
-    })))
-  );
-}
+  getUserChannels(uid: string): Observable<any[]> {
+    const channelsRef = collection(this.firestore, 'channels');
+    const q = query(channelsRef, where('members', 'array-contains', uid));
+    return collectionData(q, { idField: 'id' }) as Observable<any[]>;
+  }
 
 getUserDirectMessages(): Observable<DirectMessage[]> {
   const userId = this.auth.currentUser?.uid;
@@ -187,17 +180,17 @@ getUserDirectMessages(): Observable<DirectMessage[]> {
     this.updateUser(id, { isActive: status });
   }
 
-  async createChannelFirestore(channel: any, activUserId: string) {
-    const docRef = await addDoc(collection(this.firestore, 'channels'), {
-      channelName: channel.name,
-      channelDescription: channel.description,
-      activUserId: activUserId,
-      createdAt: serverTimestamp(),
-      members: [activUserId] // Ersteller ist der erste Mitglied
-    });
-    
-    return docRef.id;
-  }
+async createChannelFirestore(channel: any, activUserId: string): Promise<string> {
+  const docRef = await addDoc(collection(this.firestore, 'channels'), {
+    channelName: channel.name,
+    channelDescription: channel.description,
+    activUserId: activUserId,
+    createdAt: serverTimestamp(),
+    members: [activUserId] // Ersteller ist der erste Mitglied
+  });
+
+  return docRef.id;
+}
 
   getAllChannels(): Observable<Channel[]> {
     const channelsRef = collection(this.firestore, 'channels');
@@ -206,6 +199,7 @@ getUserDirectMessages(): Observable<DirectMessage[]> {
         id: channel['id'],
         name: channel['channelName'],
         description: channel['channelDescription'] || '',
+        members: channel['members'] || [],
         unread: 0 // oder aus DB, falls vorhanden
       })))
     );

@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import {
   confirmPasswordReset,
   createUserWithEmailAndPassword,
@@ -7,7 +7,7 @@ import {
 } from '@angular/fire/auth';
 import { Auth, signInWithPopup, GoogleAuthProvider, signOut, User,  signInWithEmailAndPassword, authState } from '@angular/fire/auth';
 import { doc, Firestore, getDoc, setDoc } from '@angular/fire/firestore';
-import { async, from, Observable } from 'rxjs';
+import { async, BehaviorSubject, filter, from, Observable } from 'rxjs';
 
 
 @Injectable({
@@ -15,11 +15,26 @@ import { async, from, Observable } from 'rxjs';
 })
 export class AuthService {
   google: boolean | undefined;
-  constructor(private auth: Auth, private firestore: Firestore) {}
+  
+public currentUser$ = this.user$.pipe(
+  filter((user): user is User => !!user)
+);
+
+  constructor(private auth: Auth, private firestore: Firestore) {
+
+  }
+
+  // setCurrentUser(user: User | null) {
+  //   this.currentUserSubject.next(user);
+  // }
+
+  // getCurrentUser(): User | null {
+  //   return this.currentUserSubject.getValue();
+  // }
   
 loginWithGoogle(): Observable<User> {
   const provider = new GoogleAuthProvider();
-  this.google = true
+  this.google = true;
 
   return from(
     signInWithPopup(this.auth, provider).then(async result => {
@@ -44,8 +59,7 @@ loginWithGoogle(): Observable<User> {
       return user;
     })
   );
-}
-
+} 
 
   logoutGoogle(): Observable<void> {
     return from(signOut(this.auth));

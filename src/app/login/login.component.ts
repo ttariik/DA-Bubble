@@ -53,6 +53,7 @@ export class LoginComponent {
   login() {
     this.authService.loginWithGoogle().subscribe(user => {
       this.userName = user.displayName;
+      // this.authService.setCurrentUser(user);
       console.log('Eingeloggt als:', this.userName);
     });
   }
