@@ -132,24 +132,26 @@ export class SidebarComponent implements OnInit {
       return;
     }
 
-    // Create the channel in Firestore first
+    // Close the Add Channel modal immediately
+    this.closeAddChannelModal();
+    
+    // Save the channel name for the Add People modal
+    this.newChannelName = channelData.name;
+    
+    // Create the channel in Firestore
     this.firestoreService.createChannelFirestore(channelData, userId)
       .then((channelId) => {
         if (channelId) {
-          // Save the channel ID and name for the Add People modal
+          // Save the channel ID
           this.newChannelId = channelId;
-          this.newChannelName = channelData.name;
-          
-          // Show the Add People modal
-          this.showAddPeopleModal = true;
-          
-          // Close the Add Channel modal
-          this.closeAddChannelModal();
         }
       })
       .catch(error => {
         console.error('Error creating channel:', error);
       });
+    
+    // Show the Add People modal immediately
+    this.showAddPeopleModal = true;
   }
   
   selectChannel(channel: Channel) {

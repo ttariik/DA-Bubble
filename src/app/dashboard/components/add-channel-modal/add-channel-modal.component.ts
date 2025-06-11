@@ -110,14 +110,12 @@ export class AddChannelModalComponent implements OnChanges {
 createChannel(): void {
   if (this.channelForm.valid) {
     const channelData = this.channelForm.value;
-
-    this.firestoreService.createChannelFirestore(channelData, this.activUserId).then(channelId => {
-      // Optional: Event senden oder UI aktualisieren
-      this.channelCreated.emit({ ...channelData, id: channelId });
-    });
-
+    
+    // Emit the channel data to the parent component
+    this.channelCreated.emit(channelData);
+    
+    // Reset the form
     this.channelForm.reset();
-    this.close.emit();
   } else {
     this.markFormGroupTouched(this.channelForm);
   }

@@ -103,20 +103,15 @@ export class AddPeopleModalComponent implements OnChanges, OnInit {
   
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['isVisible'] && changes['isVisible'].currentValue) {
-      // Sofort den Fokus auf das Suchfeld setzen, ohne Timeout
-      if (this.searchInput) {
-        this.searchInput.nativeElement.focus();
-      } else {
-        // Falls das Element noch nicht verfügbar ist, verwenden wir requestAnimationFrame
-        requestAnimationFrame(() => {
-          if (this.searchInput) {
-            this.searchInput.nativeElement.focus();
-          }
-        });
-      }
-      
-      // Formular zurücksetzen, wenn Modal angezeigt wird
+      // Reset the form when the modal becomes visible
       this.resetForm();
+      
+      // Set focus on search input after a short delay to ensure the modal is visible
+      setTimeout(() => {
+        if (this.searchInput) {
+          this.searchInput.nativeElement.focus();
+        }
+      }, 100);
     }
   }
   
