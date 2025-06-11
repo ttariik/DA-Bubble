@@ -125,49 +125,30 @@ export class SidebarComponent implements OnInit {
   }
   
   handleChannelCreated(channelData: {name: string, description: string}) {
-    // Generiere eine temporäre ID, falls Firestore nicht sofort antwortet
-    const tempId = `temp_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-    
-    // Erstelle den Channel lokal mit der temporären ID
-    const newChannel: Channel = {
-      id: tempId,
-      name: channelData.name,
-      unread: 0,
-      description: channelData.description,
-      members: []
-    };
-    
-    // Speichere die neue Channel-ID und den Namen für das Add-People-Modal
-    this.newChannelId = tempId;
-    this.newChannelName = channelData.name;
-    
-    // Lokale Channels sofort aktualisieren
-    this.channels.push(newChannel);
-    this.saveChannelsToStorage();
-    
-    // WICHTIG: Zeige das neue Modal SOFORT an, BEVOR das alte geschlossen wird
-    this.showAddPeopleModal = true;
-    
-    // Erst DANACH das erste Modal schließen
-    this.closeAddChannelModal();
-    
-    // Starte den Firestore-Vorgang im Hintergrund
-    this.firestoreService.createChannelFirestore(channelData, 'activeUserId')
+    // Get the current user's ID
+    const userId = this.authService.currentUser?.uid;
+    if (!userId) {
+      console.error('No user ID available');
+      return;
+    }
+
+    // Create the channel in Firestore first
+    this.firestoreService.createChannelFirestore(channelData, userId)
       .then((channelId) => {
-        // Wenn wir die echte ID von Firestore bekommen, aktualisieren wir sie
         if (channelId) {
-          // Finde den Channel mit der temporären ID
-          const index = this.channels.findIndex(c => c.id === tempId);
-          // if (index !== -1) {
-          //   // Aktualisiere die ID
-          //   this.channels[index].id = channelId;
-          //   // Aktualisiere auch die ID für das Add-People-Modal
-          //   this.newChannelId = channelId;
-          // }
+          // Save the channel ID and name for the Add People modal
+          this.newChannelId = channelId;
+          this.newChannelName = channelData.name;
+          
+          // Show the Add People modal
+          this.showAddPeopleModal = true;
+          
+          // Close the Add Channel modal
+          this.closeAddChannelModal();
         }
-        
-        // Aktualisiere die Channels im localStorage
-        this.saveChannelsToStorage();
+      })
+      .catch(error => {
+        console.error('Error creating channel:', error);
       });
   }
   
@@ -248,39 +229,33 @@ export class SidebarComponent implements OnInit {
   }
   
   ngOnInit() {
-    // Initialize channels$ with both default and Firestore channels
+    // Initialize channels$ with Firestore channels
     this.channels$ = this.authService.user$.pipe(
       filter((user): user is User => !!user),
       switchMap((user) => {
-        // First, ensure the default channels exist in Firestore
-        const defaultChannels = this.channels;
-        const promises = defaultChannels.map(async (channel) => {
-          await this.firestoreService.ensureDefaultChannel(user.uid);
-        });
-        
-        // After ensuring default channels, get all user channels
-        return from(Promise.all(promises)).pipe(
-          switchMap(() => this.firestoreService.getUserChannels(user.uid)),
+        // Get all user channels from Firestore
+        return this.firestoreService.getUserChannels(user.uid).pipe(
           map(firestoreChannels => {
-            // Konvertiere Firestore-Channels in das lokale Channel-Format
-            const convertedChannels = firestoreChannels.map(fc => ({
-              id: fc.id,
+            // Convert Firestore channels to local channel format
+            return firestoreChannels.map(fc => ({
+              id: fc.id || '',
               name: fc.channelName || '',
               description: fc.channelDescription || '',
               unread: fc.unread || 0
             }));
-
-            // Filtere die Standard-Channels aus dem lokalen Array heraus
-            const nonDefaultChannels = convertedChannels.filter(cc => 
-              !this.channels.some(dc => dc.id === cc.id)
-            );
-
-            // Kombiniere Standard-Channels mit den nicht-Standard-Channels
-            return [...this.channels, ...nonDefaultChannels];
           })
         );
       })
     );
+
+    // Subscribe to channels$ to update the local channels array
+    this.channels$.subscribe(channels => {
+      this.channels = channels;
+      this.saveChannelsToStorage();
+      
+      // Load selected content after channels are updated
+      this.loadSelectedContent();
+    });
 
     // Load settings from localStorage
     const showChannelsSetting = localStorage.getItem('showChannels');
@@ -292,10 +267,6 @@ export class SidebarComponent implements OnInit {
     if (showDirectMessagesSetting !== null) {
       this.showDirectMessages = showDirectMessagesSetting === 'true';
     }
-    
-    // Load content
-    this.loadChannelsFromLocalStorage();
-    this.loadSelectedContent();
   }
   
   loadChannelsFromLocalStorage() {

@@ -196,15 +196,31 @@ getUserDirectMessages(): Observable<DirectMessage[]> {
   }
 
 async createChannelFirestore(channel: any, activUserId: string): Promise<string> {
-  const docRef = await addDoc(collection(this.firestore, 'channels'), {
-    channelName: channel.name,
-    channelDescription: channel.description,
-    activUserId: activUserId,
-    createdAt: serverTimestamp(),
-    members: [activUserId] // Ersteller ist der erste Mitglied
-  });
+  try {
+    // Check if a channel with the same name already exists
+    const channelsRef = collection(this.firestore, 'channels');
+    const q = query(channelsRef, where('channelName', '==', channel.name));
+    const querySnapshot = await getDocs(q);
+    
+    if (!querySnapshot.empty) {
+      console.log('Channel with this name already exists');
+      return querySnapshot.docs[0].id;
+    }
 
-  return docRef.id;
+    // Create new channel if it doesn't exist
+    const docRef = await addDoc(channelsRef, {
+      channelName: channel.name,
+      channelDescription: channel.description || '',
+      createdAt: serverTimestamp(),
+      createdBy: activUserId,
+      members: [activUserId]
+    });
+
+    return docRef.id;
+  } catch (error) {
+    console.error('Error creating channel:', error);
+    throw error;
+  }
 }
 
   getAllChannels(): Observable<Channel[]> {
