@@ -1,8 +1,9 @@
-import { Component, AfterViewInit, ViewChild, ElementRef, OnInit, Input, OnChanges, SimpleChanges, Output, EventEmitter, inject } from '@angular/core';
+import { Component, AfterViewInit, ViewChild, ElementRef, OnInit, Input, OnChanges, SimpleChanges, Output, EventEmitter, inject, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FirestoreService } from '../../../services/firestore.service';
 import { AddPeopleModalComponent } from '../add-people-modal/add-people-modal.component';
+import { Auth } from '@angular/fire/auth';
 
 interface Message {
   id: string;
@@ -40,7 +41,7 @@ interface DateGroup {
   templateUrl: './chat-area.component.html',
   styleUrls: ['./chat-area.component.scss']
 })
-export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
+export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDestroy {
   @ViewChild('scrollContainer') scrollContainer!: ElementRef;
   @Input() channelName: string = 'Entwicklerteam';
   @Input() channelId: string = '1';
@@ -51,10 +52,11 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
   @Output() channelLeft = new EventEmitter<string>();
 
   private firestoreService = inject(FirestoreService);
+  private auth = inject(Auth);
 
   messageInput: string = '';
   showEmojiPicker: boolean = false;
-  currentUserId: string = '1'; 
+  currentUserId: string = '';
   emojiPickerTargetMessage: Message | null = null;
   editingMessage: Message | null = null;
   
@@ -87,6 +89,8 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
   // Add People Modal
   showAddPeopleModal: boolean = false;
   
+  showMoreOptions: boolean = false;
+  
   ngAfterViewInit() {
     setTimeout(() => {
       this.scrollToBottom();
@@ -107,6 +111,9 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
   }
   
   ngOnInit() {
+    // Set current user ID
+    this.currentUserId = this.auth.currentUser?.uid || '';
+    
     // Load all messages from localStorage
     this.loadAllMessages();
     
@@ -703,11 +710,25 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
       return;
     }
 
+    // Prüfe, ob ein Benutzer eingeloggt ist
+    if (!this.currentUserId) {
+      console.error('Kein Benutzer eingeloggt');
+      alert('Sie müssen eingeloggt sein, um einen Channel zu verlassen.');
+      return;
+    }
+
     // Zeige den Bestätigungsdialog an
     this.showLeaveConfirmDialog = true;
   }
   
   confirmLeaveChannel() {
+    if (!this.currentUserId) {
+      console.error('Kein Benutzer eingeloggt');
+      this.showLeaveConfirmDialog = false;
+      this.closeChannelInfoModal();
+      return;
+    }
+
     // Entferne den Benutzer aus dem Channel in Firestore
     this.firestoreService.leaveChannel(this.channelId, this.currentUserId).then(() => {
       console.log(`Channel ${this.channelName} (ID: ${this.channelId}) verlassen`);
@@ -802,5 +823,64 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges {
     this.closeAddPeopleModal();
     // Aktualisiere die Mitgliederliste
     this.loadChannelMembers();
+  }
+
+  /**
+   * Löscht alle Nachrichten aus dem aktuellen Channel
+   */
+  async deleteAllMessages() {
+    try {
+      // Bestätigungsdialog anzeigen
+      if (!confirm('Möchten Sie wirklich alle Nachrichten aus diesem Channel löschen? Diese Aktion kann nicht rückgängig gemacht werden.')) {
+        return;
+      }
+
+      // Alle Nachrichten in Firestore löschen
+      await this.firestoreService.deleteAllChannelMessages(this.channelId);
+      
+      // Lokale Nachrichten löschen
+      this.messages = [];
+      this.messageGroups = [];
+      
+      // Lokalen Speicher aktualisieren
+      this.allMessages = this.allMessages.filter(msg => msg.channelId !== this.channelId);
+      this.saveMessagesToStorage();
+      
+      console.log('Alle Nachrichten wurden erfolgreich gelöscht');
+    } catch (error) {
+      console.error('Fehler beim Löschen aller Nachrichten:', error);
+      alert('Beim Löschen der Nachrichten ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.');
+    }
+  }
+
+  /**
+   * Öffnet/Schließt das Mehr-Optionen-Dropdown
+   */
+  toggleMoreOptions(event: MouseEvent) {
+    event.stopPropagation(); // Verhindert, dass das Event zum Document bubbled
+    this.showMoreOptions = !this.showMoreOptions;
+
+    // Event-Listener hinzufügen, um das Dropdown zu schließen, wenn außerhalb geklickt wird
+    if (this.showMoreOptions) {
+      setTimeout(() => {
+        document.addEventListener('click', this.closeMoreOptions);
+      });
+    }
+  }
+
+  /**
+   * Schließt das Mehr-Optionen-Dropdown
+   */
+  closeMoreOptions = () => {
+    this.showMoreOptions = false;
+    document.removeEventListener('click', this.closeMoreOptions);
+  }
+
+  /**
+   * Wird aufgerufen, wenn die Komponente zerstört wird
+   */
+  ngOnDestroy() {
+    // Event-Listener entfernen
+    document.removeEventListener('click', this.closeMoreOptions);
   }
 } 

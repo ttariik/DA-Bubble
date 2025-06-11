@@ -18,7 +18,8 @@ import {
   Timestamp,
   serverTimestamp,
   DocumentData,
-  QuerySnapshot
+  QuerySnapshot,
+  deleteDoc
 } from '@angular/fire/firestore';
 import { User } from '../models/user.class';
 import { map, Observable, from, of, forkJoin, combineLatest, switchMap } from 'rxjs';
@@ -635,6 +636,66 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
         );
       })
     );
+  }
+
+  async ensureDefaultChannel(userId: string): Promise<void> {
+    try {
+      // Reference to the default "Entwicklerteam" channel
+      const defaultChannelRef = doc(this.firestore, 'channels', '1');
+      const defaultChannelDoc = await getDoc(defaultChannelRef);
+
+      if (!defaultChannelDoc.exists()) {
+        // Create the default channel if it doesn't exist
+        await setDoc(defaultChannelRef, {
+          channelName: 'Entwicklerteam',
+          channelDescription: 'Der Hauptkanal für das Entwicklerteam',
+          createdAt: serverTimestamp(),
+          members: [userId]
+        });
+      } else {
+        // If the channel exists, make sure the user is a member
+        const data = defaultChannelDoc.data();
+        const members = data['members'] || [];
+        if (!members.includes(userId)) {
+          await updateDoc(defaultChannelRef, {
+            members: [...members, userId]
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error ensuring default channel:', error);
+    }
+  }
+
+  /**
+   * Löscht alle Nachrichten eines Channels
+   * @param channelId Die ID des Channels
+   * @returns Promise<void>
+   */
+  async deleteAllChannelMessages(channelId: string): Promise<void> {
+    try {
+      // Referenz zur messages Collection
+      const messagesRef = collection(this.firestore, 'messages');
+      
+      // Query für alle Nachrichten des Channels
+      const q = query(messagesRef, where('channelId', '==', channelId));
+      
+      // Hole alle Nachrichten
+      const querySnapshot = await getDocs(q);
+      
+      // Lösche jede Nachricht
+      const deletePromises = querySnapshot.docs.map(doc => {
+        return deleteDoc(doc.ref);
+      });
+      
+      // Warte auf das Löschen aller Nachrichten
+      await Promise.all(deletePromises);
+      
+      console.log(`Alle Nachrichten aus Channel ${channelId} wurden gelöscht`);
+    } catch (error) {
+      console.error('Fehler beim Löschen der Nachrichten:', error);
+      throw error;
+    }
   }
 }
 

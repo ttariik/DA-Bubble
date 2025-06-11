@@ -43,6 +43,25 @@
         </svg>
         <span>Leute hinzufügen</span>
       </button>
+      <div class="more-options">
+        <button class="more-options-button" (click)="toggleMoreOptions($event)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="12" cy="12" r="2"></circle>
+            <circle cx="12" cy="4" r="2"></circle>
+            <circle cx="12" cy="20" r="2"></circle>
+          </svg>
+        </button>
+        <div class="more-options-dropdown" *ngIf="showMoreOptions">
+          <button class="dropdown-item delete-all" (click)="deleteAllMessages()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18"></path>
+              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+            </svg>
+            <span>Alle Nachrichten löschen</span>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -73,7 +92,9 @@
             
             <div class="message-content" [class.own-message-content]="message.userId === currentUserId">
               <div class="message-header">
-                <div class="message-sender">{{ message.userName }}</div>
+                <div class="message-sender" [style.text-align]="message.userId === currentUserId ? 'right' : 'left'">
+                  {{ message.userName }}
+                </div>
                 <div class="message-time">
                   {{ message.timestamp | date : "HH:mm" }} Uhr
                   <span *ngIf="message.isEdited && !message.isDeleted" class="edited-tag">(bearbeitet)</span>
@@ -376,8 +397,11 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button class="channel-leave-button" (click)="leaveChannel()">
+      <button class="channel-leave-button" *ngIf="channelId !== '1'" (click)="leaveChannel()">
         <span>Channel verlassen</span>
+      </button>
+      <button class="delete-messages-button" (click)="deleteAllMessages()">
+        <span>Alle Nachrichten löschen</span>
       </button>
       <button class="close-button" (click)="closeChannelInfoModal()">
         <span>Schließen</span>

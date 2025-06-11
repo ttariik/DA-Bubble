@@ -4,7 +4,7 @@ import { RouterModule } from '@angular/router';
 import { AddChannelModalComponent } from '../add-channel-modal/add-channel-modal.component';
 import { FirestoreService, Channel, ChannelStats, DirectMessage } from '../../../services/firestore.service';
 import { filter, map, switchMap, tap } from 'rxjs/operators';
-import { Observable, forkJoin, of } from 'rxjs';
+import { Observable, forkJoin, of, from } from 'rxjs';
 import { AddPeopleModalComponent } from '../add-people-modal/add-people-modal.component';
 import { ContactProfileModalComponent, ContactProfile } from '../contact-profile-modal/contact-profile-modal.component';
 import { AuthService } from '../../../services/auth.service';
@@ -62,9 +62,9 @@ export class SidebarComponent implements OnInit {
   
   // Default values for channels and direct messages
   channels: Channel[] = [
-    // { id: '1', name: 'Entwicklerteam', description: 'Team Channel', unread: 0 },
-    // { id: '2', name: 'Allgemein', description: 'General Channel', unread: 0 },
-    // { id: '3', name: 'Ankündigungen', description: 'Announcements', unread: 0 }
+    { id: '1', name: 'Entwicklerteam', description: 'Team Channel', unread: 0 },
+    { id: '2', name: 'Allgemein', description: 'General Channel', unread: 0 },
+    { id: '3', name: 'Ankündigungen', description: 'Announcements', unread: 0 }
   ];
   
   directMessages: DirectMessage[] = [
@@ -248,10 +248,39 @@ export class SidebarComponent implements OnInit {
   }
   
   ngOnInit() {
-  this.channels$ = this.authService.user$.pipe(
-    filter((user): user is User => !!user),
-    switchMap((user) => this.firestoreService.getUserChannels(user.uid))
-  );
+    // Initialize channels$ with both default and Firestore channels
+    this.channels$ = this.authService.user$.pipe(
+      filter((user): user is User => !!user),
+      switchMap((user) => {
+        // First, ensure the default channels exist in Firestore
+        const defaultChannels = this.channels;
+        const promises = defaultChannels.map(async (channel) => {
+          await this.firestoreService.ensureDefaultChannel(user.uid);
+        });
+        
+        // After ensuring default channels, get all user channels
+        return from(Promise.all(promises)).pipe(
+          switchMap(() => this.firestoreService.getUserChannels(user.uid)),
+          map(firestoreChannels => {
+            // Konvertiere Firestore-Channels in das lokale Channel-Format
+            const convertedChannels = firestoreChannels.map(fc => ({
+              id: fc.id,
+              name: fc.channelName || '',
+              description: fc.channelDescription || '',
+              unread: fc.unread || 0
+            }));
+
+            // Filtere die Standard-Channels aus dem lokalen Array heraus
+            const nonDefaultChannels = convertedChannels.filter(cc => 
+              !this.channels.some(dc => dc.id === cc.id)
+            );
+
+            // Kombiniere Standard-Channels mit den nicht-Standard-Channels
+            return [...this.channels, ...nonDefaultChannels];
+          })
+        );
+      })
+    );
 
     // Load settings from localStorage
     const showChannelsSetting = localStorage.getItem('showChannels');

@@ -8,6 +8,7 @@ import {
 import { Auth, signInWithPopup, GoogleAuthProvider, signOut, User,  signInWithEmailAndPassword, authState } from '@angular/fire/auth';
 import { doc, Firestore, getDoc, setDoc } from '@angular/fire/firestore';
 import { async, BehaviorSubject, filter, from, Observable } from 'rxjs';
+import { FirestoreService } from './firestore.service';
 
 
 @Injectable({
@@ -56,6 +57,10 @@ loginWithGoogle(): Observable<User> {
         });
       }
 
+      // Ensure user is added to the default channel
+      const firestoreService = new FirestoreService(this.firestore, this.auth);
+      await firestoreService.ensureDefaultChannel(user.uid);
+
       return user;
     })
   );
@@ -82,7 +87,10 @@ loginWithGoogle(): Observable<User> {
    */
   async signUp(email: string, password: string) {
     return createUserWithEmailAndPassword(this.auth, email, password)
-      .then((userCredential) => {
+      .then(async (userCredential) => {
+        // Ensure user is added to the default channel
+        const firestoreService = new FirestoreService(this.firestore, this.auth);
+        await firestoreService.ensureDefaultChannel(userCredential.user.uid);
         return userCredential.user;
       })
       .catch((error) => {
@@ -99,7 +107,10 @@ loginWithGoogle(): Observable<User> {
    */
   async signIn(email: string, password: string) {
     return signInWithEmailAndPassword(this.auth, email, password)
-      .then((userCredential) => {
+      .then(async (userCredential) => {
+        // Ensure user is added to the default channel
+        const firestoreService = new FirestoreService(this.firestore, this.auth);
+        await firestoreService.ensureDefaultChannel(userCredential.user.uid);
         return userCredential.user;
       })
       .catch((error) => {

@@ -37,23 +37,25 @@
         </div>
       </div>
 
-      <div class="section-content" *ngIf="channels$ | async as channels">
+      <div class="section-content" *ngIf="showChannels">
         <div class="channel-list">
-          <div
-            *ngFor="let channel of channels"
-            class="channel-item"
-            [class.active]="channel.id === selectedChannelId"
-            (click)="selectChannel(channel)"
-          >
-            <div class="channel-name">
-              <span class="channel-icon">#</span>{{ channel.channelName }}
-            </div>
-            <div class="channel-actions">
-              <div class="unread-badge" *ngIf="channel.unread > 0">
-                {{ channel.unread }}
+          <ng-container *ngIf="channels$ | async as allChannels">
+            <div
+              *ngFor="let channel of allChannels"
+              class="channel-item"
+              [class.active]="channel.id === selectedChannelId"
+              (click)="selectChannel(channel)"
+            >
+              <div class="channel-name">
+                <span class="channel-icon">#</span>{{ channel.name }}
+              </div>
+              <div class="channel-actions">
+                <div class="unread-badge" *ngIf="channel.unread > 0">
+                  {{ channel.unread }}
+                </div>
               </div>
             </div>
-          </div>
+          </ng-container>
 
           <div class="add-channel-button" (click)="addChannel()">
             <img
