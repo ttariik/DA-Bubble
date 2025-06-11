@@ -34,6 +34,16 @@ interface DateGroup {
   messages: Message[];
 }
 
+interface DirectMessage {
+  id: string;
+  name: string;
+  avatar: string;
+  online: boolean;
+  unread: number;
+  title?: string;
+  department?: string;
+}
+
 @Component({
   selector: 'app-chat-area',
   standalone: true,
@@ -50,6 +60,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
   @Output() mentionClicked = new EventEmitter<void>();
   @Output() threadOpened = new EventEmitter<Message>();
   @Output() channelLeft = new EventEmitter<string>();
+  @Output() directMessageStarted = new EventEmitter<DirectMessage>();
 
   private firestoreService = inject(FirestoreService);
   private auth = inject(Auth);
@@ -796,18 +807,36 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
     }
   }
   
-  // Startet eine Direktnachricht mit einem Mitglied
-  startDirectMessageWithMember(member: {id: string, name: string, avatar: string}) {
-    console.log('Starte Direktnachricht mit:', member.name);
+  async startDirectMessageWithMember(member: {id: string, name: string, avatar: string, online?: boolean, title?: string, department?: string}) {
+    console.log('Starting direct message with:', member.name);
     
-    // Modal schließen
+    // Close the channel info modal
     this.closeChannelInfoModal();
     
-    // In einer echten App würden wir hier zum DM-Chat navigieren
-    // Beispiel: this.router.navigate(['/dm', member.id]);
-    
-    // Hier machen wir einfach eine Konsolen-Ausgabe
-    alert(`Direktnachricht mit ${member.name} wird gestartet...`);
+    // Get current user ID
+    const currentUserId = this.auth.currentUser?.uid;
+    if (!currentUserId) return;
+
+    try {
+      // Create or get existing DM in Firestore
+      await this.firestoreService.createDirectMessage(currentUserId, member.id);
+      
+      // Create a DirectMessage object for the UI
+      const newDM: DirectMessage = {
+        id: member.id,
+        name: member.name,
+        avatar: member.avatar,
+        online: member.online || false,
+        unread: 0,
+        title: member.title,
+        department: member.department
+      };
+      
+      // Emit the new DM to be added to the sidebar
+      this.directMessageStarted.emit(newDM);
+    } catch (error) {
+      console.error('Error creating direct message:', error);
+    }
   }
 
   openAddPeopleModal() {

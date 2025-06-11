@@ -11,7 +11,7 @@ import { AuthService } from '../services/auth.service';
 import { User } from '../models/user.class';
 import { MatDialog } from '@angular/material/dialog';
 import { trigger, state, style, animate, transition } from '@angular/animations';
-import { Observable, Subject, Subscription, debounceTime, distinctUntilChanged, fromEvent, throttleTime } from 'rxjs';
+import { Observable, Subject, Subscription, debounceTime, distinctUntilChanged, fromEvent, throttleTime, of } from 'rxjs';
 // import { AuthService } from '../../app/auth.service';
 import { LoginComponent } from '../login/login.component';
 
@@ -116,7 +116,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   
   selectedChannel: Channel = { id: '1', name: 'Entwicklerteam', unread: 0 };
   selectedDirectMessage: DirectMessage | null = null;
-  isDirectMessageActive: boolean = false;
+  isDirectMessageActive = false;
 
   userProfile = {
     name: 'Frederik Beck',
@@ -149,7 +149,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   searchCursorPosition: number = 0;
   lastSearchQuery: string = '';
   selectedSearchResultIndex: number = -1;
-  directMessages$!: Observable<DirectMessage[]>;
+  directMessages: DirectMessage[] = [];
+  directMessages$: Observable<DirectMessage[]> = of([]);
   channels$!: Observable<Channel[]>;
   
   // For performance optimization
@@ -181,11 +182,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    // this.channels$ = this.firestoreService.getUserChannels();
-    // this.channels$.subscribe(channels => {
-    //   console.log('channels$', channels);
-    // });
+    // Subscribe to direct messages from Firestore
     this.directMessages$ = this.firestoreService.getUserDirectMessages();
+    this.directMessages$.subscribe(messages => {
+      this.directMessages = messages;
+      // Save to localStorage for offline access
+      localStorage.setItem('directMessages', JSON.stringify(messages));
+    });
+
     this.loadData();
     this.loadAllUsers();
     this.loadSelectedContent();
@@ -199,7 +203,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     
     // Setup throttled window resize listener
     this.resizeSubscription = fromEvent(window, 'resize')
-      .pipe(throttleTime(150)) // Throttle to run at most once every 150ms
+      .pipe(throttleTime(150))
       .subscribe(() => {
         this.ngZone.run(() => {
           this.handleWindowResize();
@@ -831,5 +835,27 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.showSearchDropdown = false;
     this.showMentionDropdown = false;
     this.selectedSearchResultIndex = -1;
+  }
+
+  handleNewDirectMessage(directMessage: DirectMessage) {
+    // Check if this DM already exists
+    const existingDM = this.directMessages.find((dm: DirectMessage) => dm.id === directMessage.id);
+    if (!existingDM) {
+      // Add the new DM to the list
+      this.directMessages = [...this.directMessages, directMessage];
+      
+      // Save to localStorage
+      localStorage.setItem('directMessages', JSON.stringify(this.directMessages));
+      
+      // Switch to the new DM
+      this.selectedDirectMessage = directMessage;
+      this.isDirectMessageActive = true;
+      localStorage.setItem('selectedDirectMessageId', directMessage.id);
+    } else {
+      // If DM already exists, just switch to it
+      this.selectedDirectMessage = existingDM;
+      this.isDirectMessageActive = true;
+      localStorage.setItem('selectedDirectMessageId', existingDM.id);
+    }
   }
 }

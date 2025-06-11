@@ -251,6 +251,7 @@
         (channelSelected)="handleChannelSelected($event)"
         (channelDeleted)="handleChannelDeleted($event)"
         (directMessageSelected)="handleDirectMessageSelected($event)"
+        [directMessages]="directMessages"
       ></app-sidebar>
     </div>
 
@@ -286,6 +287,7 @@
         (mentionClicked)="showUserTaggingInChat()"
         (threadOpened)="openThreadWithMessage($event)"
         (channelLeft)="handleChannelLeft($event)"
+        (directMessageStarted)="handleNewDirectMessage($event)"
       ></app-chat-area>
 
       <!-- Direct message chat using the same chat area component -->

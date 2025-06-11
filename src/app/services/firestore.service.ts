@@ -94,6 +94,13 @@ export interface Contact {
   phone?: string;
 }
 
+interface FirestoreDirectMessage {
+  users: string[];
+  createdAt: any;
+  lastMessage: any;
+  unread: number;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -109,11 +116,70 @@ export class FirestoreService {
 
 getUserDirectMessages(): Observable<DirectMessage[]> {
   const userId = this.auth.currentUser?.uid;
-  const ref = collection(this.firestore, 'directMessages');
-  const q = query(ref, where('users', 'array-contains', userId));
-  return collectionData(q, { idField: 'id' }) as Observable<DirectMessage[]>;
+  if (!userId) {
+    return of([]);
+  }
+
+  // Get user's direct messages from Firestore
+  const dmRef = collection(this.firestore, 'directMessages');
+  const q = query(dmRef, where('users', 'array-contains', userId));
+
+  return collectionData(q, { idField: 'id' }).pipe(
+    switchMap(async (dms: any[]) => {
+      // For each DM, get the other user's details
+      const dmPromises = dms.map(async (dm: FirestoreDirectMessage & { id: string }) => {
+        const otherUserId = dm['users'].find((id: string) => id !== userId);
+        if (!otherUserId) return null;
+
+        const userDoc = await getDoc(doc(this.firestore, 'users', otherUserId));
+        if (!userDoc.exists()) return null;
+
+        const userData = userDoc.data();
+        const directMessage: DirectMessage = {
+          id: otherUserId,
+          name: `${userData?.['firstName']} ${userData?.['lastName']}`,
+          avatar: userData?.['avatar'] || 'assets/icons/avatars/default.svg',
+          online: userData?.['isActive'] || false,
+          unread: dm.unread || 0,
+          email: userData?.['email'],
+          title: userData?.['title'],
+          department: userData?.['department']
+        };
+        return directMessage;
+      });
+
+      const resolvedDMs = await Promise.all(dmPromises);
+      return resolvedDMs.filter((dm): dm is DirectMessage => dm !== null);
+    }),
+    map(dms => dms as DirectMessage[])
+  );
 }
 
+async createDirectMessage(userId: string, otherUserId: string): Promise<void> {
+  if (!userId || !otherUserId) return;
+
+  const dmRef = collection(this.firestore, 'directMessages');
+  const q = query(
+    dmRef,
+    where('users', 'array-contains', userId)
+  );
+
+  const querySnapshot = await getDocs(q);
+  const existingDM = querySnapshot.docs.find(doc => {
+    const data = doc.data();
+    return data['users'].includes(otherUserId);
+  });
+
+  if (!existingDM) {
+    // Create new DM if it doesn't exist
+    await addDoc(dmRef, {
+      users: [userId, otherUserId],
+      createdAt: serverTimestamp(),
+      lastMessage: null,
+      unread: 0
+    });
+  }
+}
 
   /**
    * Creates a new user with the specified ID in the "users" collection.

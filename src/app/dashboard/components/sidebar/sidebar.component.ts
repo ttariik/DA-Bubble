@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Inject, Output, OnInit, Input } from '@angular/core';
+import { Component, EventEmitter, Inject, Output, OnInit, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AddChannelModalComponent } from '../add-channel-modal/add-channel-modal.component';
@@ -35,10 +35,17 @@ interface NewContact {
   styleUrls: ['./sidebar.component.scss']
 })
 
-export class SidebarComponent implements OnInit {
+export class SidebarComponent implements OnInit, OnChanges {
   @Output() channelSelected = new EventEmitter<Channel>();
   @Output() channelDeleted = new EventEmitter<string>();
   @Output() directMessageSelected = new EventEmitter<DirectMessage>();
+  @Input() directMessages: DirectMessage[] = [
+    { id: '1', name: 'Frederik Beck', avatar: 'assets/icons/avatars/avatar1.png', online: true, unread: 0 },
+    { id: '2', name: 'Sofia Müller', avatar: 'assets/icons/avatars/avatar2.png', online: true, unread: 0 },
+    { id: '3', name: 'Noah Braun', avatar: 'assets/icons/avatars/avatar3.png', online: true, unread: 0 },
+    { id: '4', name: 'Elise Roth', avatar: 'assets/icons/avatars/avatar4.png', online: false, unread: 0 },
+    { id: '5', name: 'Elias Neumann', avatar: 'assets/icons/avatars/avatar5.png', online: true, unread: 0 }
+  ];
   
   workspaceName: string = 'Devspace';
   showChannels: boolean = true;
@@ -59,14 +66,6 @@ export class SidebarComponent implements OnInit {
     { id: '1', name: 'Entwicklerteam', description: 'Team Channel', unread: 0 },
     { id: '2', name: 'Allgemein', description: 'General Channel', unread: 0 },
     { id: '3', name: 'Ankündigungen', description: 'Announcements', unread: 0 }
-  ];
-  
-  directMessages: DirectMessage[] = [
-    { id: '1', name: 'Frederik Beck', avatar: 'assets/icons/avatars/avatar1.png', online: true, unread: 0 },
-    { id: '2', name: 'Sofia Müller', avatar: 'assets/icons/avatars/avatar2.png', online: true, unread: 0 },
-    { id: '3', name: 'Noah Braun', avatar: 'assets/icons/avatars/avatar3.png', online: true, unread: 0 },
-    { id: '4', name: 'Elise Roth', avatar: 'assets/icons/avatars/avatar4.png', online: false, unread: 0 },
-    { id: '5', name: 'Elias Neumann', avatar: 'assets/icons/avatars/avatar5.png', online: true, unread: 0 }
   ];
   
   newChannelId: string = '';
@@ -378,6 +377,13 @@ export class SidebarComponent implements OnInit {
       console.log('Contact successfully added');
     } catch (error) {
       console.error('Error adding contact:', error);
+    }
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['directMessages'] && !changes['directMessages'].firstChange) {
+      // Save the updated direct messages to storage
+      this.saveDirectMessagesToStorage();
     }
   }
 } 
