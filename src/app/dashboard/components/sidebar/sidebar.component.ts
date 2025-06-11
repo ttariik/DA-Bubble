@@ -2,20 +2,14 @@ import { Component, EventEmitter, Inject, Output, OnInit, Input } from '@angular
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AddChannelModalComponent } from '../add-channel-modal/add-channel-modal.component';
-import { FirestoreService, Channel, ChannelStats, DirectMessage } from '../../../services/firestore.service';
+import { FirestoreService, Channel, ChannelStats, DirectMessage, Contact } from '../../../services/firestore.service';
 import { filter, map, switchMap, tap } from 'rxjs/operators';
 import { Observable, forkJoin, of, from } from 'rxjs';
 import { AddPeopleModalComponent } from '../add-people-modal/add-people-modal.component';
 import { ContactProfileModalComponent, ContactProfile } from '../contact-profile-modal/contact-profile-modal.component';
 import { AuthService } from '../../../services/auth.service';
 import { User } from '@angular/fire/auth';
-// import { AddContactModalComponent } from '../add-contact-modal/add-contact-modal.component';
-// import { FirestoreService, Channel, ChannelStats, Contact, DirectMessage } from '../../../services/firestore.service';
-// import { map, switchMap, tap } from 'rxjs/operators';
-// import { Observable, forkJoin, of } from 'rxjs';
-// import { AddPeopleModalComponent } from '../add-people-modal/add-people-modal.component';
-// import { ContactProfileModalComponent, ContactProfile } from '../contact-profile-modal/contact-profile-modal.component';
-// import { AddContactModalComponent } from '../add-contact-modal/add-contact-modal.component';
+import { AddContactModalComponent } from '../add-contact-modal/add-contact-modal.component';
 
 interface NewContact {
   name: string;
@@ -35,7 +29,7 @@ interface NewContact {
     AddChannelModalComponent, 
     AddPeopleModalComponent, 
     ContactProfileModalComponent,
-    // AddContactModalComponent
+    AddContactModalComponent
   ],
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.scss']
@@ -78,6 +72,7 @@ export class SidebarComponent implements OnInit {
   newChannelId: string = '';
   newChannelName: string = '';
   channels$!: Observable<any[]>;
+  showAddContactModal = false;
 
   constructor(private firestoreService: FirestoreService, private authService: AuthService) {}
 
@@ -348,38 +343,41 @@ export class SidebarComponent implements OnInit {
     this.closeAddPeopleModal();
   }
 
-  // openAddContactModal() {
-  //   this.showAddContactModal = true;
-  // }
+  // Add Contact Modal methods
+  openAddContactModal() {
+    this.showAddContactModal = true;
+  }
 
-  // closeAddContactModal() {
-  //   this.showAddContactModal = false;
-  // }
+  closeAddContactModal() {
+    this.showAddContactModal = false;
+  }
 
-  handleContactAdded(newContact: NewContact) {
-    // Erstelle eine neue ID für den Kontakt
-    const newId = 'contact_' + Date.now();
-    
-    // Füge den neuen Kontakt zu den Direktnachrichten hinzu
-    // const contact: Contact = {
-    //   id: newId,
-    //   name: newContact.name,
-    //   avatar: newContact.avatar,
-    //   online: true, // Standard: online
-    //   unread: 0,
-    //   email: newContact.email,
-    //   title: newContact.title,
-    //   department: newContact.department,
-    //   phone: newContact.phone
-    // };
-    
-    // this.directMessages = [...this.directMessages, contact];
-    
-    // // Speichere den neuen Kontakt in Firestore
-    // this.firestoreService.addContact(contact).then(() => {
-    //   console.log('Kontakt erfolgreich hinzugefügt');
-    // }).catch((error: Error) => {
-    //   console.error('Fehler beim Hinzufügen des Kontakts:', error);
-    // });
+  async handleContactAdded(newContact: NewContact) {
+    try {
+      // Create a new ID for the contact
+      const newId = 'contact_' + Date.now();
+      
+      // Create the contact object with all required fields
+      const contact: Contact = {
+        id: newId,
+        name: newContact.name,
+        avatar: newContact.avatar,
+        online: true, // Default: online
+        unread: 0,
+        email: newContact.email,
+        title: newContact.title,
+        department: newContact.department,
+        phone: newContact.phone
+      };
+      
+      // Add the contact to Firestore
+      await this.firestoreService.addContact(contact);
+      
+      // Refresh the direct messages list
+      // The list will be automatically updated through the existing subscription
+      console.log('Contact successfully added');
+    } catch (error) {
+      console.error('Error adding contact:', error);
+    }
   }
 } 
