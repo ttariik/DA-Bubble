@@ -73,6 +73,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
   currentUserName: string = '';
   emojiPickerTargetMessage: Message | null = null;
   editingMessage: Message | null = null;
+  isSending: boolean = false;
   
   // Channel info modal
   showChannelDescriptionModal: boolean = false;
@@ -127,48 +128,33 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
   }
   
   ngOnInit() {
-    // Get current user
-    this.currentUserId = this.auth.currentUser?.uid || '';
-    this.currentUserName = this.auth.currentUser?.displayName || '';
-
-    // Subscribe to messages
-    if (this.channelId) {
-      this.messageSubscription = (this.isDirect ? 
-        this.firestoreService.getDirectMessages(this.channelId.replace('dm_', '')) :
-        this.firestoreService.getChannelMessages(this.channelId)
-      ).subscribe(messages => {
-        this.messages = messages;
-        this.scrollToBottom();
-      });
-    }
+    // Wait for authentication state to be ready
+    this.auth.onAuthStateChanged((user) => {
+      if (user) {
+        this.currentUserId = user.uid;
+        this.currentUserName = user.displayName || 
+                              `${user.email?.split('@')[0]}` || 
+                              'Unbekannter Benutzer';
+        
+        console.log('User authenticated:', {
+          uid: this.currentUserId,
+          name: this.currentUserName,
+          email: user.email
+        });
+        
+        // Now load messages and other data
+        this.loadMessages();
+        this.loadChannelCreationDate();
+        
+        if (!this.isDirect && this.channelId) {
+          this.loadChannelMembers();
+        }
+      } else {
+        console.log('No user authenticated');
+      }
+    });
     
-    // Load all messages from localStorage
-    this.loadAllMessages();
-    
-    // Get the active channel ID
-    const activeChannelId = this.channelId;
-    
-    // Filter messages for the current channel
-    this.messages = this.allMessages.filter(msg => msg.channelId === activeChannelId);
-    
-    // Group messages by date
-    this.groupMessagesByDate();
-    
-    // Check if date labels need updating (e.g., if last opened yesterday)
-    this.checkDateLabels();
-    
-    // Count messages in the current channel
-    this.messageCount = this.messages.length;
-
-    // Lade das Erstellungsdatum für den Channel
-    this.loadChannelCreationDate();
-
-    // Lade die Channel-Mitglieder sofort beim Start
-    if (!this.isDirect && this.channelId) {
-      this.loadChannelMembers();
-    }
-    
-    console.log(`Loaded messages for channel ${this.channelName} (ID: ${this.channelId})`);
+    console.log(`Initialized chat for channel ${this.channelName} (ID: ${this.channelId})`);
   }
   
   // Load all messages from localStorage
@@ -190,20 +176,47 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
       }
     }
   }
-  
-  // Load messages for the current channel
+
+  // Load messages for the current channel from Firestore
   loadMessages() {
-    // Filter messages for the current channel
-    this.messages = this.allMessages.filter(msg => msg.channelId === this.channelId);
+    console.log('🔄 Loading messages for channel:', this.channelId, 'isDirect:', this.isDirect);
     
-    // Group messages by date
-    this.groupMessagesByDate();
-    
-    // Use requestAnimationFrame instead of setTimeout for smoother scrolling
-    requestAnimationFrame(() => {
-      this.scrollToBottom();
-    });
+    // Unsubscribe from previous subscription if it exists
+    if (this.messageSubscription) {
+      this.messageSubscription.unsubscribe();
+    }
+
+    // Subscribe to messages from Firestore
+    if (this.channelId) {
+      this.messageSubscription = (this.isDirect ? 
+        this.firestoreService.getDirectMessages(this.channelId.replace('dm_', '')) :
+        this.firestoreService.getChannelMessages(this.channelId)
+      ).subscribe({
+        next: (messages) => {
+          console.log('📥 Received messages:', messages.length, 'messages');
+          
+          // Reverse since Firestore returns in desc order, but we want oldest first
+          this.messages = messages.reverse();
+          this.groupMessagesByDate();
+          this.messageCount = this.messages.length;
+          
+          console.log('📊 Grouped messages into', this.messageGroups.length, 'date groups');
+          
+          // Scroll to bottom after messages are loaded
+          setTimeout(() => {
+            this.scrollToBottom();
+          }, 100);
+        },
+        error: (error) => {
+          console.error('❌ Error loading messages:', error);
+        }
+      });
+    } else {
+      console.log('❌ No channel ID provided for loading messages');
+    }
   }
+  
+
   
   // Change to a different channel
   changeChannel(channelName: string, channelId: string) {
@@ -325,48 +338,91 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
   }
   
   async sendMessage() {
-    if (!this.messageInput.trim() || !this.channelId || !this.currentUserId) return;
+    // Prevent double sending
+    if (this.isSending) {
+      console.log('⏳ Message is already being sent, ignoring click');
+      return;
+    }
 
+    // Detailed logging for debugging
+    console.log('sendMessage called with:', {
+      messageInput: this.messageInput,
+      channelId: this.channelId,
+      currentUserId: this.currentUserId,
+      currentUserName: this.currentUserName,
+      isDirect: this.isDirect
+    });
+
+    // Validation with detailed error messages
+    if (!this.messageInput || !this.messageInput.trim()) {
+      console.log('❌ Nachricht ist leer');
+      return;
+    }
+
+    if (!this.channelId) {
+      console.log('❌ Keine Channel ID');
+      return;
+    }
+
+    if (!this.currentUserId) {
+      console.log('❌ Kein Benutzer authentifiziert');
+      alert('Sie müssen angemeldet sein, um Nachrichten zu senden.');
+      return;
+    }
+
+    console.log('✅ Validierung erfolgreich - sende Nachricht...');
+
+    const messageText = this.messageInput.trim();
+    
+    // Set sending flag
+    this.isSending = true;
+    
+    // Create message object
     const message = {
-      text: this.messageInput,
+      text: messageText,
       userId: this.currentUserId,
       userName: this.currentUserName,
       userAvatar: this.auth.currentUser?.photoURL || 'assets/icons/avatars/default.svg',
       timestamp: serverTimestamp(),
       channelId: this.channelId,
-      reactions: [],
-      threadMessages: []
+      reactions: []
     };
 
+    // Clear the input immediately to prevent double sending
+    this.messageInput = '';
+
     try {
+      console.log('🚀 Sending message to Firestore:', message);
+
       if (this.isDirect) {
         // For direct messages
-        await this.firestoreService.sendDirectMessage(
-          this.channelId.replace('dm_', ''),
-          message
-        );
+        const dmId = this.channelId.replace('dm_', '');
+        console.log('📱 Sending direct message to:', dmId);
+        await this.firestoreService.sendDirectMessage(dmId, message);
+        console.log('✅ Direktnachricht erfolgreich gesendet');
       } else {
         // For channel messages
+        console.log('💬 Sending channel message to channel:', this.channelId);
         const messagesRef = collection(this.firestore, 'messages');
-        await addDoc(messagesRef, message);
+        const docRef = await addDoc(messagesRef, message);
+        console.log('✅ Channel-Nachricht erfolgreich gesendet mit ID:', docRef.id);
       }
 
-      // Clear input and scroll
-      this.messageInput = '';
-      this.scrollToBottom();
-      
-      // Save to local storage
-      const newMessage = {
-        ...message,
-        id: Date.now().toString(), // Temporary ID for local storage
-        timestamp: new Date() // Convert server timestamp to Date
-      };
-      this.allMessages.push(newMessage);
-      this.saveMessagesToStorage();
+      // Scroll to bottom after a short delay
+      setTimeout(() => {
+        this.scrollToBottom();
+      }, 300);
       
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('❌ Error sending message:', error);
+      
+      // Restore the message input if sending failed
+      this.messageInput = messageText;
+      
       alert('Fehler beim Senden der Nachricht. Bitte versuchen Sie es erneut.');
+    } finally {
+      // Reset sending flag
+      this.isSending = false;
     }
   }
   
@@ -942,6 +998,11 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
    * Wird aufgerufen, wenn die Komponente zerstört wird
    */
   ngOnDestroy() {
+    // Unsubscribe from message subscription to prevent memory leaks
+    if (this.messageSubscription) {
+      this.messageSubscription.unsubscribe();
+    }
+    
     // Event-Listener entfernen
     document.removeEventListener('click', this.closeMoreOptions);
   }

@@ -186,7 +186,7 @@
 
           <button
             class="send-button"
-            [disabled]="!messageInput.trim()"
+            [disabled]="!messageInput.trim() || isSending"
             (click)="sendMessage()"
           >
             <img src="./assets/icons/dashboard/send.svg" alt="" />
