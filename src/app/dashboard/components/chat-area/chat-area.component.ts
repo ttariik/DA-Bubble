@@ -331,7 +331,11 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
       text: this.messageInput,
       userId: this.currentUserId,
       userName: this.currentUserName,
-      userAvatar: this.auth.currentUser?.photoURL || 'assets/icons/avatars/default.svg'
+      userAvatar: this.auth.currentUser?.photoURL || 'assets/icons/avatars/default.svg',
+      timestamp: serverTimestamp(),
+      channelId: this.channelId,
+      reactions: [],
+      threadMessages: []
     };
 
     try {
@@ -344,17 +348,25 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
       } else {
         // For channel messages
         const messagesRef = collection(this.firestore, 'messages');
-        await addDoc(messagesRef, {
-          ...message,
-          channelId: this.channelId,
-          timestamp: serverTimestamp()
-        });
+        await addDoc(messagesRef, message);
       }
 
+      // Clear input and scroll
       this.messageInput = '';
       this.scrollToBottom();
+      
+      // Save to local storage
+      const newMessage = {
+        ...message,
+        id: Date.now().toString(), // Temporary ID for local storage
+        timestamp: new Date() // Convert server timestamp to Date
+      };
+      this.allMessages.push(newMessage);
+      this.saveMessagesToStorage();
+      
     } catch (error) {
       console.error('Error sending message:', error);
+      alert('Fehler beim Senden der Nachricht. Bitte versuchen Sie es erneut.');
     }
   }
   

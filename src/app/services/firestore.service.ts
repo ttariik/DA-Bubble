@@ -560,7 +560,7 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
   getChannelMessages(channelId: string): Observable<Message[]> {
     const messagesRef = collection(this.firestore, 'messages');
     const q = query(
-      messagesRef, 
+      messagesRef,
       where('channelId', '==', channelId),
       orderBy('timestamp', 'desc'),
       limit(100)
@@ -572,8 +572,8 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
         text: msg.text || '',
         userId: msg.userId || '',
         userName: msg.userName || 'Unbekannter Benutzer',
-        userAvatar: msg.userAvatar || '',
-        channelId: channelId,
+        userAvatar: msg.userAvatar || 'assets/icons/avatars/default.svg',
+        channelId: msg.channelId,
         timestamp: msg.timestamp ? (msg.timestamp as Timestamp).toDate() : new Date(),
         reactions: msg.reactions || [],
         threadId: msg.threadId || '',
