@@ -93,16 +93,43 @@ export class SidebarComponent implements OnInit, OnChanges {
   }
 
   // Send message to contact from profile modal
-  sendMessageToContact(contact: ContactProfile): void {
-    // Find the matching direct message by ID
-    const directMessage = this.directMessages.find(dm => dm.id === contact.id);
-    
-    if (directMessage) {
-      // Close the profile modal
-      this.closeContactProfile();
+  async sendMessageToContact(contact: ContactProfile): Promise<void> {
+    // Close the profile modal first
+    this.closeContactProfile();
+
+    // Get current user ID
+    const userId = this.authService.currentUser?.uid;
+    if (!userId) return;
+
+    try {
+      // Create or get direct message in Firestore
+      await this.firestoreService.createDirectMessage(userId, contact.id);
+
+      // Find existing direct message or create a new one
+      let directMessage = this.directMessages.find(dm => dm.id === contact.id);
+      
+      if (!directMessage) {
+        // Create a new DirectMessage object
+        directMessage = {
+          id: contact.id,
+          name: contact.name,
+          avatar: contact.avatar,
+          online: contact.online,
+          unread: 0,
+          email: contact.email,
+          title: contact.title,
+          department: contact.department
+        };
+        
+        // Add to direct messages array
+        this.directMessages = [...this.directMessages, directMessage];
+        this.saveDirectMessagesToStorage();
+      }
       
       // Select the direct message to open the chat
       this.selectDirectMessage(directMessage);
+    } catch (error) {
+      console.error('Error creating direct message:', error);
     }
   }
 
