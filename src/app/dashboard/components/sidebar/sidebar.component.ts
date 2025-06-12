@@ -10,6 +10,7 @@ import { ContactProfileModalComponent, ContactProfile } from '../contact-profile
 import { AuthService } from '../../../services/auth.service';
 import { User } from '@angular/fire/auth';
 import { AddContactModalComponent } from '../add-contact-modal/add-contact-modal.component';
+import { DeleteContactModalComponent } from '../delete-contact-modal/delete-contact-modal.component';
 
 interface NewContact {
   name: string;
@@ -29,7 +30,8 @@ interface NewContact {
     AddChannelModalComponent, 
     AddPeopleModalComponent, 
     ContactProfileModalComponent,
-    AddContactModalComponent
+    AddContactModalComponent,
+    DeleteContactModalComponent
   ],
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.scss']
@@ -74,6 +76,9 @@ export class SidebarComponent implements OnInit, OnChanges {
   channels$!: Observable<any[]>;
   showAddContactModal = false;
   contacts$: Observable<Contact[]>;
+
+  showDeleteContactModal = false;
+  contactToDelete: any = null;
 
   constructor(private firestoreService: FirestoreService, private authService: AuthService) {
     this.contacts$ = this.firestoreService.getAllContacts();
@@ -455,28 +460,38 @@ export class SidebarComponent implements OnInit, OnChanges {
     }
   }
 
-  async deleteContact(contact: any, event: Event) {
+  async handleDeleteContact(contact: any, event: Event) {
     event.stopPropagation(); // Prevent triggering the contact selection
-    
-    // Show confirmation dialog
-    if (confirm(`Möchten Sie den Kontakt "${contact.name}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`)) {
-      try {
-        await this.firestoreService.deleteContact(contact.id);
-        
-        // Remove from direct messages if exists
-        this.directMessages = this.directMessages.filter(dm => dm.id !== contact.id);
-        
-        // If the deleted contact was selected, clear the selection
-        if (this.selectedDirectMessageId === contact.id) {
-          this.selectedDirectMessageId = null;
-          this.directMessageSelected.emit(undefined);
-        }
-        
-        console.log('Contact deleted successfully');
-      } catch (error) {
-        console.error('Error deleting contact:', error);
-        alert('Beim Löschen des Kontakts ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.');
+    this.contactToDelete = contact;
+    this.showDeleteContactModal = true;
+  }
+
+  closeDeleteContactModal() {
+    this.showDeleteContactModal = false;
+    this.contactToDelete = null;
+  }
+
+  async confirmDeleteContact() {
+    if (!this.contactToDelete) return;
+
+    try {
+      await this.firestoreService.deleteContact(this.contactToDelete.id);
+      
+      // Remove from direct messages if exists
+      this.directMessages = this.directMessages.filter(dm => dm.id !== this.contactToDelete.id);
+      
+      // If the deleted contact was selected, clear the selection
+      if (this.selectedDirectMessageId === this.contactToDelete.id) {
+        this.selectedDirectMessageId = null;
+        this.directMessageSelected.emit(undefined);
       }
+      
+      console.log('Contact deleted successfully');
+    } catch (error) {
+      // Just log the error to console, no alert needed
+      console.error('Error deleting contact:', error);
     }
+
+    this.closeDeleteContactModal();
   }
 } 

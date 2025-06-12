@@ -174,7 +174,7 @@
                 </div>
                 <button 
                   class="delete-contact-button" 
-                  (click)="deleteContact(contact, $event)"
+                  (click)="handleDeleteContact(contact, $event)"
                   title="Kontakt löschen"
                 >
                   <svg
@@ -234,5 +234,13 @@
       (contactAdded)="handleContactAdded($event)"
     >
     </app-add-contact-modal>
+
+    <!-- Add Delete Contact Modal -->
+    <app-delete-contact-modal
+      [isVisible]="showDeleteContactModal"
+      [contactName]="contactToDelete?.name"
+      (closeModal)="closeDeleteContactModal()"
+      (confirmDeletion)="confirmDeleteContact()"
+    ></app-delete-contact-modal>
   </div>
 </div>
