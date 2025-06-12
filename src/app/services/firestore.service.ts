@@ -131,10 +131,30 @@ getUserDirectMessages(): Observable<DirectMessage[]> {
         const otherUserId = dm['users'].find((id: string) => id !== userId);
         if (!otherUserId) return null;
 
+        // Get user data from contacts collection first
+        const contactDoc = await getDoc(doc(this.firestore, 'contacts', otherUserId));
+        let userData;
+        
+        if (contactDoc.exists()) {
+          userData = contactDoc.data();
+          const directMessage: DirectMessage = {
+            id: otherUserId,
+            name: userData['name'],
+            avatar: userData['avatar'] || 'assets/icons/avatars/default.svg',
+            online: userData['online'] || false,
+            unread: dm.unread || 0,
+            email: userData['email'],
+            title: userData['title'],
+            department: userData['department']
+          };
+          return directMessage;
+        }
+
+        // Fallback to users collection if not found in contacts
         const userDoc = await getDoc(doc(this.firestore, 'users', otherUserId));
         if (!userDoc.exists()) return null;
 
-        const userData = userDoc.data();
+        userData = userDoc.data();
         const directMessage: DirectMessage = {
           id: otherUserId,
           name: `${userData?.['firstName']} ${userData?.['lastName']}`,
@@ -155,8 +175,8 @@ getUserDirectMessages(): Observable<DirectMessage[]> {
   );
 }
 
-async createDirectMessage(userId: string, otherUserId: string): Promise<void> {
-  if (!userId || !otherUserId) return;
+async createDirectMessage(userId: string, otherUserId: string): Promise<string> {
+  if (!userId || !otherUserId) return '';
 
   const dmRef = collection(this.firestore, 'directMessages');
   const q = query(
@@ -170,15 +190,64 @@ async createDirectMessage(userId: string, otherUserId: string): Promise<void> {
     return data['users'].includes(otherUserId);
   });
 
-  if (!existingDM) {
-    // Create new DM if it doesn't exist
-    await addDoc(dmRef, {
-      users: [userId, otherUserId],
-      createdAt: serverTimestamp(),
-      lastMessage: null,
-      unread: 0
-    });
+  if (existingDM) {
+    return existingDM.id;
   }
+
+  // Create new DM if it doesn't exist
+  const docRef = await addDoc(dmRef, {
+    users: [userId, otherUserId],
+    createdAt: serverTimestamp(),
+    lastMessage: null,
+    unread: 0
+  });
+
+  return docRef.id;
+}
+
+getDirectMessages(dmId: string): Observable<Message[]> {
+  const messagesRef = collection(this.firestore, 'messages');
+  const q = query(
+    messagesRef, 
+    where('channelId', '==', `dm_${dmId}`),
+    orderBy('timestamp', 'desc'),
+    limit(100)
+  );
+
+  return collectionData(q, { idField: 'id' }).pipe(
+    map(messages => messages.map((msg: any) => ({
+      id: msg.id,
+      text: msg.text || '',
+      userId: msg.userId || '',
+      userName: msg.userName || 'Unbekannter Benutzer',
+      userAvatar: msg.userAvatar || '',
+      channelId: msg.channelId,
+      timestamp: msg.timestamp ? (msg.timestamp as Timestamp).toDate() : new Date(),
+      reactions: msg.reactions || [],
+      threadId: msg.threadId || '',
+      isThreadMessage: msg.isThreadMessage || false
+    })))
+  );
+}
+
+async sendDirectMessage(dmId: string, message: any): Promise<void> {
+  const messagesRef = collection(this.firestore, 'messages');
+  const dmRef = doc(this.firestore, 'directMessages', dmId);
+
+  // Add the message
+  await addDoc(messagesRef, {
+    ...message,
+    channelId: `dm_${dmId}`,
+    timestamp: serverTimestamp()
+  });
+
+  // Update the DM's last message
+  await updateDoc(dmRef, {
+    lastMessage: {
+      text: message.text,
+      timestamp: serverTimestamp()
+    }
+  });
 }
 
   /**

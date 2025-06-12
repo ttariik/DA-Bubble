@@ -115,7 +115,7 @@
                 </div>
               </div>
               <div *ngIf="!message.isEditing" class="message-bubble" [class.deleted-message]="message.isDeleted">
-                {{ message.content }}
+                {{ message.text }}
               </div>
 
               <!-- Message Hover Menu - only show when not editing and not deleted -->

@@ -42,7 +42,7 @@
           <div *ngIf="!originalMessage.isEditing" 
                class="message-bubble"
                [class.deleted-message]="originalMessage.isDeleted">
-            {{ originalMessage.content }}
+            {{ originalMessage.text }}
           </div>
           
           <!-- Message Actions - nur anzeigen, wenn die Nachricht nicht gelöscht ist -->
@@ -138,7 +138,7 @@
                 <div *ngIf="!reply.isEditing" 
                      class="message-bubble"
                      [class.deleted-message]="reply.isDeleted">
-                  {{ reply.content }}
+                  {{ reply.text }}
                 </div>
                 
                 <!-- Message Hover Menu - only show when not editing and not deleted -->

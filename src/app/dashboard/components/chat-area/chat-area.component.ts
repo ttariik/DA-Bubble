@@ -1,25 +1,18 @@
 import { Component, AfterViewInit, ViewChild, ElementRef, OnInit, Input, OnChanges, SimpleChanges, Output, EventEmitter, inject, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { FirestoreService } from '../../../services/firestore.service';
+import { FirestoreService, Message as FirestoreMessage } from '../../../services/firestore.service';
 import { AddPeopleModalComponent } from '../add-people-modal/add-people-modal.component';
 import { Auth } from '@angular/fire/auth';
+import { Firestore, collection, addDoc, serverTimestamp } from '@angular/fire/firestore';
 
-interface Message {
-  id: string;
-  userId: string;
-  userName: string;
-  userAvatar: string;
-  content: string;
-  timestamp: Date;
-  channelId: string;
-  reactions?: Reaction[];
-  threadCount?: number;
+interface Message extends FirestoreMessage {
   isNew?: boolean;
   isEditing?: boolean;
   editedContent?: string;
   isEdited?: boolean;
   isDeleted?: boolean;
+  threadCount?: number;
 }
 
 interface Reaction {
@@ -64,10 +57,12 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
 
   private firestoreService = inject(FirestoreService);
   private auth = inject(Auth);
+  private firestore: Firestore = inject(Firestore);
 
   messageInput: string = '';
   showEmojiPicker: boolean = false;
   currentUserId: string = '';
+  currentUserName: string = '';
   emojiPickerTargetMessage: Message | null = null;
   editingMessage: Message | null = null;
   
@@ -102,6 +97,8 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
   
   showMoreOptions: boolean = false;
   
+  messageSubscription: any;
+  
   ngAfterViewInit() {
     setTimeout(() => {
       this.scrollToBottom();
@@ -122,8 +119,20 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
   }
   
   ngOnInit() {
-    // Set current user ID
+    // Get current user
     this.currentUserId = this.auth.currentUser?.uid || '';
+    this.currentUserName = this.auth.currentUser?.displayName || '';
+
+    // Subscribe to messages
+    if (this.channelId) {
+      this.messageSubscription = (this.isDirect ? 
+        this.firestoreService.getDirectMessages(this.channelId.replace('dm_', '')) :
+        this.firestoreService.getChannelMessages(this.channelId)
+      ).subscribe(messages => {
+        this.messages = messages;
+        this.scrollToBottom();
+      });
+    }
     
     // Load all messages from localStorage
     this.loadAllMessages();
@@ -281,7 +290,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
       if (existingReaction) {
         if (existingReaction.userIds.includes(this.currentUserId)) {
           existingReaction.count -= 1;
-          existingReaction.userIds = existingReaction.userIds.filter(id => id !== this.currentUserId);
+          existingReaction.userIds = existingReaction.userIds.filter((id: string) => id !== this.currentUserId);
           
           if (existingReaction.count === 0) {
             message.reactions = message.reactions.filter(r => r.emoji !== emoji);
@@ -307,46 +316,37 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
     this.emojiPickerTargetMessage = null;
   }
   
-  sendMessage() {
-    if (this.messageInput.trim()) {
-      const now = new Date();
-      
-      // Generate a unique ID for the message
-      const messageId = Date.now().toString();
-      
-      const newMessage: Message = {
-        id: messageId,
-        userId: this.currentUserId,
-        userName: 'Frederik Beck',
-        userAvatar: 'assets/icons/avatars/user1.svg', 
-        content: this.messageInput.trim(),
-        timestamp: now,
-        channelId: this.channelId,
-        isNew: true
-      };
-      
-      // Add to all messages and current channel messages
-      this.allMessages.push(newMessage);
-      this.messages.push(newMessage);
+  async sendMessage() {
+    if (!this.messageInput.trim() || !this.channelId || !this.currentUserId) return;
+
+    const message = {
+      text: this.messageInput,
+      userId: this.currentUserId,
+      userName: this.currentUserName,
+      userAvatar: this.auth.currentUser?.photoURL || 'assets/icons/avatars/default.svg'
+    };
+
+    try {
+      if (this.isDirect) {
+        // For direct messages
+        await this.firestoreService.sendDirectMessage(
+          this.channelId.replace('dm_', ''),
+          message
+        );
+      } else {
+        // For channel messages
+        const messagesRef = collection(this.firestore, 'messages');
+        await addDoc(messagesRef, {
+          ...message,
+          channelId: this.channelId,
+          timestamp: serverTimestamp()
+        });
+      }
+
       this.messageInput = '';
-      
-      // Update groups
-      this.groupMessagesByDate();
-      
-      // Save to localStorage
-      this.saveMessagesToStorage();
-      
-      // Use requestAnimationFrame instead of setTimeout
-      requestAnimationFrame(() => {
-        this.scrollToBottom();
-        
-        // Remove isNew flag after animation frame
-        setTimeout(() => {
-          newMessage.isNew = false;
-          // Save again after removing the isNew flag
-          this.saveMessagesToStorage();
-        }, 500);
-      });
+      this.scrollToBottom();
+    } catch (error) {
+      console.error('Error sending message:', error);
     }
   }
   
@@ -393,7 +393,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
       if (existingReaction.userIds.includes(this.currentUserId)) {
         // Remove reaction if already added by this user
         existingReaction.count -= 1;
-        existingReaction.userIds = existingReaction.userIds.filter(id => id !== this.currentUserId);
+        existingReaction.userIds = existingReaction.userIds.filter((id: string) => id !== this.currentUserId);
         
         if (existingReaction.count === 0) {
           message.reactions = message.reactions.filter(r => r.emoji !== emoji);
@@ -426,13 +426,13 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
     if (message.userId !== this.currentUserId) return;
     
     message.isEditing = true;
-    message.editedContent = message.content;
+    message.editedContent = message.text;
     this.editingMessage = message;
   }
   
   saveEditedMessage(message: Message) {
     if (message.editedContent && message.editedContent.trim()) {
-      message.content = message.editedContent.trim();
+      message.text = message.editedContent.trim();
       message.isEdited = true;
       
       // Save changes to localStorage
@@ -471,13 +471,13 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
     if (messageIndex !== -1) {
       // Nachricht als gelöscht markieren
       this.messages[messageIndex].isDeleted = true;
-      this.messages[messageIndex].content = 'Diese Nachricht wurde gelöscht';
+      this.messages[messageIndex].text = 'Diese Nachricht wurde gelöscht';
       
       // Auch in allMessages aktualisieren
       const allMessageIndex = this.allMessages.findIndex(msg => msg.id === message.id);
       if (allMessageIndex !== -1) {
         this.allMessages[allMessageIndex].isDeleted = true;
-        this.allMessages[allMessageIndex].content = 'Diese Nachricht wurde gelöscht';
+        this.allMessages[allMessageIndex].text = 'Diese Nachricht wurde gelöscht';
       }
       
       // Thread-Antworten für diese Nachricht aktualisieren
@@ -499,7 +499,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
       try {
         const parsedMessage = JSON.parse(originalMessage);
         parsedMessage.isDeleted = true;
-        parsedMessage.content = 'Diese Nachricht wurde gelöscht';
+        parsedMessage.text = 'Diese Nachricht wurde gelöscht';
         localStorage.setItem(originalMessageKey, JSON.stringify(parsedMessage));
         console.log(`Thread-Originalnachricht ${messageId} als gelöscht markiert`);
       } catch (e) {
@@ -911,5 +911,37 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
   ngOnDestroy() {
     // Event-Listener entfernen
     document.removeEventListener('click', this.closeMoreOptions);
+  }
+
+  getThreadCount(messageId: string): number {
+    const threadMessages = this.getThreadMessages(messageId);
+    return threadMessages ? threadMessages.length : 0;
+  }
+
+  getThreadMessages(messageId: string): Message[] {
+    return this.messages.filter(msg => msg.threadId === messageId) || [];
+  }
+
+  removeReaction(message: Message, reactionType: string) {
+    const existingReaction = message.reactions?.find(r => r.type === reactionType);
+    if (existingReaction) {
+      // Remove the current user's ID from the userIds array
+      existingReaction.userIds = existingReaction.userIds.filter((id: string) => id !== this.currentUserId);
+      
+      // If no users are left for this reaction, remove it entirely
+      if (existingReaction.userIds.length === 0) {
+        message.reactions = message.reactions?.filter(r => r.type !== reactionType);
+      }
+    }
+  }
+
+  removeDirectReaction(message: Message, reactionType: string) {
+    const existingReaction = message.reactions?.find(r => r.type === reactionType);
+    if (existingReaction) {
+      existingReaction.userIds = existingReaction.userIds.filter((id: string) => id !== this.currentUserId);
+      if (existingReaction.userIds.length === 0) {
+        message.reactions = message.reactions?.filter(r => r.type !== reactionType);
+      }
+    }
   }
 } 

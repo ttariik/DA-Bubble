@@ -283,8 +283,17 @@ export class SidebarComponent implements OnInit, OnChanges {
     this.channels$.subscribe(channels => {
       this.channels = channels;
       this.saveChannelsToStorage();
+    });
+
+    // Subscribe to direct messages
+    this.authService.user$.pipe(
+      filter((user): user is User => !!user),
+      switchMap(user => this.firestoreService.getUserDirectMessages())
+    ).subscribe(messages => {
+      this.directMessages = messages;
+      this.saveDirectMessagesToStorage();
       
-      // Load selected content after channels are updated
+      // Load selected content after messages are updated
       this.loadSelectedContent();
     });
 

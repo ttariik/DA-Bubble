@@ -7,7 +7,7 @@ interface ThreadMessage {
   userId: string;
   userName: string;
   userAvatar: string;
-  content: string;
+  text: string;
   timestamp: Date;
   reactions?: Reaction[];
   isNew?: boolean;
@@ -108,7 +108,7 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
       userId: message.userId,
       userName: message.userName,
       userAvatar: message.userAvatar,
-      content: message.content,
+      text: message.text,
       timestamp: message.timestamp,
       reactions: message.reactions,
       isEdited: message.isEdited,
@@ -429,7 +429,7 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
         userId: this.currentUserId,
         userName: 'Frederik Beck',
         userAvatar: 'assets/icons/avatars/user1.svg', 
-        content: this.replyInput.trim(),
+        text: this.replyInput.trim(),
         timestamp: now,
         isNew: true
       };
@@ -510,13 +510,13 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
   
   editMessage(message: ThreadMessage) {
     message.isEditing = true;
-    message.editedContent = message.content;
+    message.editedContent = message.text;
     this.editingMessage = message;
   }
   
   saveEditedMessage(message: ThreadMessage) {
     if (message.editedContent && message.editedContent.trim()) {
-      message.content = message.editedContent.trim();
+      message.text = message.editedContent.trim();
       message.isEdited = true;
     }
     message.isEditing = false;
@@ -553,7 +553,7 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
     // Wenn es die Original-Nachricht ist, markiere sie als gelöscht
     if (this.originalMessage && this.originalMessage.id === message.id) {
       this.originalMessage.isDeleted = true;
-      this.originalMessage.content = 'Diese Nachricht wurde gelöscht';
+      this.originalMessage.text = 'Diese Nachricht wurde gelöscht';
       
       // Speichere Änderungen
       this.saveThreadToStorage();
@@ -571,7 +571,7 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
       
       // Option 2: Nachricht als gelöscht markieren und Inhalt ersetzen
       this.replies[replyIndex].isDeleted = true;
-      this.replies[replyIndex].content = 'Diese Nachricht wurde gelöscht';
+      this.replies[replyIndex].text = 'Diese Nachricht wurde gelöscht';
       
       // Gruppen aktualisieren
       this.groupRepliesByDate();
@@ -591,7 +591,7 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
         
         if (messageIndex !== -1) {
           parsedMessages[messageIndex].isDeleted = true;
-          parsedMessages[messageIndex].content = 'Diese Nachricht wurde gelöscht';
+          parsedMessages[messageIndex].text = 'Diese Nachricht wurde gelöscht';
           localStorage.setItem('allChatMessages', JSON.stringify(parsedMessages));
           console.log(`Message ${messageId} marked as deleted in main chat`);
         }
