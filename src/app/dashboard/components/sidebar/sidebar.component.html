@@ -132,6 +132,68 @@
       </div>
     </div>
 
+    <!-- Contacts Section -->
+    <div class="section">
+      <div class="section-header" (click)="toggleContacts()">
+        <div class="section-toggle" [class.open]="showContacts">
+          <i class="toggle-icon"></i>
+        </div>
+        <img
+          src="assets/icons/contacts.svg"
+          alt="Contacts Icon"
+          class="section-icon"
+        />
+        <div class="section-title">Kontakte</div>
+        <button class="add-contact-button" title="Neuen Kontakt hinzufügen" (click)="openAddContactModal()">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="8.5" cy="7" r="4"></circle>
+            <line x1="20" y1="8" x2="20" y2="14"></line>
+            <line x1="23" y1="11" x2="17" y2="11"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="section-content" *ngIf="showContacts">
+        <div class="contacts-list">
+          <ng-container *ngFor="let contact of contacts$ | async">
+            <div
+              class="contact-item"
+              (click)="selectContact(contact)"
+            >
+              <div class="user-info">
+                <div
+                  class="user-avatar"
+                  (click)="showContactProfileModal(contact, $event)"
+                  title="Profilinfo anzeigen"
+                >
+                  <img [src]="contact.avatar" [alt]="contact.name" />
+                  <div
+                    class="status-indicator"
+                    [class.online]="contact.online"
+                  ></div>
+                </div>
+                <div class="user-name">{{ contact.name }}</div>
+              </div>
+              <div class="unread-badge" *ngIf="contact.unread > 0">
+                {{ contact.unread }}
+              </div>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+
     <!-- Add Channel Modal -->
     <app-add-channel-modal
       [isVisible]="showAddChannelModal"

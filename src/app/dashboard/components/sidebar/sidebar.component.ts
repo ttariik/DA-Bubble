@@ -50,6 +50,7 @@ export class SidebarComponent implements OnInit, OnChanges {
   workspaceName: string = 'Devspace';
   showChannels: boolean = true;
   showDirectMessages: boolean = true;
+  showContacts: boolean = true;
   showAddChannelModal: boolean = false;
   showAddPeopleModal: boolean = false;
   sidebarCollapsed: boolean = false;
@@ -72,8 +73,11 @@ export class SidebarComponent implements OnInit, OnChanges {
   newChannelName: string = '';
   channels$!: Observable<any[]>;
   showAddContactModal = false;
+  contacts$: Observable<Contact[]>;
 
-  constructor(private firestoreService: FirestoreService, private authService: AuthService) {}
+  constructor(private firestoreService: FirestoreService, private authService: AuthService) {
+    this.contacts$ = this.firestoreService.getAllContacts();
+  }
 
   // Show contact profile when avatar is clicked
   showContactProfileModal(contact: DirectMessage, event: MouseEvent): void {
@@ -108,6 +112,10 @@ export class SidebarComponent implements OnInit, OnChanges {
   
   toggleDirectMessages() {
     this.showDirectMessages = !this.showDirectMessages;
+  }
+  
+  toggleContacts() {
+    this.showContacts = !this.showContacts;
   }
   
   addChannel() {
@@ -339,7 +347,22 @@ export class SidebarComponent implements OnInit, OnChanges {
   
   handlePeopleAdded(userIds: string[]) {
     console.log('People added to channel:', userIds);
+    // The direct messages list will automatically update through the existing subscription
+    // to the Firestore service's getUserDirectMessages() method
     this.closeAddPeopleModal();
+    
+    // Refresh the direct messages list
+    if (this.firestoreService) {
+      this.firestoreService.getUserDirectMessages().subscribe(
+        (messages) => {
+          this.directMessages = messages;
+          this.saveDirectMessagesToStorage();
+        },
+        (error) => {
+          console.error('Error refreshing direct messages:', error);
+        }
+      );
+    }
   }
 
   // Add Contact Modal methods
@@ -384,6 +407,15 @@ export class SidebarComponent implements OnInit, OnChanges {
     if (changes['directMessages'] && !changes['directMessages'].firstChange) {
       // Save the updated direct messages to storage
       this.saveDirectMessagesToStorage();
+    }
+  }
+
+  selectContact(contact: Contact) {
+    // Create or get direct message for this contact
+    const userId = this.authService.currentUser?.uid;
+    if (userId) {
+      this.firestoreService.createDirectMessage(userId, contact.id);
+      // The direct message list will be automatically updated through the existing subscription
     }
   }
 } 

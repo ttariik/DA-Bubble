@@ -179,8 +179,6 @@ export class AddPeopleModalComponent implements OnChanges, OnInit {
       console.warn('Channel wird mit temporärer ID aktualisiert. Später wird der Channel korrekt aktualisiert.');
     }
     
-    // In einem realen Fall würden wir hier den Firestore-Service verwenden,
-    // um die Benutzer zum Channel hinzuzufügen
     this.firestoreService.addPeopleToChannel(this.channelId, userIds)
       .then(() => {
         console.log('Benutzer erfolgreich zum Channel hinzugefügt');
@@ -190,9 +188,8 @@ export class AddPeopleModalComponent implements OnChanges, OnInit {
       })
       .catch(error => {
         console.error('Fehler beim Hinzufügen von Benutzern zum Channel:', error);
-        // Trotz Fehler Modal schließen, um Benutzer nicht zu blockieren
-        this.resetForm();
-        this.close.emit();
+        // Show error message to user (you could add a toast/notification system here)
+        alert('Es gab einen Fehler beim Hinzufügen der Benutzer. Bitte versuchen Sie es später erneut.');
       });
   }
 }

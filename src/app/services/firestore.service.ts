@@ -448,44 +448,38 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
    */
   async addPeopleToChannel(channelId: string, userIds: string[]): Promise<void> {
     try {
-      // Überprüfen, ob es sich um eine temporäre ID handelt
-      if (channelId.startsWith('temp_')) {
-        console.log('Temporäre Channel-ID erkannt. Speichern der Benutzer für späteren Zeitpunkt.');
-        // In einem echten System würden wir diese Benutzer für eine spätere Verarbeitung zwischenspeichern
-        // Für dieses Beispiel geben wir einfach ein erfolgreiches Promise zurück
-        return Promise.resolve();
+      // Get the current user's ID
+      const currentUserId = this.auth.currentUser?.uid;
+      if (!currentUserId) {
+        throw new Error('No user is currently logged in');
       }
-      
-      // Referenz zum Channel-Dokument
+
+      // Update the channel's members
       const channelRef = doc(this.firestore, 'channels', channelId);
       const channelDoc = await getDoc(channelRef);
       
       if (!channelDoc.exists()) {
-        console.log(`Channel mit ID ${channelId} existiert noch nicht. Erstelle neue Mitgliederliste.`);
-        // Wenn der Channel noch nicht existiert, erstellen wir ihn mit den ausgewählten Benutzern
-        await setDoc(channelRef, { 
-          members: userIds,
-          // Weitere Default-Felder könnten hier gesetzt werden
-        });
-        return Promise.resolve();
+        throw new Error('Channel not found');
       }
+
+      const currentMembers = channelDoc.data()?.['members'] || [];
+      const newMembers = [...new Set([...currentMembers, ...userIds])];
       
-      // Aktuelle Mitgliederliste holen
-      const data = channelDoc.data();
-      const members = data['members'] || [];
+      await updateDoc(channelRef, {
+        members: newMembers
+      });
+
+      // Create direct message connections for each new user
+      const dmPromises = userIds.map(async (userId) => {
+        await this.createDirectMessage(currentUserId, userId);
+      });
+
+      await Promise.all(dmPromises);
       
-      // Neue Benutzer hinzufügen, Duplikate vermeiden
-      const updatedMembers = [...new Set([...members, ...userIds])];
-      
-      // Mitgliederliste aktualisieren
-      await updateDoc(channelRef, { members: updatedMembers });
-      
-      return Promise.resolve();
+      console.log('Successfully added people to channel and created DM connections');
     } catch (error) {
-      console.error('Fehler beim Hinzufügen von Benutzern zum Channel:', error);
-      // Wir geben trotzdem ein erfolgreiches Promise zurück, um die UI nicht zu blockieren
-      // In einer realen Anwendung würde man hier eine Fehlerbehandlung implementieren
-      return Promise.resolve();
+      console.error('Error adding people to channel:', error);
+      throw error;
     }
   }
 
@@ -677,6 +671,24 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
       console.error('Error adding contact:', error);
       throw error;
     }
+  }
+
+  // Get all contacts for the current user
+  getAllContacts(): Observable<Contact[]> {
+    const contactsRef = collection(this.firestore, 'contacts');
+    return collectionData(contactsRef, { idField: 'id' }).pipe(
+      map(contacts => contacts.map(contact => ({
+        id: contact['id'],
+        name: contact['name'],
+        avatar: contact['avatar'] || 'assets/icons/avatars/default.svg',
+        online: contact['online'] || false,
+        unread: contact['unread'] || 0,
+        email: contact['email'],
+        title: contact['title'],
+        department: contact['department'],
+        phone: contact['phone']
+      })))
+    );
   }
 
   getChannelMembers(channelId: string): Observable<{id: string, name: string, avatar: string, online: boolean, title?: string, department?: string}[]> {
