@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { FirestoreService, Message as FirestoreMessage } from '../../../services/firestore.service';
 import { AddPeopleModalComponent } from '../add-people-modal/add-people-modal.component';
 import { Auth } from '@angular/fire/auth';
-import { Firestore, collection, addDoc, serverTimestamp, query, getDocs, writeBatch } from '@angular/fire/firestore';
+import { Firestore, collection, addDoc, serverTimestamp, query, getDocs, writeBatch, doc, updateDoc } from '@angular/fire/firestore';
 import { Dialog, DialogModule } from '@angular/cdk/dialog';
 import { DeleteChannelMessagesModalComponent } from '../delete-channel-messages-modal/delete-channel-messages-modal.component';
 
@@ -128,33 +128,55 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
   }
   
   ngOnInit() {
+    console.log('🚀 ChatAreaComponent ngOnInit', {
+      channelId: this.channelId,
+      channelName: this.channelName,
+      isDirect: this.isDirect
+    });
+    
     // Wait for authentication state to be ready
     this.auth.onAuthStateChanged((user) => {
+      console.log('🔐 Auth state changed:', {
+        hasUser: !!user,
+        uid: user?.uid,
+        email: user?.email,
+        displayName: user?.displayName
+      });
+      
       if (user) {
         this.currentUserId = user.uid;
         this.currentUserName = user.displayName || 
                               `${user.email?.split('@')[0]}` || 
                               'Unbekannter Benutzer';
         
-        console.log('User authenticated:', {
+        console.log('✅ User authenticated:', {
           uid: this.currentUserId,
           name: this.currentUserName,
-          email: user.email
+          email: user.email,
+          channelId: this.channelId,
+          willLoadMessages: !!this.channelId
         });
         
         // Now load messages and other data
-        this.loadMessages();
-        this.loadChannelCreationDate();
-        
-        if (!this.isDirect && this.channelId) {
-          this.loadChannelMembers();
+        if (this.channelId) {
+          this.loadMessages();
+          this.loadChannelCreationDate();
+          
+          if (!this.isDirect && this.channelId) {
+            this.loadChannelMembers();
+          }
+        } else {
+          console.log('⏳ Waiting for channel to be set before loading messages');
         }
       } else {
-        console.log('No user authenticated');
+        console.log('❌ No user authenticated - clearing data');
+        this.currentUserId = '';
+        this.currentUserName = '';
+        this.messages = [];
       }
     });
     
-    console.log(`Initialized chat for channel ${this.channelName} (ID: ${this.channelId})`);
+    console.log(`✅ Initialized chat for channel ${this.channelName} (ID: ${this.channelId})`);
   }
   
   // Load all messages from localStorage
@@ -183,37 +205,49 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
     
     // Unsubscribe from previous subscription if it exists
     if (this.messageSubscription) {
+      console.log('🔄 Unsubscribing from previous message subscription');
       this.messageSubscription.unsubscribe();
+      this.messageSubscription = null;
     }
 
-    // Subscribe to messages from Firestore
-    if (this.channelId) {
-      this.messageSubscription = (this.isDirect ? 
-        this.firestoreService.getDirectMessages(this.channelId.replace('dm_', '')) :
-        this.firestoreService.getChannelMessages(this.channelId)
-      ).subscribe({
-        next: (messages) => {
-          console.log('📥 Received messages:', messages.length, 'messages');
-          
-          // Reverse since Firestore returns in desc order, but we want oldest first
-          this.messages = messages.reverse();
-          this.groupMessagesByDate();
-          this.messageCount = this.messages.length;
-          
-          console.log('📊 Grouped messages into', this.messageGroups.length, 'date groups');
-          
-          // Scroll to bottom after messages are loaded
-          setTimeout(() => {
-            this.scrollToBottom();
-          }, 100);
-        },
-        error: (error) => {
-          console.error('❌ Error loading messages:', error);
+    // Add a small delay to prevent race conditions
+    setTimeout(() => {
+      // Subscribe to messages from Firestore
+      if (this.channelId) {
+        console.log('🔗 Creating new message subscription');
+        
+        try {
+          this.messageSubscription = (this.isDirect ? 
+            this.firestoreService.getDirectMessages(this.channelId.replace('dm_', '')) :
+            this.firestoreService.getChannelMessages(this.channelId)
+          ).subscribe({
+            next: (messages) => {
+              console.log('📥 Received messages:', messages.length, 'messages');
+              
+              // Reverse since Firestore returns in desc order, but we want oldest first
+              this.messages = messages.reverse();
+              this.groupMessagesByDate();
+              this.messageCount = this.messages.length;
+              
+              console.log('📊 Grouped messages into', this.messageGroups.length, 'date groups');
+              
+              // Scroll to bottom after messages are loaded
+              setTimeout(() => {
+                this.scrollToBottom();
+              }, 100);
+            },
+            error: (error) => {
+              console.error('❌ Error loading messages:', error);
+              // Don't show alert for subscription errors, just log them
+            }
+          });
+        } catch (error) {
+          console.error('❌ Error creating message subscription:', error);
         }
-      });
-    } else {
-      console.log('❌ No channel ID provided for loading messages');
-    }
+      } else {
+        console.log('❌ No channel ID provided for loading messages');
+      }
+    }, 100);
   }
   
 
@@ -345,12 +379,13 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
     }
 
     // Detailed logging for debugging
-    console.log('sendMessage called with:', {
+    console.log('🚀 sendMessage called with:', {
       messageInput: this.messageInput,
       channelId: this.channelId,
       currentUserId: this.currentUserId,
       currentUserName: this.currentUserName,
-      isDirect: this.isDirect
+      isDirect: this.isDirect,
+      authUser: this.auth.currentUser?.uid
     });
 
     // Validation with detailed error messages
@@ -361,11 +396,16 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
 
     if (!this.channelId) {
       console.log('❌ Keine Channel ID');
+      alert('Fehler: Kein Channel ausgewählt.');
       return;
     }
 
     if (!this.currentUserId) {
       console.log('❌ Kein Benutzer authentifiziert');
+      console.log('Auth state:', {
+        currentUser: this.auth.currentUser,
+        uid: this.auth.currentUser?.uid
+      });
       alert('Sie müssen angemeldet sein, um Nachrichten zu senden.');
       return;
     }
@@ -391,21 +431,54 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
     // Clear the input immediately to prevent double sending
     this.messageInput = '';
 
+    // Temporarily pause message subscription to prevent conflicts
+    const wasSubscribed = !!this.messageSubscription;
+    if (this.messageSubscription) {
+      console.log('⏸️ Temporarily pausing message subscription during send');
+      this.messageSubscription.unsubscribe();
+      this.messageSubscription = null;
+    }
+
     try {
-      console.log('🚀 Sending message to Firestore:', message);
+      console.log('🚀 Sending message to Firestore:', {
+        ...message,
+        timestamp: '[ServerTimestamp]' // Don't log the actual timestamp object
+      });
 
       if (this.isDirect) {
         // For direct messages
         const dmId = this.channelId.replace('dm_', '');
-        console.log('📱 Sending direct message to:', dmId);
+        console.log('📱 Sending direct message to DM ID:', dmId);
         await this.firestoreService.sendDirectMessage(dmId, message);
         console.log('✅ Direktnachricht erfolgreich gesendet');
       } else {
-        // For channel messages
+        // For channel messages - use a more robust approach
         console.log('💬 Sending channel message to channel:', this.channelId);
+        
+        // Create a new Firestore instance to avoid conflicts
         const messagesRef = collection(this.firestore, 'messages');
-        const docRef = await addDoc(messagesRef, message);
-        console.log('✅ Channel-Nachricht erfolgreich gesendet mit ID:', docRef.id);
+        
+        // Add retry logic for internal errors
+        let retryCount = 0;
+        const maxRetries = 3;
+        
+        while (retryCount < maxRetries) {
+          try {
+            const docRef = await addDoc(messagesRef, message);
+            console.log('✅ Channel-Nachricht erfolgreich gesendet mit ID:', docRef.id);
+            break;
+          } catch (retryError: any) {
+            retryCount++;
+            console.log(`⚠️ Retry ${retryCount}/${maxRetries} for message send:`, retryError.message);
+            
+            if (retryCount >= maxRetries) {
+              throw retryError;
+            }
+            
+            // Wait before retry
+            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+          }
+        }
       }
 
       // Scroll to bottom after a short delay
@@ -413,16 +486,46 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
         this.scrollToBottom();
       }, 300);
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Error sending message:', error);
+      console.error('❌ Error details:', {
+        code: error.code,
+        message: error.message,
+        name: error.name
+      });
       
       // Restore the message input if sending failed
       this.messageInput = messageText;
       
-      alert('Fehler beim Senden der Nachricht. Bitte versuchen Sie es erneut.');
+      // Specific error handling
+      if (error.code === 'permission-denied') {
+        alert('Fehler: Sie haben keine Berechtigung, Nachrichten zu senden.');
+      } else if (error.code === 'unavailable') {
+        alert('Fehler: Firestore ist momentan nicht verfügbar. Bitte versuchen Sie es später erneut.');
+      } else if (error.message?.includes('INTERNAL ASSERTION FAILED')) {
+        console.log('🔄 Internal Firestore error detected - will reload messages after delay');
+        alert('Nachricht wurde möglicherweise gesendet. Die Seite wird aktualisiert...');
+        
+        // Reload the page after a short delay to reset Firestore state
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      } else {
+        alert(`Fehler beim Senden der Nachricht: ${error.message || 'Unbekannter Fehler'}`);
+      }
     } finally {
       // Reset sending flag
       this.isSending = false;
+      
+      // Restore message subscription after a delay if it was active
+      if (wasSubscribed) {
+        setTimeout(() => {
+          console.log('▶️ Restoring message subscription after send');
+          this.loadMessages();
+        }, 1000);
+      }
+      
+      console.log('🏁 Send process completed, isSending reset to false');
     }
   }
   
@@ -458,7 +561,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
   }
   
   // Add a direct reaction with a specific emoji
-  addDirectReaction(message: Message, emoji: string) {
+  async addDirectReaction(message: Message, emoji: string) {
     if (!message.reactions) {
       message.reactions = [];
     }
@@ -488,7 +591,20 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
       });
     }
     
-    // Save changes
+    try {
+      // Update reactions in Firestore
+      const messagesRef = collection(this.firestore, 'messages');
+      const messageRef = doc(messagesRef, message.id);
+      await updateDoc(messageRef, {
+        reactions: message.reactions
+      });
+      
+      console.log('✅ Reaction updated in Firestore');
+    } catch (error) {
+      console.error('❌ Error updating reaction in Firestore:', error);
+    }
+    
+    // Save changes locally
     this.saveMessagesToStorage();
   }
   
@@ -506,13 +622,32 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
     this.editingMessage = message;
   }
   
-  saveEditedMessage(message: Message) {
+  async saveEditedMessage(message: Message) {
     if (message.editedContent && message.editedContent.trim()) {
-      message.text = message.editedContent.trim();
-      message.isEdited = true;
+      const newText = message.editedContent.trim();
       
-      // Save changes to localStorage
-      this.saveMessagesToStorage();
+      try {
+        // Update message in Firestore
+        const messagesRef = collection(this.firestore, 'messages');
+        const messageRef = doc(messagesRef, message.id);
+        await updateDoc(messageRef, {
+          text: newText,
+          isEdited: true
+        });
+        
+        console.log('✅ Message successfully updated in Firestore');
+        
+        // Update local message immediately for better UX
+        message.text = newText;
+        message.isEdited = true;
+        
+        // Save changes to localStorage
+        this.saveMessagesToStorage();
+        
+      } catch (error) {
+        console.error('❌ Error updating message in Firestore:', error);
+        alert('Fehler beim Bearbeiten der Nachricht. Bitte versuchen Sie es erneut.');
+      }
     }
     
     this.cancelEdit(message);
@@ -535,35 +670,140 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
   }
   
   // Neue Methode zum Löschen einer Nachricht
-  deleteMessage(message: Message) {
+  async deleteMessage(message: Message) {
     // Prüfen, ob es sich um die eigene Nachricht handelt
     if (message.userId !== this.currentUserId) {
       console.error('Nur eigene Nachrichten können gelöscht werden');
       return;
     }
     
-    // Nachricht im lokalen Array finden
+    console.log('🗑️ Deleting message:', message.id);
+    
+    // Sofortige lokale Löschung für bessere UX
+    this.deleteMessageLocally(message);
+    
+    // Versuche Firestore-Update mit Fallback
+    await this.deleteMessageInFirestore(message);
+  }
+
+  // Lokale Löschung der Nachricht
+  private deleteMessageLocally(message: Message) {
+    console.log('📝 Deleting message locally:', message.id);
+    
+    // Lokale Arrays aktualisieren
     const messageIndex = this.messages.findIndex(msg => msg.id === message.id);
     if (messageIndex !== -1) {
-      // Nachricht als gelöscht markieren
       this.messages[messageIndex].isDeleted = true;
       this.messages[messageIndex].text = 'Diese Nachricht wurde gelöscht';
+    }
+    
+    const allMessageIndex = this.allMessages.findIndex(msg => msg.id === message.id);
+    if (allMessageIndex !== -1) {
+      this.allMessages[allMessageIndex].isDeleted = true;
+      this.allMessages[allMessageIndex].text = 'Diese Nachricht wurde gelöscht';
+    }
+    
+    // Thread-Antworten für diese Nachricht aktualisieren
+    this.updateThreadForDeletedMessage(message.id);
+    
+    // Nachrichten neu gruppieren
+    this.groupMessagesByDate();
+    
+    // Speichern
+    this.saveMessagesToStorage();
+  }
+
+  // Firestore-Löschung mit Retry-Logik
+  private async deleteMessageInFirestore(message: Message, retryCount = 0) {
+    // Maximal 3 Versuche
+    const maxRetries = 3;
+    
+    try {
+      // Validierung
+      if (!message.id || message.id.toString().startsWith('temp_')) {
+        console.log('📝 Message is local only, skipping Firestore update');
+        return;
+      }
+
+      console.log(`🚀 Updating message in Firestore (attempt ${retryCount + 1})...`);
+      console.log('📋 Message details:', {
+        id: message.id,
+        userId: message.userId,
+        text: message.text.substring(0, 50) + '...',
+        channelId: message.channelId
+      });
       
-      // Auch in allMessages aktualisieren
-      const allMessageIndex = this.allMessages.findIndex(msg => msg.id === message.id);
-      if (allMessageIndex !== -1) {
-        this.allMessages[allMessageIndex].isDeleted = true;
-        this.allMessages[allMessageIndex].text = 'Diese Nachricht wurde gelöscht';
+      // Firestore-Update OHNE Subscription zu pausieren (um Race Conditions zu vermeiden)
+      const messagesRef = collection(this.firestore, 'messages');
+      const messageRef = doc(messagesRef, message.id);
+      
+      console.log('📍 Firestore path:', `messages/${message.id}`);
+      
+      await updateDoc(messageRef, {
+        isDeleted: true,
+        text: 'Diese Nachricht wurde gelöscht'
+      });
+      
+      console.log('✅ Message successfully marked as deleted in Firestore!');
+      console.log('✅ Firestore update completed successfully');
+      
+    } catch (error: any) {
+      console.error(`❌ Error deleting message from Firestore (attempt ${retryCount + 1}):`, error);
+      console.error('❌ Full error object:', error);
+      console.error('❌ Error code:', error.code);
+      console.error('❌ Error message:', error.message);
+      
+      // Bei Firestore internal errors: Retry mit exponential backoff
+      if (error.message?.includes('INTERNAL ASSERTION FAILED') && retryCount < maxRetries) {
+        const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
+        console.log(`🔄 Retrying in ${delay}ms... (${retryCount + 1}/${maxRetries})`);
+        
+        setTimeout(() => {
+          this.deleteMessageInFirestore(message, retryCount + 1);
+        }, delay);
+        return;
       }
       
-      // Thread-Antworten für diese Nachricht aktualisieren
-      this.updateThreadForDeletedMessage(message.id);
+      // Nach allen Retry-Versuchen gescheitert
+      if (retryCount >= maxRetries) {
+        console.error('❌ All retry attempts failed. Firestore update unsuccessful.');
+        console.error('⚠️ Message will reappear on page reload because Firestore was not updated.');
+        alert('Warnung: Die Nachricht wurde nur lokal gelöscht. Sie wird beim Neuladen der Seite wieder erscheinen, da ein Firestore-Fehler auftrat.');
+      }
       
-      // Speichern
-      this.saveMessagesToStorage();
-      
-      console.log(`Nachricht ${message.id} wurde gelöscht`);
+      // Andere Fehlerbehandlung
+      if (error.code === 'not-found') {
+        console.log('📝 Message not found in Firestore (this is actually expected for local-only messages)');
+      } else if (error.code === 'permission-denied') {
+        console.error('❌ Permission denied for message deletion');
+        // Lokale Löschung rückgängig machen
+        this.restoreMessageLocally(message);
+        alert('Fehler: Sie haben keine Berechtigung, diese Nachricht zu löschen.');
+      } else {
+        console.error('❌ Unhandled Firestore error:', error);
+        console.log('📝 Keeping local deletion, but warning user about reload behavior');
+      }
     }
+  }
+
+  // Nachricht lokal wiederherstellen (falls Firestore-Löschung fehlschlägt)
+  private restoreMessageLocally(message: Message) {
+    console.log('🔄 Restoring message locally:', message.id);
+    
+    const messageIndex = this.messages.findIndex(msg => msg.id === message.id);
+    if (messageIndex !== -1) {
+      this.messages[messageIndex].isDeleted = false;
+      this.messages[messageIndex].text = message.text; // Original text wiederherstellen
+    }
+    
+    const allMessageIndex = this.allMessages.findIndex(msg => msg.id === message.id);
+    if (allMessageIndex !== -1) {
+      this.allMessages[allMessageIndex].isDeleted = false;
+      this.allMessages[allMessageIndex].text = message.text;
+    }
+    
+    this.groupMessagesByDate();
+    this.saveMessagesToStorage();
   }
   
   // Methode zum Aktualisieren des Threads für eine gelöschte Nachricht
@@ -998,13 +1238,26 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
    * Wird aufgerufen, wenn die Komponente zerstört wird
    */
   ngOnDestroy() {
+    console.log('🧹 ChatAreaComponent ngOnDestroy - cleaning up subscriptions');
+    
     // Unsubscribe from message subscription to prevent memory leaks
     if (this.messageSubscription) {
-      this.messageSubscription.unsubscribe();
+      try {
+        this.messageSubscription.unsubscribe();
+        console.log('✅ Message subscription unsubscribed');
+      } catch (error) {
+        console.error('❌ Error unsubscribing from messages:', error);
+      }
+      this.messageSubscription = null;
     }
     
     // Event-Listener entfernen
-    document.removeEventListener('click', this.closeMoreOptions);
+    try {
+      document.removeEventListener('click', this.closeMoreOptions);
+      console.log('✅ Event listener removed');
+    } catch (error) {
+      console.error('❌ Error removing event listener:', error);
+    }
   }
 
   getThreadCount(messageId: string): number {

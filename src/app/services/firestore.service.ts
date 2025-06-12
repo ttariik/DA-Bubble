@@ -67,6 +67,8 @@ export interface Message {
   reactions?: any[];
   threadId?: string;
   isThreadMessage?: boolean;
+  isDeleted?: boolean;
+  isEdited?: boolean;
 }
 
 export interface SearchResult {
@@ -225,7 +227,9 @@ getDirectMessages(dmId: string): Observable<Message[]> {
       timestamp: msg.timestamp ? (msg.timestamp as Timestamp).toDate() : new Date(),
       reactions: msg.reactions || [],
       threadId: msg.threadId || '',
-      isThreadMessage: msg.isThreadMessage || false
+      isThreadMessage: msg.isThreadMessage || false,
+      isDeleted: msg.isDeleted || false,
+      isEdited: msg.isEdited || false
     })))
   );
 }
@@ -577,7 +581,9 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
         timestamp: msg.timestamp ? (msg.timestamp as Timestamp).toDate() : new Date(),
         reactions: msg.reactions || [],
         threadId: msg.threadId || '',
-        isThreadMessage: msg.isThreadMessage || false
+        isThreadMessage: msg.isThreadMessage || false,
+        isDeleted: msg.isDeleted || false,
+        isEdited: msg.isEdited || false
       })))
     );
   }
