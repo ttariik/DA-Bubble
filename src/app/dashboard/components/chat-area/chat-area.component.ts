@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { FirestoreService, Message as FirestoreMessage } from '../../../services/firestore.service';
 import { AddPeopleModalComponent } from '../add-people-modal/add-people-modal.component';
 import { Auth } from '@angular/fire/auth';
-import { Firestore, collection, addDoc, serverTimestamp } from '@angular/fire/firestore';
+import { Firestore, collection, addDoc, serverTimestamp, query, getDocs, writeBatch } from '@angular/fire/firestore';
 import { Dialog, DialogModule } from '@angular/cdk/dialog';
 import { DeleteChannelMessagesModalComponent } from '../delete-channel-messages-modal/delete-channel-messages-modal.component';
 
@@ -876,25 +876,27 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
     dialogRef.closed.subscribe(async (result) => {
       if (result === true) {
         try {
-          // Bestätigungsdialog anzeigen
-          if (!confirm('Möchten Sie wirklich alle Nachrichten aus diesem Channel löschen? Diese Aktion kann nicht rückgängig gemacht werden.')) {
-            return;
-          }
-
-          // Alle Nachrichten in Firestore löschen
-          await this.firestoreService.deleteAllChannelMessages(this.channelId);
+          // Delete messages in Firestore
+          const messagesRef = collection(this.firestore, 'channels', this.channelId, 'messages');
+          const q = query(messagesRef);
+          const querySnapshot = await getDocs(q);
           
-          // Lokale Nachrichten löschen
+          const batch = writeBatch(this.firestore);
+          querySnapshot.forEach((doc) => {
+            batch.delete(doc.ref);
+          });
+          
+          await batch.commit();
+
+          // Update local state
           this.messages = [];
           this.messageGroups = [];
-          
-          // Lokalen Speicher aktualisieren
           this.allMessages = this.allMessages.filter(msg => msg.channelId !== this.channelId);
           this.saveMessagesToStorage();
           
           console.log('Alle Nachrichten wurden erfolgreich gelöscht');
         } catch (error) {
-          console.error('Fehler beim Löschen aller Nachrichten:', error);
+          console.error('Error deleting messages:', error);
           alert('Beim Löschen der Nachrichten ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.');
         }
       }
