@@ -860,5 +860,27 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
       throw error;
     }
   }
+
+  async deleteContact(contactId: string): Promise<void> {
+    try {
+      // Delete from contacts collection
+      await deleteDoc(doc(this.firestore, 'contacts', contactId));
+
+      // Delete associated direct messages
+      const dmRef = collection(this.firestore, 'directMessages');
+      const q = query(
+        dmRef,
+        where('users', 'array-contains', contactId)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const deletePromises = querySnapshot.docs.map(doc => deleteDoc(doc.ref));
+      await Promise.all(deletePromises);
+
+    } catch (error) {
+      console.error('Error deleting contact:', error);
+      throw error;
+    }
+  }
 }
 

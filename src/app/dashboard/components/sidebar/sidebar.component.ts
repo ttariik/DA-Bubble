@@ -454,4 +454,29 @@ export class SidebarComponent implements OnInit, OnChanges {
       // The direct message list will be automatically updated through the existing subscription
     }
   }
+
+  async deleteContact(contact: any, event: Event) {
+    event.stopPropagation(); // Prevent triggering the contact selection
+    
+    // Show confirmation dialog
+    if (confirm(`Möchten Sie den Kontakt "${contact.name}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`)) {
+      try {
+        await this.firestoreService.deleteContact(contact.id);
+        
+        // Remove from direct messages if exists
+        this.directMessages = this.directMessages.filter(dm => dm.id !== contact.id);
+        
+        // If the deleted contact was selected, clear the selection
+        if (this.selectedDirectMessageId === contact.id) {
+          this.selectedDirectMessageId = null;
+          this.directMessageSelected.emit(undefined);
+        }
+        
+        console.log('Contact deleted successfully');
+      } catch (error) {
+        console.error('Error deleting contact:', error);
+        alert('Beim Löschen des Kontakts ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.');
+      }
+    }
+  }
 } 
