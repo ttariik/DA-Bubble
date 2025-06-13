@@ -43,20 +43,53 @@
   .close-button {
     background: none;
     border: none;
-    font-size: 28px;
-    color: #666;
     cursor: pointer;
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 50%;
     transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background-color: rgba(0, 0, 0, 0.05);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: width 0.3s ease, height 0.3s ease;
+    }
     
     &:hover {
-      background-color: rgba(0, 0, 0, 0.05);
-      color: #444df2;
+      transform: rotate(90deg);
+      
+      &::before {
+        width: 100%;
+        height: 100%;
+      }
+      
+      img {
+        filter: invert(32%) sepia(59%) saturate(3714%) hue-rotate(229deg) brightness(95%) contrast(95%);
+      }
+    }
+    
+    &:active {
+      transform: rotate(90deg) scale(0.9);
+    }
+    
+    img {
+      width: 20px;
+      height: 20px;
+      transition: filter 0.2s ease;
+      position: relative;
+      z-index: 1;
     }
   }
 }
