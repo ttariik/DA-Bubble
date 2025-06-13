@@ -79,6 +79,9 @@ export class SidebarComponent implements OnInit, OnChanges {
 
   showDeleteContactModal = false;
   contactToDelete: any = null;
+  
+  showDeleteDMModal = false;
+  dmToDelete: any = null;
 
   constructor(private firestoreService: FirestoreService, private authService: AuthService) {
     this.contacts$ = this.firestoreService.getAllContacts();
@@ -516,5 +519,41 @@ export class SidebarComponent implements OnInit, OnChanges {
     }
 
     this.closeDeleteContactModal();
+  }
+
+  async handleDeleteDirectMessage(dm: any, event: Event) {
+    event.stopPropagation(); // Prevent triggering the DM selection
+    this.dmToDelete = dm;
+    this.showDeleteDMModal = true;
+  }
+
+  closeDeleteDMModal() {
+    this.showDeleteDMModal = false;
+    this.dmToDelete = null;
+  }
+
+  async confirmDeleteDirectMessage() {
+    if (!this.dmToDelete) return;
+
+    try {
+      // Remove from the local array
+      this.directMessages = this.directMessages.filter(dm => dm.id !== this.dmToDelete.id);
+      
+      // Update localStorage
+      this.saveDirectMessagesToStorage();
+      
+      // If the deleted DM was selected, clear the selection
+      if (this.selectedDirectMessageId === this.dmToDelete.id) {
+        this.selectedDirectMessageId = null;
+        this.directMessageSelected.emit(undefined);
+        localStorage.removeItem('selectedDirectMessageId');
+      }
+      
+      console.log('Direct message deleted successfully');
+    } catch (error) {
+      console.error('Error deleting direct message:', error);
+    }
+
+    this.closeDeleteDMModal();
   }
 } 
