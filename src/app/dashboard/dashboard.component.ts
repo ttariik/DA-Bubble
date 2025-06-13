@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, ViewChild, inject, ElementRef, HostListener, NgZone, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, ViewChild, inject, ElementRef, HostListener, NgZone, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
@@ -11,9 +11,10 @@ import { AuthService } from '../services/auth.service';
 import { User } from '../models/user.class';
 import { MatDialog } from '@angular/material/dialog';
 import { trigger, state, style, animate, transition } from '@angular/animations';
-import { Observable, Subject, Subscription, debounceTime, distinctUntilChanged, fromEvent, throttleTime, of } from 'rxjs';
+import { Observable, Subject, Subscription, debounceTime, distinctUntilChanged, fromEvent, throttleTime, of, takeUntil } from 'rxjs';
 // import { AuthService } from '../../app/auth.service';
 import { LoginComponent } from '../login/login.component';
+import { ResourceOptimizerService } from '../services/resource-optimizer.service';
 
 interface Channel {
   id: string;
@@ -55,6 +56,7 @@ interface SearchResult {
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   animations: [
     trigger('profileMenuAnimation', [
       state('closed', style({
@@ -106,6 +108,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private cd = inject(ChangeDetectorRef);
   private router = inject(Router);
   private ngZone = inject(NgZone);
+  private resourceOptimizer = inject(ResourceOptimizerService);
   readonly dialog = inject(MatDialog);
 
   showThreadView: boolean = true;
@@ -159,35 +162,40 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription[] = [];
   private resizeSubscription: Subscription | null = null;
 
+  // For performance optimization - centralized destroy subject
+  private destroy$ = new Subject<void>();
+  private searchPerformanceOptimized = false;
+
   constructor(public auth : AuthService) {
-    // Set up debounced search for tagging
-    this.subscriptions.push(
-      this.tagSearchSubject.pipe(
-        debounceTime(250), // Wait for 250ms after the last event
-        distinctUntilChanged() // Only emit if the value changes
-      ).subscribe(searchText => {
-        this.performTagSearch(searchText);
-      })
-    );
+    // Set up debounced search for tagging with takeUntil
+    this.tagSearchSubject.pipe(
+      debounceTime(250),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(searchText => {
+      this.performTagSearch(searchText);
+    });
     
-    // Set up debounced search for main search functionality
-    this.subscriptions.push(
-      this.searchQuerySubject.pipe(
-        debounceTime(300),
-        distinctUntilChanged()
-      ).subscribe(query => {
-        this.performSearch(query);
-      })
-    );
+    // Set up debounced search for main search functionality with takeUntil
+    this.searchQuerySubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(query => {
+      this.performSearch(query);
+    });
   }
 
   ngOnInit() {
-    // Subscribe to direct messages from Firestore
+    // Subscribe to direct messages from Firestore with takeUntil
     this.directMessages$ = this.firestoreService.getUserDirectMessages();
-    this.directMessages$.subscribe(messages => {
+    this.directMessages$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(messages => {
       this.directMessages = messages;
-      // Save to localStorage for offline access
-      localStorage.setItem('directMessages', JSON.stringify(messages));
+      // Optimize localStorage operations
+      this.optimizeLocalStorageWrite('directMessages', messages);
+      this.cd.markForCheck();
     });
 
     this.loadData();
@@ -196,41 +204,48 @@ export class DashboardComponent implements OnInit, OnDestroy {
     console.log(this.auth.google);
     
     
-    // Initialize filtered lists with delay
-    setTimeout(() => {
-      this.initializeTaggingLists();
-    }, 500);
-    
-    // Setup throttled window resize listener
-    this.resizeSubscription = fromEvent(window, 'resize')
-      .pipe(throttleTime(150))
-      .subscribe(() => {
-        this.ngZone.run(() => {
-          this.handleWindowResize();
-        });
-      });
-      
-    // Setup document click listener to close dropdowns when clicking outside
-    this.subscriptions.push(
-      fromEvent(document, 'click').subscribe((event: Event) => {
-        if (this.showSearchDropdown || this.showMentionDropdown) {
-          const target = event.target as HTMLElement;
-          const searchContainer = document.querySelector('.search-container');
-          
-          if (searchContainer && !searchContainer.contains(target)) {
-            this.closeSearchDropdowns();
-          }
-        }
-      })
+    // Initialize filtered lists with optimized delay
+    this.resourceOptimizer.createOptimizedInterval(
+      'init-tagging-lists',
+      () => this.initializeTaggingLists(),
+      500,
+      false
     );
+    
+    // Setup throttled window resize listener with takeUntil
+    fromEvent(window, 'resize').pipe(
+      throttleTime(150),
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      this.ngZone.run(() => {
+        this.handleWindowResize();
+      });
+    });
+      
+    // Setup document click listener with takeUntil
+    fromEvent(document, 'click').pipe(
+      takeUntil(this.destroy$)
+    ).subscribe((event: Event) => {
+      if (this.showSearchDropdown || this.showMentionDropdown) {
+        const target = event.target as HTMLElement;
+        const searchContainer = document.querySelector('.search-container');
+        
+        if (searchContainer && !searchContainer.contains(target)) {
+          this.closeSearchDropdowns();
+        }
+      }
+    });
   }
   
   ngOnDestroy() {
-    // Clean up all subscriptions
-    this.subscriptions.forEach(sub => sub.unsubscribe());
-    if (this.resizeSubscription) {
-      this.resizeSubscription.unsubscribe();
-    }
+    // Emit destroy signal to complete all subscriptions
+    this.destroy$.next();
+    this.destroy$.complete();
+    
+    // Clear all optimized intervals
+    this.resourceOptimizer.clearOptimizedInterval('init-tagging-lists');
+    
+    console.log('🧹 DashboardComponent destroyed - all subscriptions cleaned up');
   }
   
   // Helper methods for filtering search results by type
@@ -249,7 +264,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   handleWindowResize() {
     // Handle window resizing logic
     // Only run heavy calculations when actually needed
-    this.cd.detectChanges();
+    this.cd.markForCheck();
   }
 
   initializeTaggingLists() {
@@ -292,12 +307,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   loadAllUsers() {
-    this.subscriptions.push(
-      this.firestoreService.getAllUsers().subscribe((users) => {
-        this.listOfAllUsers = users.map((user) => new User(user));
-        this.loadActiveUser();
-      })
-    );
+    this.firestoreService.getAllUsers().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe((users) => {
+      this.listOfAllUsers = users.map((user) => new User(user));
+      this.loadActiveUser();
+    });
   }
 
   loadActiveUser() {
@@ -307,7 +322,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (user) {
       this.activUser = user;
     }
-    this.cd.detectChanges();
+    this.cd.markForCheck();
   }
 
   logout() {
@@ -856,6 +871,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.selectedDirectMessage = existingDM;
       this.isDirectMessageActive = true;
       localStorage.setItem('selectedDirectMessageId', existingDM.id);
+    }
+  }
+
+  // Optimize localStorage operations
+  private optimizeLocalStorageWrite(key: string, data: any) {
+    try {
+      // Only write if data has actually changed
+      const currentData = localStorage.getItem(key);
+      const newData = JSON.stringify(data);
+      
+      if (currentData !== newData) {
+        localStorage.setItem(key, newData);
+      }
+    } catch (error) {
+      console.error('Error writing to localStorage:', error);
     }
   }
 }

@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, ViewChild, ElementRef, OnInit, Input, OnChanges, SimpleChanges, Output, EventEmitter, inject, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, AfterViewInit, ViewChild, ElementRef, OnInit, Input, OnChanges, SimpleChanges, Output, EventEmitter, inject, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FirestoreService, Message as FirestoreMessage } from '../../../services/firestore.service';
@@ -7,6 +7,8 @@ import { Auth } from '@angular/fire/auth';
 import { Firestore, collection, addDoc, serverTimestamp, doc, updateDoc } from '@angular/fire/firestore';
 import { Dialog, DialogModule } from '@angular/cdk/dialog';
 import { DeleteChannelMessagesModalComponent } from '../delete-channel-messages-modal/delete-channel-messages-modal.component';
+import { ResourceOptimizerService } from '../../../services/resource-optimizer.service';
+import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
 
 interface Message extends FirestoreMessage {
   isNew?: boolean;
@@ -49,7 +51,8 @@ interface DirectMessage {
     DialogModule
   ],
   templateUrl: './chat-area.component.html',
-  styleUrls: ['./chat-area.component.scss']
+  styleUrls: ['./chat-area.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDestroy {
   @ViewChild('scrollContainer') scrollContainer!: ElementRef;
@@ -62,11 +65,13 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
   @Output() channelLeft = new EventEmitter<string>();
   @Output() directMessageStarted = new EventEmitter<DirectMessage>();
 
+  private destroy$ = new Subject<void>();
   private firestoreService = inject(FirestoreService);
   private auth = inject(Auth);
   private firestore: Firestore = inject(Firestore);
   private dialog = inject(Dialog);
   private cdr = inject(ChangeDetectorRef);
+  private resourceOptimizer = inject(ResourceOptimizerService);
 
   messageInput: string = '';
   showEmojiPicker: boolean = false;
@@ -111,15 +116,29 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
 
   messageSubscription: any;
   
+  // Performance optimization properties
+  private dateCheckInterval: number | null = null;
+  private scrollDebouncer = new Subject<void>();
+  
   ngAfterViewInit() {
-    setTimeout(() => {
+    // Debounced scroll to bottom
+    this.scrollDebouncer.pipe(
+      debounceTime(50),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
       this.scrollToBottom();
-    }, 100);
+    });
+
+    this.scrollDebouncer.next();
     
-    // Set up interval to check if date labels need updating
-    setInterval(() => {
-      this.checkDateLabels();
-    }, 60000); // Check every minute
+    // Use optimized interval for date checking
+    this.resourceOptimizer.createOptimizedInterval(
+      'chat-date-check',
+      () => this.checkDateLabels(),
+      60000, // 1 minute
+      false // Not critical
+    );
   }
   
   ngOnChanges(changes: SimpleChanges) {
@@ -129,7 +148,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
       
       // Clear messages and load new ones
       this.cleanupMessages();
-      this.cdr.detectChanges();
+      this.cdr.markForCheck();
       
       // Load messages for the new channel
       this.loadMessages();
@@ -138,7 +157,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
     
     if (changes['channelName'] && !changes['channelName'].firstChange) {
       console.log('📝 Channel name changed to:', this.channelName);
-      this.cdr.detectChanges();
+      this.cdr.markForCheck();
     }
   }
   
@@ -235,6 +254,8 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
         this.messageSubscription = (this.isDirect ? 
           this.firestoreService.getDirectMessages(this.channelId.replace('dm_', '')) :
           this.firestoreService.getChannelMessages(this.channelId)
+        ).pipe(
+          takeUntil(this.destroy$)
         ).subscribe({
           next: (messages) => {
             console.log('📥 Received messages:', messages.length, 'messages for channel:', this.channelId);
@@ -275,12 +296,10 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
             console.log('📊 Loaded', this.messages.length, 'messages in', this.messageGroups.length, 'date groups for channel:', this.channelId);
             
             // Force change detection to update UI immediately
-            this.cdr.detectChanges();
+            this.cdr.markForCheck();
             
-            // Scroll to bottom after messages are loaded and UI is updated
-            setTimeout(() => {
-              this.scrollToBottom();
-            }, 50);
+            // Debounced scroll to bottom after messages are loaded
+            this.scrollDebouncer.next();
           },
           error: (error) => {
             console.error('❌ Error loading messages:', error);
@@ -1460,26 +1479,26 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
    * Wird aufgerufen, wenn die Komponente zerstört wird
    */
   ngOnDestroy() {
-    console.log('🧹 ChatAreaComponent ngOnDestroy - cleaning up subscriptions');
+    // Emit destroy signal to complete all subscriptions
+    this.destroy$.next();
+    this.destroy$.complete();
     
-    // Unsubscribe from message subscription to prevent memory leaks
+    // Clean up message subscription
     if (this.messageSubscription) {
-      try {
-        this.messageSubscription.unsubscribe();
-        console.log('✅ Message subscription unsubscribed');
-      } catch (error) {
-        console.error('❌ Error unsubscribing from messages:', error);
-      }
+      this.messageSubscription.unsubscribe();
       this.messageSubscription = null;
     }
     
-    // Event-Listener entfernen
-    try {
-      document.removeEventListener('click', this.closeMoreOptions);
-      console.log('✅ Event listener removed');
-    } catch (error) {
-      console.error('❌ Error removing event listener:', error);
+    // Clear optimized intervals
+    this.resourceOptimizer.clearOptimizedInterval('chat-date-check');
+    
+    // Clear any remaining intervals
+    if (this.dateCheckInterval) {
+      clearInterval(this.dateCheckInterval);
+      this.dateCheckInterval = null;
     }
+    
+    console.log('🧹 ChatAreaComponent destroyed - all subscriptions cleaned up');
   }
 
   getThreadCount(messageId: string): number {

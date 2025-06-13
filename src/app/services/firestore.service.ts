@@ -22,7 +22,7 @@ import {
   deleteDoc
 } from '@angular/fire/firestore';
 import { User } from '../models/user.class';
-import { map, Observable, from, of, forkJoin, combineLatest, switchMap } from 'rxjs';
+import { map, Observable, from, of, forkJoin, combineLatest, switchMap, shareReplay, distinctUntilChanged, debounceTime } from 'rxjs';
 import { Auth } from '@angular/fire/auth';
 
 
@@ -107,157 +107,195 @@ interface FirestoreDirectMessage {
   providedIn: 'root',
 })
 export class FirestoreService {
+  // Cache for frequently accessed data
+  private userCache = new Map<string, { data: User, timestamp: number }>();
+  private channelCache = new Map<string, { data: any, timestamp: number }>();
+  private messageCache = new Map<string, { data: any[], timestamp: number }>();
+  private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+  // Shared observables to prevent multiple subscriptions
+  private allUsers$: Observable<User[]> | null = null;
+  private allChannels$: Observable<Channel[]> | null = null;
+
   constructor(private firestore: Firestore, private auth: Auth) {}
 
-
+  // Optimized user queries with caching
   getUserChannels(uid: string): Observable<any[]> {
     const channelsRef = collection(this.firestore, 'channels');
     const q = query(channelsRef, where('members', 'array-contains', uid));
-    return collectionData(q, { idField: 'id' }) as Observable<any[]>;
+    
+    return collectionData(q, { idField: 'id' }).pipe(
+      distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)),
+      shareReplay(1)
+    ) as Observable<any[]>;
   }
 
-getUserDirectMessages(): Observable<DirectMessage[]> {
-  const userId = this.auth.currentUser?.uid;
-  if (!userId) {
-    return of([]);
-  }
+  // Optimized direct messages with improved caching
+  getUserDirectMessages(): Observable<DirectMessage[]> {
+    const userId = this.auth.currentUser?.uid;
+    if (!userId) {
+      return of([]);
+    }
 
-  // Get user's direct messages from Firestore
-  const dmRef = collection(this.firestore, 'directMessages');
-  const q = query(dmRef, where('users', 'array-contains', userId));
+    // Check cache first
+    const cacheKey = `dm_${userId}`;
+    const cached = this.messageCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
+      return of(cached.data as DirectMessage[]);
+    }
 
-  return collectionData(q, { idField: 'id' }).pipe(
-    switchMap(async (dms: any[]) => {
-      // For each DM, get the other user's details
-      const dmPromises = dms.map(async (dm: FirestoreDirectMessage & { id: string }) => {
-        const otherUserId = dm['users'].find((id: string) => id !== userId);
-        if (!otherUserId) return null;
+    const dmRef = collection(this.firestore, 'directMessages');
+    const q = query(dmRef, where('users', 'array-contains', userId));
 
-        // Get user data from contacts collection first
-        const contactDoc = await getDoc(doc(this.firestore, 'contacts', otherUserId));
-        let userData;
-        
-        if (contactDoc.exists()) {
-          userData = contactDoc.data();
-          const contactName = userData['name'] || 'Unbekannter Kontakt';
+    return collectionData(q, { idField: 'id' }).pipe(
+      debounceTime(100), // Prevent rapid-fire queries
+      distinctUntilChanged(),
+      switchMap(async (dms: any[]) => {
+        const dmPromises = dms.map(async (dm: FirestoreDirectMessage & { id: string }) => {
+          const otherUserId = dm['users'].find((id: string) => id !== userId);
+          if (!otherUserId) return null;
+
+          // Check user cache first
+          const userCacheKey = `user_${otherUserId}`;
+          const cachedUser = this.userCache.get(userCacheKey);
+          
+          if (cachedUser && Date.now() - cachedUser.timestamp < this.CACHE_DURATION) {
+            return this.createDirectMessageFromUserData(cachedUser.data, otherUserId, dm.unread || 0);
+          }
+
+          // Get user data from contacts collection first
+          const contactDoc = await getDoc(doc(this.firestore, 'contacts', otherUserId));
+          let userData;
+          
+          if (contactDoc.exists()) {
+            userData = contactDoc.data();
+            // Cache the user data
+            this.userCache.set(userCacheKey, { data: userData as User, timestamp: Date.now() });
+            
+            const directMessage: DirectMessage = {
+              id: otherUserId,
+              name: userData['name'] || 'Unbekannter Kontakt',
+              avatar: userData['avatar'] || 'assets/icons/avatars/default.svg',
+              online: userData['online'] || false,
+              unread: dm.unread || 0,
+              email: userData['email'],
+              title: userData['title'],
+              department: userData['department']
+            };
+            return directMessage;
+          }
+
+          // Fallback to users collection if not found in contacts
+          const userDoc = await getDoc(doc(this.firestore, 'users', otherUserId));
+          if (!userDoc.exists()) return null;
+
+          userData = userDoc.data();
+          // Cache the user data
+          this.userCache.set(userCacheKey, { data: userData as User, timestamp: Date.now() });
+          
+          const firstName = userData?.['firstName'] || '';
+          const lastName = userData?.['lastName'] || '';
+          const fullName = firstName && lastName ? `${firstName} ${lastName}` : firstName || lastName || 'Unbekannter Benutzer';
+          
           const directMessage: DirectMessage = {
             id: otherUserId,
-            name: contactName,
-            avatar: userData['avatar'] || 'assets/icons/avatars/default.svg',
-            online: userData['online'] || false,
+            name: fullName,
+            avatar: userData?.['avatar'] || 'assets/icons/avatars/default.svg',
+            online: userData?.['isActive'] || false,
             unread: dm.unread || 0,
-            email: userData['email'],
-            title: userData['title'],
-            department: userData['department']
+            email: userData?.['email'],
+            title: userData?.['title'],
+            department: userData?.['department']
           };
           return directMessage;
-        }
+        });
 
-        // Fallback to users collection if not found in contacts
-        const userDoc = await getDoc(doc(this.firestore, 'users', otherUserId));
-        if (!userDoc.exists()) return null;
-
-        userData = userDoc.data();
-        const firstName = userData?.['firstName'] || '';
-        const lastName = userData?.['lastName'] || '';
-        const fullName = firstName && lastName ? `${firstName} ${lastName}` : firstName || lastName || 'Unbekannter Benutzer';
+        const resolvedDMs = await Promise.all(dmPromises);
+        const filteredDMs = resolvedDMs.filter((dm): dm is DirectMessage => dm !== null);
         
-        const directMessage: DirectMessage = {
-          id: otherUserId,
-          name: fullName,
-          avatar: userData?.['avatar'] || 'assets/icons/avatars/default.svg',
-          online: userData?.['isActive'] || false,
-          unread: dm.unread || 0,
-          email: userData?.['email'],
-          title: userData?.['title'],
-          department: userData?.['department']
-        };
-        return directMessage;
-      });
-
-      const resolvedDMs = await Promise.all(dmPromises);
-      return resolvedDMs.filter((dm): dm is DirectMessage => dm !== null);
-    }),
-    map(dms => dms as DirectMessage[])
-  );
-}
-
-async createDirectMessage(userId: string, otherUserId: string): Promise<string> {
-  if (!userId || !otherUserId) return '';
-
-  const dmRef = collection(this.firestore, 'directMessages');
-  const q = query(
-    dmRef,
-    where('users', 'array-contains', userId)
-  );
-
-  const querySnapshot = await getDocs(q);
-  const existingDM = querySnapshot.docs.find(doc => {
-    const data = doc.data();
-    return data['users'].includes(otherUserId);
-  });
-
-  if (existingDM) {
-    return existingDM.id;
+        // Cache the result
+        this.messageCache.set(cacheKey, { data: filteredDMs, timestamp: Date.now() });
+        
+        return filteredDMs;
+      }),
+      shareReplay(1)
+    );
   }
 
-  // Create new DM if it doesn't exist
-  const docRef = await addDoc(dmRef, {
-    users: [userId, otherUserId],
-    createdAt: serverTimestamp(),
-    lastMessage: null,
-    unread: 0
-  });
+  private createDirectMessageFromUserData(userData: any, userId: string, unread: number): DirectMessage {
+    return {
+      id: userId,
+      name: userData.name || `${userData.firstName || ''} ${userData.lastName || ''}`.trim() || 'Unbekannter Benutzer',
+      avatar: userData.avatar || 'assets/icons/avatars/default.svg',
+      online: userData.online || userData.isActive || false,
+      unread: unread,
+      email: userData.email,
+      title: userData.title,
+      department: userData.department
+    };
+  }
 
-  return docRef.id;
-}
+  // Optimized message queries with better performance
+  getDirectMessages(dmId: string): Observable<Message[]> {
+    const messagesRef = collection(this.firestore, 'messages');
+    const q = query(
+      messagesRef, 
+      where('channelId', '==', `dm_${dmId}`),
+      orderBy('timestamp', 'desc'),
+      limit(50) // Reduced from 100 for better performance
+    );
 
-getDirectMessages(dmId: string): Observable<Message[]> {
-  const messagesRef = collection(this.firestore, 'messages');
-  const q = query(
-    messagesRef, 
-    where('channelId', '==', `dm_${dmId}`),
-    orderBy('timestamp', 'desc'),
-    limit(100)
-  );
+    return collectionData(q, { idField: 'id' }).pipe(
+      distinctUntilChanged((prev, curr) => prev.length === curr.length),
+      map(messages => messages.map((msg: any) => ({
+        id: msg.id,
+        text: msg.text || '',
+        userId: msg.userId || '',
+        userName: msg.userName || 'Unbekannter Benutzer',
+        userAvatar: msg.userAvatar || '',
+        channelId: msg.channelId,
+        timestamp: msg.timestamp ? (msg.timestamp as Timestamp).toDate() : new Date(),
+        reactions: msg.reactions || [],
+        threadId: msg.threadId || '',
+        isThreadMessage: msg.isThreadMessage || false,
+        isDeleted: msg.isDeleted || false,
+        isEdited: msg.isEdited || false
+      }))),
+      shareReplay(1)
+    );
+  }
 
-  return collectionData(q, { idField: 'id' }).pipe(
-    map(messages => messages.map((msg: any) => ({
-      id: msg.id,
-      text: msg.text || '',
-      userId: msg.userId || '',
-      userName: msg.userName || 'Unbekannter Benutzer',
-      userAvatar: msg.userAvatar || '',
-      channelId: msg.channelId,
-      timestamp: msg.timestamp ? (msg.timestamp as Timestamp).toDate() : new Date(),
-      reactions: msg.reactions || [],
-      threadId: msg.threadId || '',
-      isThreadMessage: msg.isThreadMessage || false,
-      isDeleted: msg.isDeleted || false,
-      isEdited: msg.isEdited || false
-    })))
-  );
-}
+  // Optimized channel messages
+  getChannelMessages(channelId: string): Observable<Message[]> {
+    const cacheKey = `channel_messages_${channelId}`;
+    
+    const messagesRef = collection(this.firestore, 'messages');
+    const q = query(
+      messagesRef,
+      where('channelId', '==', channelId),
+      orderBy('timestamp', 'desc'),
+      limit(50) // Reduced from 100 for better performance
+    );
 
-async sendDirectMessage(dmId: string, message: any): Promise<void> {
-  const messagesRef = collection(this.firestore, 'messages');
-  const dmRef = doc(this.firestore, 'directMessages', dmId);
-
-  // Add the message
-  await addDoc(messagesRef, {
-    ...message,
-    channelId: `dm_${dmId}`,
-    timestamp: serverTimestamp()
-  });
-
-  // Update the DM's last message
-  await updateDoc(dmRef, {
-    lastMessage: {
-      text: message.text,
-      timestamp: serverTimestamp()
-    }
-  });
-}
+    return collectionData(q, { idField: 'id' }).pipe(
+      distinctUntilChanged((prev, curr) => prev.length === curr.length),
+      map(messages => messages.map((msg: any) => ({
+        id: msg.id,
+        text: msg.text || '',
+        userId: msg.userId || '',
+        userName: msg.userName || 'Unbekannter Benutzer',
+        userAvatar: msg.userAvatar || 'assets/icons/avatars/default.svg',
+        channelId: msg.channelId,
+        timestamp: msg.timestamp ? (msg.timestamp as Timestamp).toDate() : new Date(),
+        reactions: msg.reactions || [],
+        threadId: msg.threadId || '',
+        isThreadMessage: msg.isThreadMessage || false,
+        isDeleted: msg.isDeleted || false,
+        isEdited: msg.isEdited || false
+      }))),
+      shareReplay(1)
+    );
+  }
 
   /**
    * Creates a new user with the specified ID in the "users" collection.
@@ -302,15 +340,17 @@ async sendDirectMessage(dmId: string, message: any): Promise<void> {
 
   /**
    * Returns an observable stream of users from the Firestore "users" collection.
-   *
-   * @returns An observable of the user list.
+   * Uses caching to prevent multiple subscriptions.
    */
   getAllUsers(): Observable<User[]> {
-    const usersRef = collection(
-      this.firestore,
-      'users'
-    ) as CollectionReference<User>;
-    return collectionData(usersRef, { idField: 'userId' });
+    if (!this.allUsers$) {
+      const usersRef = collection(this.firestore, 'users') as CollectionReference<User>;
+      this.allUsers$ = collectionData(usersRef, { idField: 'userId' }).pipe(
+        distinctUntilChanged((prev, curr) => prev.length === curr.length),
+        shareReplay(1)
+      );
+    }
+    return this.allUsers$;
   }
 
   /**
@@ -367,17 +407,23 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
   }
 }
 
+  // Optimized channel loading
   getAllChannels(): Observable<Channel[]> {
-    const channelsRef = collection(this.firestore, 'channels');
-    return collectionData(channelsRef, { idField: 'id' }).pipe(
-      map(channels => channels.map(channel => ({
-        id: channel['id'],
-        name: channel['channelName'],
-        description: channel['channelDescription'] || '',
-        members: channel['members'] || [],
-        unread: 0 // oder aus DB, falls vorhanden
-      })))
-    );
+    if (!this.allChannels$) {
+      const channelsRef = collection(this.firestore, 'channels');
+      this.allChannels$ = collectionData(channelsRef, { idField: 'id' }).pipe(
+        distinctUntilChanged(),
+        map(channels => channels.map(channel => ({
+          id: channel['id'],
+          name: channel['channelName'],
+          description: channel['channelDescription'] || '',
+          members: channel['members'] || [],
+          unread: 0
+        }))),
+        shareReplay(1)
+      );
+    }
+    return this.allChannels$;
   }
   
   // Neue Methode: Ruft alle Channels mit Statistiken ab
@@ -555,38 +601,6 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
       console.error('Error adding people to channel:', error);
       throw error;
     }
-  }
-
-  /**
-   * Holt alle Nachrichten für einen bestimmten Channel
-   * @param channelId Die ID des Channels
-   * @returns Observable mit einem Array von Message-Objekten
-   */
-  getChannelMessages(channelId: string): Observable<Message[]> {
-    const messagesRef = collection(this.firestore, 'messages');
-    const q = query(
-      messagesRef,
-      where('channelId', '==', channelId),
-      orderBy('timestamp', 'desc'),
-      limit(100)
-    );
-
-    return collectionData(q, { idField: 'id' }).pipe(
-      map(messages => messages.map((msg: any) => ({
-        id: msg.id,
-        text: msg.text || '',
-        userId: msg.userId || '',
-        userName: msg.userName || 'Unbekannter Benutzer',
-        userAvatar: msg.userAvatar || 'assets/icons/avatars/default.svg',
-        channelId: msg.channelId,
-        timestamp: msg.timestamp ? (msg.timestamp as Timestamp).toDate() : new Date(),
-        reactions: msg.reactions || [],
-        threadId: msg.threadId || '',
-        isThreadMessage: msg.isThreadMessage || false,
-        isDeleted: msg.isDeleted || false,
-        isEdited: msg.isEdited || false
-      })))
-    );
   }
 
   /**
@@ -1011,6 +1025,65 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
     } catch (error) {
       console.error('❌ Error debugging messages:', error);
     }
+  }
+
+  // Clear cache when needed
+  clearCache() {
+    this.userCache.clear();
+    this.channelCache.clear();
+    this.messageCache.clear();
+    this.allUsers$ = null;
+    this.allChannels$ = null;
+  }
+
+  async createDirectMessage(userId: string, otherUserId: string): Promise<string> {
+    if (!userId || !otherUserId) return '';
+
+    const dmRef = collection(this.firestore, 'directMessages');
+    const q = query(
+      dmRef,
+      where('users', 'array-contains', userId)
+    );
+
+    const querySnapshot = await getDocs(q);
+    const existingDM = querySnapshot.docs.find(doc => {
+      const data = doc.data();
+      return data['users'].includes(otherUserId);
+    });
+
+    if (existingDM) {
+      return existingDM.id;
+    }
+
+    // Create new DM if it doesn't exist
+    const docRef = await addDoc(dmRef, {
+      users: [userId, otherUserId],
+      createdAt: serverTimestamp(),
+      lastMessage: null,
+      unread: 0
+    });
+
+    return docRef.id;
+  }
+
+  async sendDirectMessage(dmId: string, message: any): Promise<void> {
+    const messagesRef = collection(this.firestore, 'messages');
+    const dmRef = doc(this.firestore, 'directMessages', dmId);
+
+    // Add the message
+    await addDoc(messagesRef, {
+      ...message,
+      channelId: `dm_${dmId}`,
+      timestamp: serverTimestamp()
+    });
+
+    // Update the DM's last message
+    await updateDoc(dmRef, {
+      lastMessage: {
+        text: message.text,
+        timestamp: serverTimestamp()
+      }
+    });
   }
 }
 

@@ -1,5 +1,13 @@
-import { Injectable, NgZone, inject } from '@angular/core';
+import { Injectable, NgZone, inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { environment } from '../../environments/environment';
+
+interface PerformanceMetrics {
+  memoryUsage: number;
+  cpuUsage: number;
+  networkActivity: number;
+  lastUpdate: number;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -8,9 +16,32 @@ export class ResourceOptimizerService {
   private isBackgroundMode = false;
   private pollingIntervals: Map<string, any> = new Map();
   private ngZone = inject(NgZone);
+  private platformId = inject(PLATFORM_ID);
+  private isBrowser = isPlatformBrowser(this.platformId);
+  
+  // Performance monitoring
+  private performanceMetrics: PerformanceMetrics = {
+    memoryUsage: 0,
+    cpuUsage: 0,
+    networkActivity: 0,
+    lastUpdate: Date.now()
+  };
+  
+  // Battery optimization
+  private batteryManager: any = null;
+  private isLowPowerMode = false;
+  
+  // Network optimization
+  private networkConnection: any = null;
+  private isSlowConnection = false;
 
   constructor() {
-    this.setupVisibilityListener();
+    if (this.isBrowser) {
+      this.setupVisibilityListener();
+      this.setupBatteryOptimization();
+      this.setupNetworkOptimization();
+      this.setupPerformanceMonitoring();
+    }
   }
 
   /**
@@ -28,10 +59,205 @@ export class ResourceOptimizerService {
   }
 
   /**
+   * Sets up battery monitoring for additional power saving
+   */
+  private async setupBatteryOptimization(): Promise<void> {
+    if ('getBattery' in navigator) {
+      try {
+        this.batteryManager = await (navigator as any).getBattery();
+        this.updateBatteryStatus();
+        
+        this.batteryManager.addEventListener('chargingchange', () => this.updateBatteryStatus());
+        this.batteryManager.addEventListener('levelchange', () => this.updateBatteryStatus());
+      } catch (error) {
+        console.warn('Battery API not available:', error);
+      }
+    }
+  }
+
+  /**
+   * Sets up network connection monitoring
+   */
+  private setupNetworkOptimization(): void {
+    if ('connection' in navigator) {
+      this.networkConnection = (navigator as any).connection;
+      this.updateNetworkStatus();
+      
+      this.networkConnection.addEventListener('change', () => {
+        this.updateNetworkStatus();
+      });
+    }
+  }
+
+  /**
+   * Sets up performance monitoring
+   */
+  private setupPerformanceMonitoring(): void {
+    if (environment.performance.enableMetrics) {
+      this.createOptimizedInterval(
+        'performance-monitor',
+        () => this.updatePerformanceMetrics(),
+        5000, // Every 5 seconds
+        false
+      );
+    }
+  }
+
+  /**
+   * Updates battery status for power optimization
+   */
+  private updateBatteryStatus(): void {
+    if (this.batteryManager) {
+      const batteryLevel = this.batteryManager.level;
+      const isCharging = this.batteryManager.charging;
+      
+      // Enable low power mode if battery is below 20% and not charging
+      this.isLowPowerMode = batteryLevel < 0.2 && !isCharging;
+      
+      if (this.isLowPowerMode) {
+        this.enableLowPowerMode();
+      } else {
+        this.disableLowPowerMode();
+      }
+    }
+  }
+
+  /**
+   * Updates network status for connection optimization
+   */
+  private updateNetworkStatus(): void {
+    if (this.networkConnection) {
+      const effectiveType = this.networkConnection.effectiveType;
+      this.isSlowConnection = effectiveType === 'slow-2g' || effectiveType === '2g';
+      
+      if (this.isSlowConnection) {
+        this.enableSlowConnectionMode();
+      }
+    }
+  }
+
+  /**
+   * Updates performance metrics
+   */
+  private updatePerformanceMetrics(): void {
+    if ('performance' in window && 'memory' in performance) {
+      const memInfo = (performance as any).memory;
+      this.performanceMetrics = {
+        memoryUsage: memInfo.usedJSHeapSize / memInfo.totalJSHeapSize,
+        cpuUsage: this.estimateCPUUsage(),
+        networkActivity: this.getNetworkActivity(),
+        lastUpdate: Date.now()
+      };
+      
+      // Trigger optimizations if resource usage is high
+      if (this.performanceMetrics.memoryUsage > 0.8) {
+        this.triggerMemoryOptimization();
+      }
+    }
+  }
+
+  /**
+   * Estimates CPU usage based on frame timing
+   */
+  private estimateCPUUsage(): number {
+    // Simple estimation based on performance entries
+    const entries = performance.getEntriesByType('measure');
+    if (entries.length > 0) {
+      const avgDuration = entries.reduce((sum, entry) => sum + entry.duration, 0) / entries.length;
+      return Math.min(avgDuration / 16.67, 1); // Normalize to 60fps
+    }
+    return 0;
+  }
+
+  /**
+   * Gets network activity level
+   */
+  private getNetworkActivity(): number {
+    const entries = performance.getEntriesByType('resource');
+    const recentEntries = entries.filter(entry => 
+      Date.now() - entry.startTime < 5000 // Last 5 seconds
+    );
+    return Math.min(recentEntries.length / 10, 1); // Normalize
+  }
+
+  /**
+   * Enables low power mode optimizations
+   */
+  private enableLowPowerMode(): void {
+    // Reduce animation frame rate
+    if ('requestAnimationFrame' in window) {
+      const originalRAF = window.requestAnimationFrame;
+      window.requestAnimationFrame = (callback) => {
+        return originalRAF(() => {
+          setTimeout(callback, 33); // Reduce to 30fps
+        });
+      };
+    }
+    
+    // Increase interval times
+    this.pollingIntervals.forEach((intervalId, key) => {
+      if (intervalId && !key.includes('critical')) {
+        clearInterval(intervalId);
+        const callback = this.pollingIntervals.get(`${key}_callback`);
+        if (callback) {
+          const newInterval = setInterval(callback, 10000); // 10 second intervals
+          this.pollingIntervals.set(key, newInterval);
+        }
+      }
+    });
+  }
+
+  /**
+   * Disables low power mode optimizations
+   */
+  private disableLowPowerMode(): void {
+    // Restore normal operations
+    this.restoreResourceUsage();
+  }
+
+  /**
+   * Enables optimizations for slow connections
+   */
+  private enableSlowConnectionMode(): void {
+    // Reduce data usage, increase caching
+    console.log('Slow connection detected - enabling data saving mode');
+  }
+
+  /**
+   * Triggers memory optimization
+   */
+  private triggerMemoryOptimization(): void {
+    // Force garbage collection if available
+    if ('gc' in window) {
+      (window as any).gc();
+    }
+    
+    // Clear old cache entries
+    this.clearOldCacheEntries();
+  }
+
+  /**
+   * Clears old cache entries
+   */
+  private clearOldCacheEntries(): void {
+    const cacheKeys = ['directMessages', 'channels', 'messages'];
+    cacheKeys.forEach(key => {
+      const cached = localStorage.getItem(`${key}_timestamp`);
+      if (cached) {
+        const timestamp = parseInt(cached);
+        if (Date.now() - timestamp > 30 * 60 * 1000) { // 30 minutes
+          localStorage.removeItem(key);
+          localStorage.removeItem(`${key}_timestamp`);
+        }
+      }
+    });
+  }
+
+  /**
    * Adjusts resource usage based on application visibility
    */
   private adjustResourceUsage(): void {
-    if (this.isBackgroundMode) {
+    if (this.isBackgroundMode || this.isLowPowerMode) {
       this.reduceResourceUsage();
     } else {
       this.restoreResourceUsage();
@@ -39,12 +265,12 @@ export class ResourceOptimizerService {
   }
 
   /**
-   * Reduces resource usage when app is in background
+   * Reduces resource usage when app is in background or low power mode
    */
   private reduceResourceUsage(): void {
     // Pause or slow down non-critical polling/intervals
     this.pollingIntervals.forEach((intervalId, key) => {
-      if (!key.includes('critical')) {
+      if (!key.includes('critical') && intervalId) {
         clearInterval(intervalId);
         this.pollingIntervals.set(key, null);
       }
@@ -56,7 +282,18 @@ export class ResourceOptimizerService {
    */
   private restoreResourceUsage(): void {
     // Restore polling intervals that were paused
-    // Implementation depends on specific use cases
+    this.pollingIntervals.forEach((intervalId, key) => {
+      if (!intervalId && !key.includes('critical')) {
+        const callback = this.pollingIntervals.get(`${key}_callback`);
+        if (callback) {
+          const interval = this.pollingIntervals.get(`${key}_interval`) || 5000;
+          const newIntervalId = setInterval(() => {
+            this.ngZone.run(() => callback());
+          }, interval);
+          this.pollingIntervals.set(key, newIntervalId);
+        }
+      }
+    });
   }
 
   /**
@@ -70,19 +307,35 @@ export class ResourceOptimizerService {
     // Clear any existing interval with this name
     this.clearOptimizedInterval(name);
     
+    // Store callback and interval for restoration
+    this.pollingIntervals.set(`${name}_callback`, callback);
+    this.pollingIntervals.set(`${name}_interval`, interval);
+    
     // Mark critical intervals
     const key = isCritical ? `critical_${name}` : name;
     
-    // Don't start non-critical intervals if already in background
-    if (this.isBackgroundMode && !isCritical) {
+    // Don't start non-critical intervals if already in background or low power mode
+    if ((this.isBackgroundMode || this.isLowPowerMode) && !isCritical) {
       this.pollingIntervals.set(key, null);
       return;
     }
     
-    // Create interval with adjusted timing based on priority
+    // Adjust interval based on mode
+    let adjustedInterval = interval;
+    if (this.isBackgroundMode && !isCritical) {
+      adjustedInterval *= 3;
+    }
+    if (this.isLowPowerMode && !isCritical) {
+      adjustedInterval *= 2;
+    }
+    if (this.isSlowConnection && !isCritical) {
+      adjustedInterval *= 1.5;
+    }
+    
+    // Create interval
     const intervalId = setInterval(() => {
       this.ngZone.run(() => callback());
-    }, this.isBackgroundMode ? interval * 3 : interval);
+    }, adjustedInterval);
     
     this.pollingIntervals.set(key, intervalId);
   }
@@ -100,36 +353,67 @@ export class ResourceOptimizerService {
         this.pollingIntervals.delete(key);
       }
     });
+    
+    // Clear stored callback and interval
+    this.pollingIntervals.delete(`${name}_callback`);
+    this.pollingIntervals.delete(`${name}_interval`);
   }
 
   /**
    * Determines if detailed logging should be enabled
    */
   shouldEnableDetailedLogging(): boolean {
-    return environment.enableLogging;
+    return environment.enableLogging && !this.isLowPowerMode;
   }
 
   /**
-   * Gets the appropriate cache expiration time based on environment
+   * Gets the appropriate cache expiration time based on environment and conditions
    */
   getCacheExpirationTime(resourceType: 'data' | 'image' | 'config'): number {
-    // Return cache times in milliseconds
+    let baseTime: number;
+    
     if (environment.cacheStrategy === 'aggressive') {
-      // Longer cache times for production
       const cacheTimes = {
         data: 12 * 60 * 60 * 1000, // 12 hours
         image: 7 * 24 * 60 * 60 * 1000, // 7 days
         config: 24 * 60 * 60 * 1000 // 24 hours
       };
-      return cacheTimes[resourceType];
+      baseTime = cacheTimes[resourceType];
     } else {
-      // Shorter cache times for development
       const cacheTimes = {
         data: 5 * 60 * 1000, // 5 minutes
         image: 60 * 60 * 1000, // 1 hour
         config: 30 * 60 * 1000 // 30 minutes
       };
-      return cacheTimes[resourceType];
+      baseTime = cacheTimes[resourceType];
     }
+    
+    // Extend cache time for slow connections or low power mode
+    if (this.isSlowConnection || this.isLowPowerMode) {
+      baseTime *= 2;
+    }
+    
+    return baseTime;
+  }
+
+  /**
+   * Gets current performance metrics
+   */
+  getPerformanceMetrics(): PerformanceMetrics {
+    return { ...this.performanceMetrics };
+  }
+
+  /**
+   * Checks if device is in low power mode
+   */
+  isInLowPowerMode(): boolean {
+    return this.isLowPowerMode;
+  }
+
+  /**
+   * Checks if connection is slow
+   */
+  hasSlowConnection(): boolean {
+    return this.isSlowConnection;
   }
 } 
