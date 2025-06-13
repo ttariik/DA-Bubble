@@ -225,7 +225,29 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
               console.log('📥 Received messages:', messages.length, 'messages');
               
               // Reverse since Firestore returns in desc order, but we want oldest first
-              this.messages = messages.reverse();
+              const firestoreMessages = messages.reverse();
+              
+              // Keep any optimistic messages (temporary ones with temp_ IDs)
+              const optimisticMessages = this.messages.filter(m => m.id.startsWith('temp_'));
+              
+              // Merge Firestore messages with optimistic messages, avoiding duplicates
+              const mergedMessages = [...firestoreMessages];
+              
+              // Add optimistic messages that don't have corresponding Firestore messages yet
+              optimisticMessages.forEach(optMsg => {
+                const existsInFirestore = firestoreMessages.some(fsMsg => 
+                  fsMsg.text === optMsg.text && 
+                  fsMsg.userId === optMsg.userId &&
+                  Math.abs(fsMsg.timestamp.getTime() - optMsg.timestamp.getTime()) < 60000 // Within 1 minute
+                );
+                
+                if (!existsInFirestore) {
+                  mergedMessages.push(optMsg);
+                }
+              });
+              
+              // Sort by timestamp
+              this.messages = mergedMessages.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
               this.groupMessagesByDate();
               this.messageCount = this.messages.length;
               
@@ -439,6 +461,31 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
       this.messageSubscription = null;
     }
 
+    // Add optimistic UI update - show message immediately
+    const optimisticMessage: Message = {
+      id: 'temp_' + Date.now(), // Temporary ID
+      text: messageText,
+      userId: this.currentUserId,
+      userName: this.currentUserName,
+      userAvatar: this.auth.currentUser?.photoURL || 'assets/icons/avatars/default.svg',
+      channelId: this.channelId,
+      timestamp: new Date(), // Current time for immediate display
+      reactions: [],
+      isNew: true // Mark as new for styling
+    };
+
+    // Add to messages array immediately for instant display
+    this.messages.push(optimisticMessage);
+    this.groupMessagesByDate();
+    this.messageCount = this.messages.length;
+    
+    console.log('🎯 Added optimistic message for instant display');
+    
+    // Scroll to bottom immediately
+    setTimeout(() => {
+      this.scrollToBottom();
+    }, 50);
+
     try {
       console.log('🚀 Sending message to Firestore:', {
         ...message,
@@ -466,6 +513,15 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
           try {
             const docRef = await addDoc(messagesRef, message);
             console.log('✅ Channel-Nachricht erfolgreich gesendet mit ID:', docRef.id);
+            
+            // Update the optimistic message with the real ID
+            const optimisticIndex = this.messages.findIndex(m => m.id === optimisticMessage.id);
+            if (optimisticIndex !== -1) {
+              this.messages[optimisticIndex].id = docRef.id;
+              this.messages[optimisticIndex].isNew = false;
+              console.log('🔄 Updated optimistic message with real Firestore ID');
+            }
+            
             break;
           } catch (retryError: any) {
             retryCount++;
@@ -480,11 +536,6 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
           }
         }
       }
-
-      // Scroll to bottom after a short delay
-      setTimeout(() => {
-        this.scrollToBottom();
-      }, 300);
       
     } catch (error: any) {
       console.error('❌ Error sending message:', error);
@@ -493,6 +544,15 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
         message: error.message,
         name: error.name
       });
+      
+      // Remove the optimistic message since sending failed
+      const optimisticIndex = this.messages.findIndex(m => m.id === optimisticMessage.id);
+      if (optimisticIndex !== -1) {
+        this.messages.splice(optimisticIndex, 1);
+        this.groupMessagesByDate();
+        this.messageCount = this.messages.length;
+        console.log('🗑️ Removed optimistic message due to send failure');
+      }
       
       // Restore the message input if sending failed
       this.messageInput = messageText;
