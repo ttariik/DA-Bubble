@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { FirestoreService, Message as FirestoreMessage } from '../../../services/firestore.service';
 import { AddPeopleModalComponent } from '../add-people-modal/add-people-modal.component';
 import { Auth } from '@angular/fire/auth';
-import { Firestore, collection, addDoc, serverTimestamp, query, getDocs, writeBatch, doc, updateDoc } from '@angular/fire/firestore';
+import { Firestore, collection, addDoc, serverTimestamp, doc, updateDoc } from '@angular/fire/firestore';
 import { Dialog, DialogModule } from '@angular/cdk/dialog';
 import { DeleteChannelMessagesModalComponent } from '../delete-channel-messages-modal/delete-channel-messages-modal.component';
 
@@ -1243,30 +1243,69 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
 
     dialogRef.closed.subscribe(async (result) => {
       if (result === true) {
-        try {
-          // Delete messages in Firestore
-          const messagesRef = collection(this.firestore, 'channels', this.channelId, 'messages');
-          const q = query(messagesRef);
-          const querySnapshot = await getDocs(q);
-          
-          const batch = writeBatch(this.firestore);
-          querySnapshot.forEach((doc) => {
-            batch.delete(doc.ref);
-          });
-          
-          await batch.commit();
+        console.log('🗑️ Starting to delete all messages for channel:', this.channelId);
+        
+        // Close more options dropdown
+        this.showMoreOptions = false;
+        
+        // Optimistically clear the UI immediately
+        this.messages = [];
+        this.messageGroups = [];
+        this.messageCount = 0;
+        console.log('🎯 UI cleared optimistically');
 
-          // Update local state
-          this.messages = [];
-          this.messageGroups = [];
-          this.allMessages = this.allMessages.filter(msg => msg.channelId !== this.channelId);
-          this.saveMessagesToStorage();
+        try {
+          // Pause message subscription during deletion to prevent conflicts
+          if (this.messageSubscription) {
+            console.log('⏸️ Temporarily pausing message subscription during deletion');
+            this.messageSubscription.unsubscribe();
+            this.messageSubscription = null;
+          }
+
+          // Use the Firestore service method for proper deletion
+          await this.firestoreService.deleteAllChannelMessages(this.channelId);
           
-          console.log('Alle Nachrichten wurden erfolgreich gelöscht');
+          console.log('✅ All messages successfully deleted from Firestore');
+          
+          // Update local storage
+          this.allMessages = this.allMessages.filter(msg => msg.channelId !== this.channelId);
+          
+          // Also clear localStorage completely for this channel
+          const savedMessages = localStorage.getItem('allChatMessages');
+          if (savedMessages) {
+            try {
+              const parsedMessages = JSON.parse(savedMessages);
+              const filteredMessages = parsedMessages.filter((msg: any) => msg.channelId !== this.channelId);
+              localStorage.setItem('allChatMessages', JSON.stringify(filteredMessages));
+              console.log('🧹 Cleared messages from localStorage');
+            } catch (e) {
+              console.error('Error updating localStorage:', e);
+              localStorage.removeItem('allChatMessages'); // Clear completely if parsing fails
+            }
+          }
+          
+          // Show success message
+          console.log('🎉 All messages deleted successfully');
+          
         } catch (error) {
-          console.error('Error deleting messages:', error);
-          alert('Beim Löschen der Nachrichten ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.');
-        }
+          console.error('❌ Error deleting messages:', error);
+          
+          // On error, try to reload messages to show current state
+          console.log('🔄 Reloading messages due to deletion error');
+          setTimeout(() => {
+            this.loadMessages();
+          }, 1000);
+          
+          alert('Beim Löschen der Nachrichten ist ein Fehler aufgetreten. Die Ansicht wird aktualisiert.');
+                  } finally {
+            // Restore message subscription after a delay
+            setTimeout(() => {
+              if (!this.messageSubscription && this.channelId) {
+                console.log('▶️ Restoring message subscription after deletion');
+                this.loadMessages();
+              }
+            }, 1500);
+          }
       }
     });
   }
@@ -1276,13 +1315,19 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
    */
   toggleMoreOptions(event: MouseEvent) {
     event.stopPropagation(); // Verhindert, dass das Event zum Document bubbled
+    console.log('🔄 Toggling more options, current state:', this.showMoreOptions);
+    
     this.showMoreOptions = !this.showMoreOptions;
+    console.log('🔄 New more options state:', this.showMoreOptions);
 
     // Event-Listener hinzufügen, um das Dropdown zu schließen, wenn außerhalb geklickt wird
     if (this.showMoreOptions) {
       setTimeout(() => {
         document.addEventListener('click', this.closeMoreOptions);
       });
+    } else {
+      // Wenn wir das Dropdown schließen, entfernen wir den Event-Listener
+      document.removeEventListener('click', this.closeMoreOptions);
     }
   }
 
@@ -1290,6 +1335,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
    * Schließt das Mehr-Optionen-Dropdown
    */
   closeMoreOptions = () => {
+    console.log('🔒 Closing more options dropdown');
     this.showMoreOptions = false;
     document.removeEventListener('click', this.closeMoreOptions);
   }
