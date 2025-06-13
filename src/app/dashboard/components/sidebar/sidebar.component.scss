@@ -310,58 +310,132 @@
 }
 
 .channel-list, .dm-list {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  width: 100%;
-  padding: 0 16px;
-  gap: 10px;
-}
-
-.channel-list {
+  margin-top: 8px;
   max-height: 300px;
   overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 8px;
   
   &::-webkit-scrollbar {
-    width: 4px;
+    width: 6px;
   }
   
   &::-webkit-scrollbar-track {
-    background: transparent;
+    background: #f1f1f1;
+    border-radius: 3px;
   }
   
   &::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 2px;
+    background: #888;
+    border-radius: 3px;
+    
+    &:hover {
+      background: #666;
+    }
   }
   
-  &::-webkit-scrollbar-thumb:hover {
-    background: #a1a1a1;
+  scrollbar-width: thin;
+  scrollbar-color: #888 #f1f1f1;
+}
+
+.channel-list {
+  .channel-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 4px;
+    
+    &:hover {
+      background-color: rgba(68, 77, 242, 0.1);
+    }
+    
+    &.active {
+      background-color: #EAF2FF;
+      
+      .channel-name {
+        font-weight: 600;
+        color: #444df2;
+        font-family: "Nunito";
+      }
+      
+      .channel-icon {
+        color: #444df2;
+      }
+    }
+    
+    .channel-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      
+      .channel-icon {
+        color: #c7c8cc;
+        font-size: 16px;
+        font-weight: bold;
+      }
+      
+      .channel-name {
+        font-size: 14px;
+        color: #333;
+        font-weight: 500;
+      }
+    }
+    
+    .channel-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .unread-badge {
+        background-color: #444df2;
+        color: white;
+        font-size: 12px;
+        padding: 2px 6px;
+        border-radius: 10px;
+        min-width: 20px;
+        text-align: center;
+      }
+    }
   }
 }
 
 .dm-list {
-  max-height: 300px;
-  overflow-y: auto;
-  
-  &::-webkit-scrollbar {
-    width: 4px;
-  }
-  
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  
-  &::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 2px;
-  }
-  
-  &::-webkit-scrollbar-thumb:hover {
-    background: #a1a1a1;
-  }
-
   .dm-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 4px;
+    
+    &:hover {
+      background-color: rgba(68, 77, 242, 0.1);
+      
+      .dm-actions {
+        .delete-dm-button {
+          opacity: 1;
+          visibility: visible;
+          transform: translateX(0);
+        }
+      }
+    }
+    
+    &.active {
+      background-color: #EAF2FF;
+      
+      .user-name {
+        font-weight: 600;
+        color: #444df2;
+        font-family: "Nunito";
+      }
+    }
+    
     .user-info {
       display: flex;
       align-items: center;
@@ -451,60 +525,20 @@
   }
 }
 
-.channel-item, .dm-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-  padding: 15px 20px;
-  width: 100%;
-  border-radius: 30px;
-  height: 32px;
 
-  
-  &:hover {
-    background-color: rgba(0, 0, 0, 0.05);
-    
-    // Show delete button on DM hover
-    &.dm-item {
-      .dm-actions {
-        .delete-dm-button {
-          opacity: 1;
-          visibility: visible;
-          transform: translateX(0);
-        }
-      }
-    }
-  }
-  
-  &.active {
-    background-color: #EAF2FF;
-    
-    
-    .channel-name, .user-name {
-      font-weight: 600;
-      color: #444df2;
-      font-family: "Nunito";
-    }
-    
-    .channel-icon {
-      color: #444df2;
-    }
-  }
-}
 
 .add-channel-button {
   display: flex;
   align-items: center;
   cursor: pointer;
-  padding: 5px 20px;
-  width: 100%;
-  border-radius: 6px;
+  padding: 8px 12px;
+  border-radius: 8px;
   margin-top: 5px;
-  height: 32px;
+  margin-bottom: 4px;
+  transition: all 0.2s ease;
   
   &:hover {
-    background-color: rgba(0, 0, 0, 0.05);
+    background-color: rgba(68, 77, 242, 0.1);
     
     .add-channel-icon {
       transform: scale(1.125);
@@ -530,69 +564,7 @@
   transition: all 0.2s ease;
 }
 
-.channel-name, .user-name {
-  font-size: 15px;
-  color: black;
-  display: flex;
-  align-items: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  position: relative;
-}
 
-.channel-icon {
-  margin-right: 8px;
-  color: #c7c8cc;
-  font-size: 16px;
-  font-weight: bold;
-}
-
-.user-avatar {
-  position: relative;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  overflow: hidden;
-  margin-right: 10px;
-  cursor: pointer;
-  transition: transform 0.2s ease;
-  
-  &:hover {
-    transform: scale(1.1);
-  }
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  
-  .status-indicator {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background-color: #e0e0e0;
-    border: 2px solid #fff;
-    
-    &.online {
-      background-color: #00C851;
-    }
-  }
-}
-
-.unread-badge {
-  background-color: #444df2;
-  color: white;
-  border-radius: 13px;
-  padding: 1px 5px;
-  font-size: 10px;
-  font-weight: 600;
-  margin-left: auto;
-}
 
 .section-actions {
   display: flex;
