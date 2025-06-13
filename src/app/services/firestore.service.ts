@@ -139,9 +139,10 @@ getUserDirectMessages(): Observable<DirectMessage[]> {
         
         if (contactDoc.exists()) {
           userData = contactDoc.data();
+          const contactName = userData['name'] || 'Unbekannter Kontakt';
           const directMessage: DirectMessage = {
             id: otherUserId,
-            name: userData['name'],
+            name: contactName,
             avatar: userData['avatar'] || 'assets/icons/avatars/default.svg',
             online: userData['online'] || false,
             unread: dm.unread || 0,
@@ -157,9 +158,13 @@ getUserDirectMessages(): Observable<DirectMessage[]> {
         if (!userDoc.exists()) return null;
 
         userData = userDoc.data();
+        const firstName = userData?.['firstName'] || '';
+        const lastName = userData?.['lastName'] || '';
+        const fullName = firstName && lastName ? `${firstName} ${lastName}` : firstName || lastName || 'Unbekannter Benutzer';
+        
         const directMessage: DirectMessage = {
           id: otherUserId,
-          name: `${userData?.['firstName']} ${userData?.['lastName']}`,
+          name: fullName,
           avatar: userData?.['avatar'] || 'assets/icons/avatars/default.svg',
           online: userData?.['isActive'] || false,
           unread: dm.unread || 0,
@@ -542,14 +547,10 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
         members: newMembers
       });
 
-      // Create direct message connections for each new user
-      const dmPromises = userIds.map(async (userId) => {
-        await this.createDirectMessage(currentUserId, userId);
-      });
-
-      await Promise.all(dmPromises);
+      // Note: We don't automatically create direct messages when adding people to channels
+      // Direct messages should only be created when users actually want to chat directly
       
-      console.log('Successfully added people to channel and created DM connections');
+      console.log('Successfully added people to channel');
     } catch (error) {
       console.error('Error adding people to channel:', error);
       throw error;

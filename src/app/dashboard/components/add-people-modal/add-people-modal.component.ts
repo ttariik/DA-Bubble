@@ -82,18 +82,31 @@ export class AddPeopleModalComponent implements OnChanges, OnInit {
       search: ['']
     });
     
-    // Mock-Daten für Benutzer (in einem realen Fall würden diese aus Firestore kommen)
-    this.allUsers = [
-      { id: '1', name: 'Max Mustermann', avatar: 'assets/icons/avatars/user2.svg', online: true },
-      { id: '2', name: 'Sofia Müller', avatar: 'assets/icons/avatars/user1.svg', online: true },
-      { id: '3', name: 'Noah Braun', avatar: 'assets/icons/avatars/user3.svg', online: true },
-      { id: '4', name: 'Elise Roth', avatar: 'assets/icons/avatars/user6.svg', online: false },
-      { id: '5', name: 'Elias Neumann', avatar: 'assets/icons/avatars/user5.svg', online: true },
-      { id: '6', name: 'Steffen Hoffmann', avatar: 'assets/icons/avatars/user2.svg', online: false },
-      { id: '7', name: 'Laura Schmidt', avatar: 'assets/icons/avatars/user1.svg', online: true }
-    ];
-    
-    this.filteredUsers = [...this.allUsers];
+    this.loadUsersFromFirestore();
+  }
+  
+  private loadUsersFromFirestore(): void {
+    this.firestoreService.getAllUsers().subscribe(
+      users => {
+                 this.allUsers = users.map(user => ({
+           id: user.userId,
+           name: user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : 
+                 user.firstName || user.lastName || 'Unbekannter Benutzer',
+           avatar: user.avatar || 'assets/icons/avatars/default.svg',
+           online: user.isActive || false,
+           email: user.email || '',
+           title: (user as any).title || '',
+           department: (user as any).department || ''
+         }));
+        this.filteredUsers = [...this.allUsers];
+      },
+      error => {
+        console.error('Error loading users:', error);
+        // Fallback zu Mock-Daten, falls Firestore nicht verfügbar ist
+        this.allUsers = [];
+        this.filteredUsers = [];
+      }
+    );
   }
   
   ngOnInit(): void {

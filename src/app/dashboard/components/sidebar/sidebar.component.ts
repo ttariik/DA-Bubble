@@ -388,11 +388,34 @@ export class SidebarComponent implements OnInit, OnChanges {
   
   handlePeopleAdded(userIds: string[]) {
     console.log('People added to channel:', userIds);
-    // The direct messages list will automatically update through the existing subscription
-    // to the Firestore service's getUserDirectMessages() method
     this.closeAddPeopleModal();
     
-    // Refresh the direct messages list
+    // After adding people, refresh the channels list to include the new channel
+    if (this.newChannelId && this.newChannelName) {
+      // Add the new channel to the local channels array
+      const newChannel: Channel = {
+        id: this.newChannelId,
+        name: this.newChannelName,
+        description: '',
+        unread: 0
+      };
+      
+      // Check if channel already exists
+      const existingChannelIndex = this.channels.findIndex(c => c.id === this.newChannelId);
+      if (existingChannelIndex === -1) {
+        this.channels.push(newChannel);
+        this.saveChannelsToStorage();
+        
+        // Select the newly created channel
+        this.selectChannel(newChannel);
+      }
+      
+      // Reset the new channel data
+      this.newChannelId = '';
+      this.newChannelName = '';
+    }
+    
+    // Refresh the direct messages list for new DM connections
     if (this.firestoreService) {
       this.firestoreService.getUserDirectMessages().subscribe(
         (messages) => {
