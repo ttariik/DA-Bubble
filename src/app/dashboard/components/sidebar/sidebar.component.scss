@@ -198,14 +198,16 @@
     scrollbar-color: #888 #f1f1f1;
     
     .contact-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 12px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      margin-bottom: 4px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 8px;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          margin-bottom: 12px;
+          margin-top: 8px;
+          margin-left: 1.3rem;
       
       &:hover {
         background-color: rgba(68, 77, 242, 0.1);
@@ -343,11 +345,13 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 12px;
+    padding: 8px;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s ease;
-    margin-bottom: 4px;
+    margin-bottom: 12px;
+    margin-top: 8px;
+    margin-left: 1.3rem;
     
     &:hover {
       background-color: rgba(68, 77, 242, 0.1);
@@ -405,14 +409,16 @@
 
 .dm-list {
   .dm-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-bottom: 12px;
+        margin-top: 8px;
+        margin-left: 1.3rem;
     
     &:hover {
       background-color: rgba(68, 77, 242, 0.1);
@@ -528,17 +534,17 @@
 
 
 .add-channel-button {
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  padding: 8px 12px;
-  border-radius: 8px;
-  margin-top: 5px;
-  margin-bottom: 4px;
-  transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      padding: 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-top: 8px;
+      margin-left: 1.3rem;
   
   &:hover {
-    background-color: rgba(68, 77, 242, 0.1);
+
     
     .add-channel-icon {
       transform: scale(1.125);
