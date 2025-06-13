@@ -136,6 +136,16 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
       channelName: this.channelName,
       isDirect: this.isDirect
     });
+
+    // TEMP: Clear all localStorage message data to ensure clean start
+    this.clearLocalStorageMessages();
+
+    // Debug: Show all messages in database (only once during development)
+    if (this.channelId === '1' && !this.isDirect) {
+      setTimeout(() => {
+        this.firestoreService.debugAllMessages();
+      }, 2000);
+    }
     
     // Wait for authentication state to be ready
     this.auth.onAuthStateChanged((user) => {
@@ -182,25 +192,17 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
     console.log(`✅ Initialized chat for channel ${this.channelName} (ID: ${this.channelId})`);
   }
   
-  // Load all messages from localStorage
-  loadAllMessages() {
-    const savedMessages = localStorage.getItem('allChatMessages');
-    if (savedMessages) {
-      try {
-        const parsedMessages = JSON.parse(savedMessages);
-        // Convert string dates back to Date objects
-        parsedMessages.forEach((msg: any) => {
-          msg.timestamp = new Date(msg.timestamp);
-          // Ensure no messages are in editing mode after reload
-          msg.isEditing = false;
-          msg.editedContent = undefined;
-        });
-        this.allMessages = parsedMessages;
-      } catch (e) {
-        console.error('Error parsing saved messages:', e);
-      }
-    }
+  // Temporary method to clear all localStorage message data
+  private clearLocalStorageMessages() {
+    console.log('🧹 Clearing localStorage message data');
+    localStorage.removeItem('allChatMessages');
+    localStorage.removeItem('chatMessages');
+    localStorage.removeItem('messages');
+    localStorage.removeItem('channelMessages');
+    console.log('✅ localStorage message data cleared');
   }
+
+  // REMOVED: loadAllMessages() - we only use Firestore data now
 
   // Load messages for the current channel from Firestore
   loadMessages() {
@@ -230,10 +232,14 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
               // Reverse since Firestore returns in desc order, but we want oldest first
               const firestoreMessages = messages.reverse();
               
-              // Keep any optimistic messages (temporary ones with temp_ IDs)
-              const optimisticMessages = this.messages.filter(m => m.id.startsWith('temp_'));
+              // Keep only optimistic messages for THIS channel (temporary ones with temp_ IDs)
+              const optimisticMessages = this.messages.filter(m => 
+                m.id.startsWith('temp_') && m.channelId === this.channelId
+              );
               
-              // Merge Firestore messages with optimistic messages, avoiding duplicates
+              console.log('🔄 Found optimistic messages for this channel:', optimisticMessages.length);
+              
+              // Merge Firestore messages with channel-specific optimistic messages
               const mergedMessages = [...firestoreMessages];
               
               // Add optimistic messages that don't have corresponding Firestore messages yet
@@ -241,10 +247,12 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
                 const existsInFirestore = firestoreMessages.some(fsMsg => 
                   fsMsg.text === optMsg.text && 
                   fsMsg.userId === optMsg.userId &&
+                  fsMsg.channelId === optMsg.channelId &&
                   Math.abs(fsMsg.timestamp.getTime() - optMsg.timestamp.getTime()) < 60000 // Within 1 minute
                 );
                 
                 if (!existsInFirestore) {
+                  console.log('📝 Keeping optimistic message:', optMsg.text.substring(0, 30) + '...');
                   mergedMessages.push(optMsg);
                 }
               });
@@ -279,11 +287,32 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
   
   // Change to a different channel
   changeChannel(channelName: string, channelId: string) {
+    console.log('🔄 Changing channel from', this.channelId, 'to', channelId);
+    
+    // Clear all messages immediately to prevent cross-channel pollution
+    this.cleanupMessages();
+    
+    // Update channel info
     this.channelName = channelName;
     this.channelId = channelId;
     
+    // Reset any optimistic UI state
+    this.isSending = false;
+    
     // Load messages for the new channel
     this.loadMessages();
+  }
+
+  // Clean up all messages and reset UI state
+  private cleanupMessages() {
+    console.log('🧹 Cleaning up messages for channel change');
+    this.messages = [];
+    this.messageGroups = [];
+    this.messageCount = 0;
+    this.allMessages = []; // Also clear this array
+    this.editingMessage = null;
+    this.emojiPickerTargetMessage = null;
+    this.showEmojiPicker = false;
   }
   
   // Group messages by date
@@ -387,8 +416,8 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
         });
       }
       
-      // Save changes to localStorage
-      this.saveMessagesToStorage();
+      // Refresh message display
+      this.refreshMessageDisplay();
     } else {
       this.messageInput += emoji;
     }
@@ -464,23 +493,27 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
       this.messageSubscription = null;
     }
 
-    // Add optimistic UI update - show message immediately
+    // Add optimistic UI update - show message immediately ONLY for current channel
     const optimisticMessage: Message = {
-      id: 'temp_' + Date.now(), // Temporary ID
+      id: 'temp_' + Date.now() + '_' + this.channelId, // Include channelId in temp ID
       text: messageText,
       userId: this.currentUserId,
       userName: this.currentUserName,
       userAvatar: this.auth.currentUser?.photoURL || 'assets/icons/avatars/default.svg',
-      channelId: this.channelId,
+      channelId: this.channelId, // Ensure correct channelId
       timestamp: new Date(), // Current time for immediate display
       reactions: [],
       isNew: true // Mark as new for styling
     };
 
-    // Add to messages array immediately for instant display
-    this.messages.push(optimisticMessage);
-    this.groupMessagesByDate();
-    this.messageCount = this.messages.length;
+    console.log('🎯 Adding optimistic message for channel:', this.channelId, 'Message:', messageText.substring(0, 30) + '...');
+
+    // Add to messages array immediately for instant display ONLY if it's for current channel
+    if (optimisticMessage.channelId === this.channelId) {
+      this.messages.push(optimisticMessage);
+      this.groupMessagesByDate();
+      this.messageCount = this.messages.length;
+    }
     
     console.log('🎯 Added optimistic message for instant display');
     
@@ -502,11 +535,8 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
         await this.firestoreService.sendDirectMessage(dmId, message);
         console.log('✅ Direktnachricht erfolgreich gesendet');
       } else {
-        // For channel messages - use a more robust approach
+        // For channel messages - use the dedicated service method
         console.log('💬 Sending channel message to channel:', this.channelId);
-        
-        // Create a new Firestore instance to avoid conflicts
-        const messagesRef = collection(this.firestore, 'messages');
         
         // Add retry logic for internal errors
         let retryCount = 0;
@@ -514,17 +544,10 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
         
         while (retryCount < maxRetries) {
           try {
-            const docRef = await addDoc(messagesRef, message);
-            console.log('✅ Channel-Nachricht erfolgreich gesendet mit ID:', docRef.id);
+            await this.firestoreService.sendChannelMessage(this.channelId, message);
+            console.log('✅ Channel-Nachricht erfolgreich gesendet');
             
-            // Update the optimistic message with the real ID
-            const optimisticIndex = this.messages.findIndex(m => m.id === optimisticMessage.id);
-            if (optimisticIndex !== -1) {
-              this.messages[optimisticIndex].id = docRef.id;
-              this.messages[optimisticIndex].isNew = false;
-              console.log('🔄 Updated optimistic message with real Firestore ID');
-            }
-            
+            // The optimistic message will be replaced by the real one from Firestore subscription
             break;
           } catch (retryError: any) {
             retryCount++;
@@ -555,6 +578,18 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
         this.groupMessagesByDate();
         this.messageCount = this.messages.length;
         console.log('🗑️ Removed optimistic message due to send failure');
+      }
+      
+      // Also clean up any orphaned optimistic messages for wrong channels
+      const beforeCleanup = this.messages.length;
+      this.messages = this.messages.filter(m => 
+        !m.id.startsWith('temp_') || m.channelId === this.channelId
+      );
+      const afterCleanup = this.messages.length;
+      if (beforeCleanup !== afterCleanup) {
+        console.log('🧹 Cleaned up', beforeCleanup - afterCleanup, 'orphaned optimistic messages');
+        this.groupMessagesByDate();
+        this.messageCount = this.messages.length;
       }
       
       // Restore the message input if sending failed
@@ -615,8 +650,8 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
     // Emit ein Event mit der ausgewählten Nachricht
     this.threadOpened.emit(message);
     
-    // Speichere die aktualisierte Nachricht
-    this.saveMessagesToStorage();
+    // Refresh the message display
+    this.refreshMessageDisplay();
   }
   
   addReaction(message: Message) {
@@ -887,23 +922,17 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
     }
   }
   
-  // Save messages to localStorage
-  saveMessagesToStorage() {
-    // Create a copy of messages to avoid modifying the UI state
-    const messagesToSave = JSON.parse(JSON.stringify(this.allMessages));
-    
-    // Remove temporary editing states before saving
-    messagesToSave.forEach((msg: any) => {
-      delete msg.isEditing;
-      delete msg.editedContent;
-      delete msg.isNew;
-    });
-    
-    localStorage.setItem('allChatMessages', JSON.stringify(messagesToSave));
-    
-    // Update date labels and regrouping
+  // REMOVED: saveMessagesToStorage() - we only use Firestore data now
+  // Just update date labels and regrouping without localStorage
+  refreshMessageDisplay() {
     this.updateDateLabels();
     this.groupMessagesByDate();
+  }
+
+  // Temporary stub method to prevent linter errors - does nothing
+  saveMessagesToStorage() {
+    // NO-OP: We don't save to localStorage anymore, only use Firestore
+    console.log('💡 saveMessagesToStorage called but ignored - using Firestore only');
   }
   
   // Method to check if date labels need to be updated (e.g., at midnight)

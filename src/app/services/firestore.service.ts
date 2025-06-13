@@ -889,5 +889,88 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
       throw error;
     }
   }
+
+  /**
+   * Sendet eine Nachricht an einen Channel
+   * @param channelId Die ID des Channels
+   * @param message Die Nachricht, die gesendet werden soll
+   * @returns Promise<void>
+   */
+  async sendChannelMessage(channelId: string, message: any): Promise<void> {
+    try {
+      console.log('🚀 FirestoreService: Sending message to channel:', {
+        channelId,
+        messageText: message.text,
+        userId: message.userId,
+        userName: message.userName
+      });
+
+      // Validate channelId
+      if (!channelId || channelId.trim() === '') {
+        throw new Error('Channel ID is required');
+      }
+
+      // Ensure channelId is set on the message object
+      const messageWithChannelId = {
+        ...message,
+        channelId: channelId
+      };
+
+      const messagesRef = collection(this.firestore, 'messages');
+      const docRef = await addDoc(messagesRef, messageWithChannelId);
+      
+      console.log('✅ FirestoreService: Message sent successfully with ID:', docRef.id);
+      console.log('✅ FirestoreService: Message was sent to channel:', channelId);
+      
+    } catch (error) {
+      console.error('❌ FirestoreService: Error sending channel message:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Debug-Methode: Zeigt alle Nachrichten in der Datenbank mit ihren channelIds an
+   * @returns Promise<void>
+   */
+  async debugAllMessages(): Promise<void> {
+    try {
+      const messagesRef = collection(this.firestore, 'messages');
+      const querySnapshot = await getDocs(messagesRef);
+      
+      console.log('🔍 DEBUG: All messages in database:');
+      console.log('Total messages found:', querySnapshot.size);
+      
+      const channelGroups: { [key: string]: any[] } = {};
+      
+      querySnapshot.forEach(doc => {
+        const data = doc.data();
+        const channelId = data['channelId'] || 'NO_CHANNEL_ID';
+        
+        if (!channelGroups[channelId]) {
+          channelGroups[channelId] = [];
+        }
+        
+        channelGroups[channelId].push({
+          id: doc.id,
+          text: data['text']?.substring(0, 50) + '...',
+          channelId: channelId,
+          userId: data['userId'],
+          userName: data['userName'],
+          timestamp: data['timestamp']
+        });
+      });
+      
+      console.log('🔍 Messages grouped by channelId:');
+      Object.keys(channelGroups).forEach(channelId => {
+        console.log(`Channel "${channelId}": ${channelGroups[channelId].length} messages`);
+        channelGroups[channelId].forEach(msg => {
+          console.log(`  - ${msg.userName}: ${msg.text}`);
+        });
+      });
+      
+    } catch (error) {
+      console.error('❌ Error debugging messages:', error);
+    }
+  }
 }
 
