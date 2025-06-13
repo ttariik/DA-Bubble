@@ -5,8 +5,10 @@
       <div class="channel-name">
         <!-- Show hash for channels, avatar for direct messages -->
         <ng-container *ngIf="!isDirect">
-          <span class="hash-symbol">#</span>
-          <span class="clickable-channel-name" (click)="openChannelInfoModal()">{{ channelName }}</span>
+          <div class="clickable-channel-name" (click)="openChannelInfoModal()">
+            <span class="channel-text">#{{ channelName }}</span>
+            <img src="assets/svg/keyboard_arrow_down.svg" alt="Dropdown" class="dropdown-arrow">
+          </div>
         </ng-container>
         <ng-container *ngIf="isDirect && directContact">
           <div class="direct-contact-info">
