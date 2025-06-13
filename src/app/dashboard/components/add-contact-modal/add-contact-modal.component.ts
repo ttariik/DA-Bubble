@@ -22,7 +22,7 @@ interface NewContact {
         <div class="modal-header">
           <h2>Neuen Kontakt hinzufügen</h2>
           <button class="close-button" (click)="closeModal($event)" aria-label="Schließen">
-            <span>×</span>
+            <img src="assets/icons/close.svg" alt="Schließen">
           </button>
         </div>
         
