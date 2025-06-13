@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, ViewChild, ElementRef, OnInit, Input, OnChanges, SimpleChanges, Output, EventEmitter, inject, OnDestroy } from '@angular/core';
+import { Component, AfterViewInit, ViewChild, ElementRef, OnInit, Input, OnChanges, SimpleChanges, Output, EventEmitter, inject, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FirestoreService, Message as FirestoreMessage } from '../../../services/firestore.service';
@@ -66,6 +66,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
   private auth = inject(Auth);
   private firestore: Firestore = inject(Firestore);
   private dialog = inject(Dialog);
+  private cdr = inject(ChangeDetectorRef);
 
   messageInput: string = '';
   showEmojiPicker: boolean = false;
@@ -1236,10 +1237,16 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
    * Versteckt das Overlay mit einer sanften Animation
    */
   private hideOverlayWithAnimation(): void {
+    console.log('🎭 Starting overlay fade-out animation');
     this.isOverlayFadingOut = true;
+    this.cdr.detectChanges(); // Force change detection
+    
     setTimeout(() => {
+      console.log('🎭 Hiding overlay completely');
       this.isDeletingAllMessages = false;
       this.isOverlayFadingOut = false;
+      this.cdr.detectChanges(); // Force change detection
+      console.log('✅ Overlay hidden, chat should be visible now');
     }, 500); // Duration of fade-out animation
   }
 
@@ -1298,11 +1305,13 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
         try {
           // Show loading state
           this.isDeletingAllMessages = true;
+          this.cdr.detectChanges(); // Force change detection
+          console.log('🎬 Deletion overlay shown');
           
-          // Auto-hide overlay after 3 seconds maximum
+          // Auto-hide overlay after exactly 3 seconds (no matter what)
           setTimeout(() => {
-            this.hideOverlayWithAnimation();
             console.log('⏰ Auto-hiding deletion overlay after 3 seconds');
+            this.hideOverlayWithAnimation();
           }, 3000);
           
           // Pause message subscription during deletion to prevent conflicts
@@ -1312,57 +1321,45 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
             this.messageSubscription = null;
           }
 
-          // Use the Firestore service method for proper deletion
-          await this.firestoreService.deleteAllChannelMessages(this.channelId);
-          
-          console.log('✅ All messages successfully deleted from Firestore');
-          
-          // Update local storage
-          this.allMessages = this.allMessages.filter(msg => msg.channelId !== this.channelId);
-          
-          // Also clear localStorage completely for this channel
-          const savedMessages = localStorage.getItem('allChatMessages');
-          if (savedMessages) {
-            try {
-              const parsedMessages = JSON.parse(savedMessages);
-              const filteredMessages = parsedMessages.filter((msg: any) => msg.channelId !== this.channelId);
-              localStorage.setItem('allChatMessages', JSON.stringify(filteredMessages));
-              console.log('🧹 Cleared messages from localStorage');
-            } catch (e) {
-              console.error('Error updating localStorage:', e);
-              localStorage.removeItem('allChatMessages'); // Clear completely if parsing fails
+          // Run Firestore deletion in background (don't wait for it)
+          this.firestoreService.deleteAllChannelMessages(this.channelId).then(() => {
+            console.log('✅ All messages successfully deleted from Firestore');
+            
+            // Update local storage
+            this.allMessages = this.allMessages.filter(msg => msg.channelId !== this.channelId);
+            
+            // Also clear localStorage completely for this channel
+            const savedMessages = localStorage.getItem('allChatMessages');
+            if (savedMessages) {
+              try {
+                const parsedMessages = JSON.parse(savedMessages);
+                const filteredMessages = parsedMessages.filter((msg: any) => msg.channelId !== this.channelId);
+                localStorage.setItem('allChatMessages', JSON.stringify(filteredMessages));
+                console.log('🧹 Cleared messages from localStorage');
+              } catch (e) {
+                console.error('Error updating localStorage:', e);
+                localStorage.removeItem('allChatMessages'); // Clear completely if parsing fails
+              }
             }
-          }
-          
-          // Hide overlay when deletion is complete
-          setTimeout(() => {
-            this.hideOverlayWithAnimation();
-            console.log('🎉 All messages deleted successfully - hiding overlay');
-          }, 1000); // Small delay to show completion
+            
+            console.log('🎉 All messages deleted successfully');
+          }).catch((error) => {
+            console.error('❌ Error deleting messages:', error);
+            // Don't show alert here since overlay will disappear anyway
+          });
           
         } catch (error) {
-          console.error('❌ Error deleting messages:', error);
-          
-          // On error, try to reload messages to show current state
-          console.log('🔄 Reloading messages due to deletion error');
-          setTimeout(() => {
-            this.loadMessages();
-          }, 1000);
-          
-          alert('Beim Löschen der Nachrichten ist ein Fehler aufgetreten. Die Ansicht wird aktualisiert.');
-                          } finally {
-          // Hide loading state (fallback)
-          if (this.isDeletingAllMessages && !this.isOverlayFadingOut) {
-            this.hideOverlayWithAnimation();
-          }
-          
-          // Restore message subscription after a delay
+          console.error('❌ Error in deleteAllMessages setup:', error);
+          // If there's an error in the setup, hide overlay immediately
+          this.hideOverlayWithAnimation();
+        } finally {
+          // Restore message subscription after overlay disappears
           setTimeout(() => {
             if (!this.messageSubscription && this.channelId) {
               console.log('▶️ Restoring message subscription after deletion');
               this.loadMessages();
             }
-          }, 1500);
+          }, 4000); // Wait for overlay to fully disappear (3s + 1s buffer)
         }
       }
     });
