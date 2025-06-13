@@ -125,8 +125,20 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
   ngOnChanges(changes: SimpleChanges) {
     // If the channel has changed, update the messages
     if (changes['channelId'] && !changes['channelId'].firstChange) {
+      console.log('🔄 Channel ID changed via Input to:', this.channelId);
+      
+      // Clear messages and load new ones
+      this.cleanupMessages();
+      this.cdr.detectChanges();
+      
+      // Load messages for the new channel
       this.loadMessages();
       this.loadChannelMembers(); // Lade die Mitglieder neu wenn sich der Channel ändert
+    }
+    
+    if (changes['channelName'] && !changes['channelName'].firstChange) {
+      console.log('📝 Channel name changed to:', this.channelName);
+      this.cdr.detectChanges();
     }
   }
   
@@ -215,72 +227,72 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
       this.messageSubscription = null;
     }
 
-    // Add a small delay to prevent race conditions
-    setTimeout(() => {
-      // Subscribe to messages from Firestore
-      if (this.channelId) {
-        console.log('🔗 Creating new message subscription');
-        
-        try {
-          this.messageSubscription = (this.isDirect ? 
-            this.firestoreService.getDirectMessages(this.channelId.replace('dm_', '')) :
-            this.firestoreService.getChannelMessages(this.channelId)
-          ).subscribe({
-            next: (messages) => {
-              console.log('📥 Received messages:', messages.length, 'messages');
-              
-              // Reverse since Firestore returns in desc order, but we want oldest first
-              const firestoreMessages = messages.reverse();
-              
-              // Keep only optimistic messages for THIS channel (temporary ones with temp_ IDs)
-              const optimisticMessages = this.messages.filter(m => 
-                m.id.startsWith('temp_') && m.channelId === this.channelId
+    // Subscribe to messages from Firestore immediately
+    if (this.channelId) {
+      console.log('🔗 Creating new message subscription for channel:', this.channelId);
+      
+      try {
+        this.messageSubscription = (this.isDirect ? 
+          this.firestoreService.getDirectMessages(this.channelId.replace('dm_', '')) :
+          this.firestoreService.getChannelMessages(this.channelId)
+        ).subscribe({
+          next: (messages) => {
+            console.log('📥 Received messages:', messages.length, 'messages for channel:', this.channelId);
+            
+            // Reverse since Firestore returns in desc order, but we want oldest first
+            const firestoreMessages = messages.reverse();
+            
+            // Keep only optimistic messages for THIS channel (temporary ones with temp_ IDs)
+            const optimisticMessages = this.messages.filter(m => 
+              m.id.startsWith('temp_') && m.channelId === this.channelId
+            );
+            
+            console.log('🔄 Found optimistic messages for this channel:', optimisticMessages.length);
+            
+            // Merge Firestore messages with channel-specific optimistic messages
+            const mergedMessages = [...firestoreMessages];
+            
+            // Add optimistic messages that don't have corresponding Firestore messages yet
+            optimisticMessages.forEach(optMsg => {
+              const existsInFirestore = firestoreMessages.some(fsMsg => 
+                fsMsg.text === optMsg.text && 
+                fsMsg.userId === optMsg.userId &&
+                fsMsg.channelId === optMsg.channelId &&
+                Math.abs(fsMsg.timestamp.getTime() - optMsg.timestamp.getTime()) < 60000 // Within 1 minute
               );
               
-              console.log('🔄 Found optimistic messages for this channel:', optimisticMessages.length);
-              
-              // Merge Firestore messages with channel-specific optimistic messages
-              const mergedMessages = [...firestoreMessages];
-              
-              // Add optimistic messages that don't have corresponding Firestore messages yet
-              optimisticMessages.forEach(optMsg => {
-                const existsInFirestore = firestoreMessages.some(fsMsg => 
-                  fsMsg.text === optMsg.text && 
-                  fsMsg.userId === optMsg.userId &&
-                  fsMsg.channelId === optMsg.channelId &&
-                  Math.abs(fsMsg.timestamp.getTime() - optMsg.timestamp.getTime()) < 60000 // Within 1 minute
-                );
-                
-                if (!existsInFirestore) {
-                  console.log('📝 Keeping optimistic message:', optMsg.text.substring(0, 30) + '...');
-                  mergedMessages.push(optMsg);
-                }
-              });
-              
-              // Sort by timestamp
-              this.messages = mergedMessages.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
-              this.groupMessagesByDate();
-              this.messageCount = this.messages.length;
-              
-              console.log('📊 Grouped messages into', this.messageGroups.length, 'date groups');
-              
-              // Scroll to bottom after messages are loaded
-              setTimeout(() => {
-                this.scrollToBottom();
-              }, 100);
-            },
-            error: (error) => {
-              console.error('❌ Error loading messages:', error);
-              // Don't show alert for subscription errors, just log them
-            }
-          });
-        } catch (error) {
-          console.error('❌ Error creating message subscription:', error);
-        }
-      } else {
-        console.log('❌ No channel ID provided for loading messages');
+              if (!existsInFirestore) {
+                console.log('📝 Keeping optimistic message:', optMsg.text.substring(0, 30) + '...');
+                mergedMessages.push(optMsg);
+              }
+            });
+            
+            // Sort by timestamp
+            this.messages = mergedMessages.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+            this.groupMessagesByDate();
+            this.messageCount = this.messages.length;
+            
+            console.log('📊 Loaded', this.messages.length, 'messages in', this.messageGroups.length, 'date groups for channel:', this.channelId);
+            
+            // Force change detection to update UI immediately
+            this.cdr.detectChanges();
+            
+            // Scroll to bottom after messages are loaded and UI is updated
+            setTimeout(() => {
+              this.scrollToBottom();
+            }, 50);
+          },
+          error: (error) => {
+            console.error('❌ Error loading messages:', error);
+            // Don't show alert for subscription errors, just log them
+          }
+        });
+      } catch (error) {
+        console.error('❌ Error creating message subscription:', error);
       }
-    }, 100);
+    } else {
+      console.log('❌ No channel ID provided for loading messages');
+    }
   }
   
 
@@ -288,6 +300,12 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
   // Change to a different channel
   changeChannel(channelName: string, channelId: string) {
     console.log('🔄 Changing channel from', this.channelId, 'to', channelId);
+    
+    // Don't reload if we're already on this channel
+    if (this.channelId === channelId) {
+      console.log('✅ Already on channel', channelId, '- no change needed');
+      return;
+    }
     
     // Clear all messages immediately to prevent cross-channel pollution
     this.cleanupMessages();
@@ -299,20 +317,34 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
     // Reset any optimistic UI state
     this.isSending = false;
     
-    // Load messages for the new channel
+    // Force change detection after cleanup
+    this.cdr.detectChanges();
+    
+    // Load messages for the new channel immediately
+    console.log('🚀 Loading messages for new channel:', channelId);
     this.loadMessages();
   }
 
   // Clean up all messages and reset UI state
   private cleanupMessages() {
     console.log('🧹 Cleaning up messages for channel change');
+    
+    // Cancel any pending message subscriptions
+    if (this.messageSubscription) {
+      this.messageSubscription.unsubscribe();
+      this.messageSubscription = null;
+    }
+    
+    // Clear all message arrays and UI state
     this.messages = [];
     this.messageGroups = [];
     this.messageCount = 0;
-    this.allMessages = []; // Also clear this array
+    this.allMessages = [];
     this.editingMessage = null;
     this.emojiPickerTargetMessage = null;
     this.showEmojiPicker = false;
+    
+    console.log('✅ Cleanup complete - messages cleared');
   }
   
   // Group messages by date
