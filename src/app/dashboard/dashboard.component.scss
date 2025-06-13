@@ -575,19 +575,55 @@
 }
 
 .thread-section {
-  width: 400px;
-  min-width: 400px;
+  width: 450px;
+  min-width: 450px;
   height: 100%;
   max-height: 100%;
-  background-color: #ffffff;
+  background: linear-gradient(135deg, #f8f9ff 0%, #f0f3ff 50%, #e8ecff 100%);
   display: flex;
   flex-direction: column;
-  border: 1px solid #e1e1e1;
-  border-radius: 16px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  border: 2px solid rgba(68, 77, 242, 0.2);
+  border-radius: 24px;
+  box-shadow: 0 16px 64px rgba(68, 77, 242, 0.15);
   overflow: hidden;
-  transition: transform 0.3s ease, opacity 0.3s ease, width 0.3s ease,
-    min-width 0.3s ease;
+  position: relative;
+  transition: transform 0.2s ease, opacity 0.3s ease, width 0.3s ease,
+    min-width 0.3s ease, box-shadow 0.2s ease;
+  animation: threadSectionFloat 6s ease-in-out infinite;
+  will-change: transform, box-shadow;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at center, rgba(68, 77, 242, 0.08) 0%, transparent 70%);
+    animation: backgroundFloat 15s ease-in-out infinite;
+    z-index: 0;
+    pointer-events: none;
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(68, 77, 242, 0.02) 0%, transparent 50%, rgba(68, 77, 242, 0.02) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 12s ease-in-out infinite;
+    z-index: 0;
+    pointer-events: none;
+  }
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 40px rgba(68, 77, 242, 0.2);
+    border-color: rgba(68, 77, 242, 0.3);
+  }
 
   &.hidden {
     transform: translateX(50px);
@@ -603,9 +639,11 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 15px 20px;
-    border-bottom: 1px solid #e1e1e1;
-    background-color: white;
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(68, 77, 242, 0.1);
+    background: rgba(255, 255, 255, 0.95);
+    position: relative;
+    z-index: 10;
 
     .thread-title {
       font-size: 16px;
@@ -674,6 +712,36 @@
   }
 }
 
+@keyframes threadSectionFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes backgroundFloat {
+  0%, 100% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  33% {
+    transform: translate(-45%, -55%) rotate(120deg);
+  }
+  66% {
+    transform: translate(-55%, -45%) rotate(240deg);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
 .profile-header {
   height: 60px;
   min-height: 60px;
@@ -723,7 +791,9 @@
 .thread-view {
   flex: 1;
   overflow-y: auto;
-  border-left: 1px solid #e0e0e0;
+  position: relative;
+  z-index: 5;
+  background: rgba(255, 255, 255, 0.8);
 }
 
 .toggle-sidebar-icon {

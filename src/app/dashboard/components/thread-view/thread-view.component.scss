@@ -935,7 +935,21 @@
   justify-content: center;
   height: 100%;
   width: 100%;
-  background-color: #f9f9f9;
+  background: linear-gradient(135deg, #f8f9ff 0%, #f0f3ff 50%, #e8ecff 100%);
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at center, rgba(68, 77, 242, 0.05) 0%, transparent 70%);
+    animation: backgroundFloat 12s ease-in-out infinite;
+    z-index: 0;
+  }
 }
 
 .empty-state-content {
@@ -943,43 +957,159 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 2rem;
-  max-width: 300px;
+  padding: 3rem;
+  max-width: 350px;
+  position: relative;
+  z-index: 1;
+  backdrop-filter: blur(10px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  animation: contentSlideIn 1s ease-out;
 }
 
 .empty-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  color: #bdbdbd;
-  animation: pulse 3s infinite;
+  position: relative;
+  font-size: 4rem;
+  margin-bottom: 2rem;
+  color: #444df2;
+  animation: floatAndGlow 4s ease-in-out infinite;
+  filter: drop-shadow(0 0 20px rgba(68, 77, 242, 0.3));
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 120px;
+    height: 120px;
+    background: radial-gradient(circle, rgba(68, 77, 242, 0.1) 0%, rgba(68, 77, 242, 0.05) 50%, transparent 70%);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    animation: ripple 3s ease-in-out infinite;
+    z-index: -1;
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(45deg, rgba(68, 77, 242, 0.2), rgba(68, 77, 242, 0.1));
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    animation: rotate 8s linear infinite;
+    z-index: -2;
+  }
 }
 
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-    opacity: 0.7;
+@keyframes floatAndGlow {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+    filter: drop-shadow(0 0 20px rgba(68, 77, 242, 0.3));
+  }
+  25% {
+    transform: translateY(-10px) scale(1.05);
+    filter: drop-shadow(0 5px 25px rgba(68, 77, 242, 0.4));
   }
   50% {
-    transform: scale(1.1);
-    opacity: 1;
+    transform: translateY(-5px) scale(1.08);
+    filter: drop-shadow(0 10px 30px rgba(68, 77, 242, 0.5));
+  }
+  75% {
+    transform: translateY(-8px) scale(1.03);
+    filter: drop-shadow(0 3px 22px rgba(68, 77, 242, 0.35));
+  }
+}
+
+@keyframes ripple {
+  0% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 0.4;
   }
   100% {
-    transform: scale(1);
-    opacity: 0.7;
+    transform: translate(-50%, -50%) scale(1.5);
+    opacity: 0;
+  }
+}
+
+@keyframes rotate {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes backgroundFloat {
+  0%, 100% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  33% {
+    transform: translate(-45%, -55%) rotate(120deg);
+  }
+  66% {
+    transform: translate(-55%, -45%) rotate(240deg);
+  }
+}
+
+@keyframes contentSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes titleGlow {
+  0% {
+    filter: brightness(1);
+  }
+  100% {
+    filter: brightness(1.1);
+  }
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 0.9;
+    transform: translateY(0);
   }
 }
 
 .empty-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: #444;
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #2d3748;
+  background: linear-gradient(135deg, #444df2, #6366f1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: titleGlow 2s ease-in-out infinite alternate;
+  font-family: "Nunito", sans-serif;
 }
 
 .empty-description {
-  font-size: 0.9rem;
-  color: #757575;
-  line-height: 1.5;
+  font-size: 1rem;
+  color: #64748b;
+  line-height: 1.6;
+  font-weight: 500;
+  opacity: 0.9;
+  animation: fadeInUp 1s ease-out 0.3s both;
 }
 
 // Styling für das Hover-Menü der ursprünglichen Nachricht
