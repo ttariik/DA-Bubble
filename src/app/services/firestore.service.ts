@@ -890,6 +890,46 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
     }
   }
 
+  async deleteDirectMessage(userId: string, otherUserId: string): Promise<void> {
+    try {
+      // Find the direct message document
+      const dmRef = collection(this.firestore, 'directMessages');
+      const q = query(
+        dmRef,
+        where('users', 'array-contains', userId)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const dmDoc = querySnapshot.docs.find(doc => {
+        const data = doc.data();
+        return data['users'].includes(otherUserId);
+      });
+
+      if (dmDoc) {
+        // Delete the direct message document
+        await deleteDoc(dmDoc.ref);
+
+        // Delete all messages associated with this DM
+        const messagesRef = collection(this.firestore, 'messages');
+        const messagesQuery = query(
+          messagesRef,
+          where('channelId', '==', `dm_${dmDoc.id}`)
+        );
+        
+        const messagesSnapshot = await getDocs(messagesQuery);
+        const deleteMessagePromises = messagesSnapshot.docs.map(doc => deleteDoc(doc.ref));
+        await Promise.all(deleteMessagePromises);
+
+        console.log('Direct message and associated messages deleted successfully');
+      } else {
+        console.log('Direct message not found');
+      }
+    } catch (error) {
+      console.error('Error deleting direct message:', error);
+      throw error;
+    }
+  }
+
   /**
    * Sendet eine Nachricht an einen Channel
    * @param channelId Die ID des Channels

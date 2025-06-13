@@ -536,6 +536,15 @@ export class SidebarComponent implements OnInit, OnChanges {
     if (!this.dmToDelete) return;
 
     try {
+      const userId = this.authService.currentUser?.uid;
+      if (!userId) {
+        console.error('No user logged in');
+        return;
+      }
+
+      // Delete the direct message from Firestore
+      await this.firestoreService.deleteDirectMessage(userId, this.dmToDelete.id);
+      
       // Remove from the local array
       this.directMessages = this.directMessages.filter(dm => dm.id !== this.dmToDelete.id);
       
