@@ -68,7 +68,7 @@
   <!-- Content Area (Scroll + Input) -->
   <div class="content-area">
     <!-- Deletion Loading Overlay -->
-    <div *ngIf="isDeletingAllMessages" class="deletion-overlay">
+    <div *ngIf="isDeletingAllMessages" class="deletion-overlay" [class.fade-out]="isOverlayFadingOut">
       <div class="deletion-animation">
         <div class="delete-icon-large">🗑️</div>
         <div class="delete-progress">

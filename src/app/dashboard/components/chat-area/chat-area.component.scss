@@ -341,17 +341,21 @@
   z-index: 1000;
   backdrop-filter: blur(10px);
   animation: overlay-fade-in 0.3s ease-out forwards;
+  
+  &.fade-out {
+    animation: overlay-fade-out 0.5s ease-out forwards;
+  }
 }
 
 .deletion-animation {
   text-align: center;
   color: white;
-  animation: deletion-float 2s ease-in-out infinite alternate;
+  animation: deletion-float 2s ease-in-out 1 alternate;
 }
 
 .delete-icon-large {
   font-size: 80px;
-  animation: delete-bounce 1s ease-in-out infinite;
+  animation: delete-bounce 1s ease-in-out 3;
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
   margin-bottom: 20px;
 }
@@ -370,7 +374,7 @@
   height: 100%;
   background: linear-gradient(90deg, #fff 0%, #f8f9fa 50%, #fff 100%);
   border-radius: 3px;
-  animation: progress-fill 2s ease-in-out infinite;
+  animation: progress-fill 3s ease-in-out 1 forwards;
   box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
 
@@ -379,7 +383,7 @@
   font-weight: 600;
   margin-top: 15px;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  animation: text-pulse 1.5s ease-in-out infinite alternate;
+  animation: text-pulse 1.5s ease-in-out 2 alternate;
 }
 
 .delete-particles {
@@ -395,16 +399,16 @@
   background: white;
   border-radius: 50%;
   opacity: 0;
-  animation: particle-float 3s ease-in-out infinite;
+  animation: particle-float 1s ease-in-out 1 forwards;
   
   &:nth-child(1) { left: 10%; animation-delay: 0s; }
-  &:nth-child(2) { left: 20%; animation-delay: 0.3s; }
-  &:nth-child(3) { left: 30%; animation-delay: 0.6s; }
-  &:nth-child(4) { left: 40%; animation-delay: 0.9s; }
-  &:nth-child(5) { left: 60%; animation-delay: 1.2s; }
-  &:nth-child(6) { left: 70%; animation-delay: 1.5s; }
-  &:nth-child(7) { left: 80%; animation-delay: 1.8s; }
-  &:nth-child(8) { left: 90%; animation-delay: 2.1s; }
+  &:nth-child(2) { left: 20%; animation-delay: 0.2s; }
+  &:nth-child(3) { left: 30%; animation-delay: 0.4s; }
+  &:nth-child(4) { left: 40%; animation-delay: 0.6s; }
+  &:nth-child(5) { left: 60%; animation-delay: 0.8s; }
+  &:nth-child(6) { left: 70%; animation-delay: 1.0s; }
+  &:nth-child(7) { left: 80%; animation-delay: 1.2s; }
+  &:nth-child(8) { left: 90%; animation-delay: 1.4s; }
 }
 
 .messages-container {
@@ -703,6 +707,24 @@
   }
 }
 
+@keyframes overlay-fade-out {
+  0% {
+    opacity: 1;
+    backdrop-filter: blur(10px);
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    backdrop-filter: blur(5px);
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+    transform: scale(0.95);
+  }
+}
+
 @keyframes deletion-float {
   0% {
     transform: translateY(0px);
@@ -724,15 +746,9 @@
 @keyframes progress-fill {
   0% {
     width: 0%;
-    transform: translateX(-100%);
-  }
-  50% {
-    width: 100%;
-    transform: translateX(0%);
   }
   100% {
     width: 100%;
-    transform: translateX(100%);
   }
 }
 

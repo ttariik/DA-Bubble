@@ -106,6 +106,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
   
     showMoreOptions: boolean = false;
   isDeletingAllMessages: boolean = false;
+  isOverlayFadingOut: boolean = false;
 
   messageSubscription: any;
   
@@ -1232,6 +1233,17 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
   }
 
   /**
+   * Versteckt das Overlay mit einer sanften Animation
+   */
+  private hideOverlayWithAnimation(): void {
+    this.isOverlayFadingOut = true;
+    setTimeout(() => {
+      this.isDeletingAllMessages = false;
+      this.isOverlayFadingOut = false;
+    }, 500); // Duration of fade-out animation
+  }
+
+  /**
    * Animiert alle Nachrichten beim Löschen hinaus
    */
   private animateMessagesOut(): Promise<void> {
@@ -1287,6 +1299,12 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
           // Show loading state
           this.isDeletingAllMessages = true;
           
+          // Auto-hide overlay after 3 seconds maximum
+          setTimeout(() => {
+            this.hideOverlayWithAnimation();
+            console.log('⏰ Auto-hiding deletion overlay after 3 seconds');
+          }, 3000);
+          
           // Pause message subscription during deletion to prevent conflicts
           if (this.messageSubscription) {
             console.log('⏸️ Temporarily pausing message subscription during deletion');
@@ -1316,8 +1334,11 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
             }
           }
           
-          // Show success message
-          console.log('🎉 All messages deleted successfully');
+          // Hide overlay when deletion is complete
+          setTimeout(() => {
+            this.hideOverlayWithAnimation();
+            console.log('🎉 All messages deleted successfully - hiding overlay');
+          }, 1000); // Small delay to show completion
           
         } catch (error) {
           console.error('❌ Error deleting messages:', error);
@@ -1330,8 +1351,10 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
           
           alert('Beim Löschen der Nachrichten ist ein Fehler aufgetreten. Die Ansicht wird aktualisiert.');
                           } finally {
-          // Hide loading state
-          this.isDeletingAllMessages = false;
+          // Hide loading state (fallback)
+          if (this.isDeletingAllMessages && !this.isOverlayFadingOut) {
+            this.hideOverlayWithAnimation();
+          }
           
           // Restore message subscription after a delay
           setTimeout(() => {
