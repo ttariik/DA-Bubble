@@ -361,10 +361,31 @@
       background-color: #EAF2FF;
       
       .channel-name {
-        font-weight: 600;
+        font-weight: 800;
         color: #444df2;
-        font-family: "Nunito";
+        font-family: "Nunito", sans-serif;
+        position: relative;
+        display: inline-block;
+        cursor: pointer;
+        transition: color 0.3s ease, transform 0.3s ease;
+      
+  
+      
+        &:hover {
+          color: #2a2ee6;
+          transform: translateY(-2px) scale(1.02);
+      
+          &::after {
+            transform: scaleX(1);
+          }
+        }
+      
+        &:active {
+          transform: scale(0.98);
+          color: #1a1cc4;
+        }
       }
+      
       
       .channel-icon {
         color: #444df2;
