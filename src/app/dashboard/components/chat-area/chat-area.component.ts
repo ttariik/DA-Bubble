@@ -104,8 +104,9 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
   // Add People Modal
   showAddPeopleModal: boolean = false;
   
-  showMoreOptions: boolean = false;
-  
+    showMoreOptions: boolean = false;
+  isDeletingAllMessages: boolean = false;
+
   messageSubscription: any;
   
   ngAfterViewInit() {
@@ -1231,6 +1232,31 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
   }
 
   /**
+   * Animiert alle Nachrichten beim Löschen hinaus
+   */
+  private animateMessagesOut(): Promise<void> {
+    return new Promise((resolve) => {
+      const messageElements = document.querySelectorAll('.message-item');
+      if (messageElements.length === 0) {
+        resolve();
+        return;
+      }
+
+      // Add deletion animation class to all messages
+      messageElements.forEach((element, index) => {
+        setTimeout(() => {
+          element.classList.add('deleting-message');
+        }, index * 50); // Staggered animation
+      });
+
+      // Wait for all animations to complete
+      setTimeout(() => {
+        resolve();
+      }, messageElements.length * 50 + 500);
+    });
+  }
+
+  /**
    * Löscht alle Nachrichten aus dem aktuellen Channel
    */
   async deleteAllMessages() {
@@ -1248,13 +1274,19 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
         // Close more options dropdown
         this.showMoreOptions = false;
         
-        // Optimistically clear the UI immediately
-        this.messages = [];
-        this.messageGroups = [];
-        this.messageCount = 0;
-        console.log('🎯 UI cleared optimistically');
+        // Add cool deletion animation before clearing
+        this.animateMessagesOut().then(() => {
+          // Clear the UI after animation
+          this.messages = [];
+          this.messageGroups = [];
+          this.messageCount = 0;
+          console.log('🎯 UI cleared after animation');
+        });
 
         try {
+          // Show loading state
+          this.isDeletingAllMessages = true;
+          
           // Pause message subscription during deletion to prevent conflicts
           if (this.messageSubscription) {
             console.log('⏸️ Temporarily pausing message subscription during deletion');
@@ -1297,15 +1329,18 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
           }, 1000);
           
           alert('Beim Löschen der Nachrichten ist ein Fehler aufgetreten. Die Ansicht wird aktualisiert.');
-                  } finally {
-            // Restore message subscription after a delay
-            setTimeout(() => {
-              if (!this.messageSubscription && this.channelId) {
-                console.log('▶️ Restoring message subscription after deletion');
-                this.loadMessages();
-              }
-            }, 1500);
-          }
+                          } finally {
+          // Hide loading state
+          this.isDeletingAllMessages = false;
+          
+          // Restore message subscription after a delay
+          setTimeout(() => {
+            if (!this.messageSubscription && this.channelId) {
+              console.log('▶️ Restoring message subscription after deletion');
+              this.loadMessages();
+            }
+          }, 1500);
+        }
       }
     });
   }
