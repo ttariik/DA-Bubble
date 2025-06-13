@@ -6,7 +6,7 @@
         <!-- Show hash for channels, avatar for direct messages -->
         <ng-container *ngIf="!isDirect">
           <div class="clickable-channel-name" (click)="openChannelInfoModal()">
-            <span class="channel-text">#{{ channelName }}</span>
+            <span class="channel-text"># {{ channelName }}</span>
             <img src="assets/svg/keyboard_arrow_down.svg" alt="Dropdown" class="dropdown-arrow">
           </div>
         </ng-container>
