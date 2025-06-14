@@ -168,9 +168,6 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
       isDirect: this.isDirect
     });
 
-    // TEMP: Clear all localStorage message data to ensure clean start
-    this.clearLocalStorageMessages();
-
     // Debug: Show all messages in database (only once during development)
     if (this.channelId === '1' && !this.isDirect) {
       setTimeout(() => {
@@ -222,20 +219,6 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
     
     console.log(`✅ Initialized chat for channel ${this.channelName} (ID: ${this.channelId})`);
   }
-  
-  // Temporary method to clear all localStorage message data
-  private clearLocalStorageMessages() {
-    console.log('🧹 Clearing localStorage message data');
-    localStorage.removeItem('allChatMessages');
-    localStorage.removeItem('chatMessages');
-    localStorage.removeItem('messages');
-    localStorage.removeItem('channelMessages');
-    console.log('✅ localStorage message data cleared');
-  }
-
-  // REMOVED: loadAllMessages() - we only use Firestore data now
-
-  // Load messages for the current channel from Firestore
   loadMessages() {
     console.log('🔄 Loading messages for channel:', this.channelId, 'isDirect:', this.isDirect);
     
@@ -790,8 +773,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
         message.text = newText;
         message.isEdited = true;
         
-        // Save changes to localStorage
-        this.saveMessagesToStorage();
+        // Changes are automatically saved to Firebase
         
       } catch (error) {
         console.error('❌ Error updating message in Firestore:', error);
@@ -858,8 +840,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
     // Nachrichten neu gruppieren
     this.groupMessagesByDate();
     
-    // Speichern
-    this.saveMessagesToStorage();
+    // Changes are automatically saved to Firebase
   }
 
   // Firestore-Löschung mit Retry-Logik
@@ -951,30 +932,14 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
       this.allMessages[allMessageIndex].text = message.text;
     }
     
-    this.groupMessagesByDate();
-    this.saveMessagesToStorage();
+          this.groupMessagesByDate();
+      // Changes are automatically saved to Firebase
   }
   
-  // Methode zum Aktualisieren des Threads für eine gelöschte Nachricht
+      // Methode zum Aktualisieren des Threads für eine gelöschte Nachricht
   updateThreadForDeletedMessage(messageId: string) {
-    const originalMessageKey = `threadOriginalMessage_${messageId}`;
-    const originalMessage = localStorage.getItem(originalMessageKey);
-    
-    if (originalMessage) {
-      try {
-        const parsedMessage = JSON.parse(originalMessage);
-        parsedMessage.isDeleted = true;
-        parsedMessage.text = 'Diese Nachricht wurde gelöscht';
-        localStorage.setItem(originalMessageKey, JSON.stringify(parsedMessage));
-        console.log(`Thread-Originalnachricht ${messageId} als gelöscht markiert`);
-      } catch (e) {
-        console.error('Fehler beim Aktualisieren der Thread-Originalnachricht:', e);
-      }
-    }
+    console.log(`Thread-Originalnachricht ${messageId} als gelöscht markiert - Firebase handles this automatically`);
   }
-  
-  // REMOVED: saveMessagesToStorage() - we only use Firestore data now
-  // Just update date labels and regrouping without localStorage
   refreshMessageDisplay() {
     this.updateDateLabels();
     this.groupMessagesByDate();
@@ -1003,8 +968,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
     // Filter out messages for the deleted channel
     this.allMessages = this.allMessages.filter(msg => msg.channelId !== channelId);
     
-    // Save the updated messages to localStorage
-    this.saveMessagesToStorage();
+    // Changes are automatically saved to Firebase
     
     // If the current channel is the one being deleted, clear the messages array
     if (this.channelId === channelId) {
@@ -1408,19 +1372,8 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
             // Update local storage
             this.allMessages = this.allMessages.filter(msg => msg.channelId !== this.channelId);
             
-            // Also clear localStorage completely for this channel
-            const savedMessages = localStorage.getItem('allChatMessages');
-            if (savedMessages) {
-              try {
-                const parsedMessages = JSON.parse(savedMessages);
-                const filteredMessages = parsedMessages.filter((msg: any) => msg.channelId !== this.channelId);
-                localStorage.setItem('allChatMessages', JSON.stringify(filteredMessages));
-                console.log('🧹 Cleared messages from localStorage');
-              } catch (e) {
-                console.error('Error updating localStorage:', e);
-                localStorage.removeItem('allChatMessages'); // Clear completely if parsing fails
-              }
-            }
+            // Messages are now managed by Firebase, no localStorage clearing needed
+            console.log('🧹 Messages cleared from channel - Firebase handles persistence');
             
             console.log('🎉 All messages deleted successfully');
           }).catch((error) => {

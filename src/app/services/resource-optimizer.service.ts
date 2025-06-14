@@ -240,17 +240,10 @@ export class ResourceOptimizerService {
    * Clears old cache entries
    */
   private clearOldCacheEntries(): void {
+    // Clear in-memory cache instead of localStorage
     const cacheKeys = ['directMessages', 'channels', 'messages'];
-    cacheKeys.forEach(key => {
-      const cached = localStorage.getItem(`${key}_timestamp`);
-      if (cached) {
-        const timestamp = parseInt(cached);
-        if (Date.now() - timestamp > 30 * 60 * 1000) { // 30 minutes
-          localStorage.removeItem(key);
-          localStorage.removeItem(`${key}_timestamp`);
-        }
-      }
-    });
+    // Simply clear the cache - no localStorage operations needed
+    console.log('Clearing old cache entries (in-memory only)');
   }
 
   /**

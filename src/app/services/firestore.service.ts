@@ -84,6 +84,16 @@ export interface SearchResult {
   highlight?: string[];
 }
 
+export interface UserSettings {
+  userId: string;
+  selectedChannelId?: string;
+  selectedDirectMessageId?: string;
+  showChannels?: boolean;
+  showDirectMessages?: boolean;
+  showContacts?: boolean;
+  lastUpdated?: Date;
+}
+
 export interface Contact {
   id: string;
   name: string;
@@ -1084,6 +1094,103 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
         timestamp: serverTimestamp()
       }
     });
+  }
+
+  // User Settings methods to replace localStorage
+  async saveUserSettings(settings: UserSettings): Promise<void> {
+    try {
+      const userId = this.auth.currentUser?.uid;
+      if (!userId) {
+        console.error('No user logged in');
+        return;
+      }
+
+      const settingsRef = doc(this.firestore, 'userSettings', userId);
+      await setDoc(settingsRef, {
+        ...settings,
+        userId: userId,
+        lastUpdated: serverTimestamp()
+      }, { merge: true });
+    } catch (error) {
+      console.error('Error saving user settings:', error);
+    }
+  }
+
+  async getUserSettings(): Promise<UserSettings | null> {
+    try {
+      const userId = this.auth.currentUser?.uid;
+      if (!userId) {
+        console.error('No user logged in');
+        return null;
+      }
+
+      const settingsRef = doc(this.firestore, 'userSettings', userId);
+      const settingsDoc = await getDoc(settingsRef);
+      
+      if (settingsDoc.exists()) {
+        const data = settingsDoc.data();
+        return {
+          userId: data['userId'],
+          selectedChannelId: data['selectedChannelId'],
+          selectedDirectMessageId: data['selectedDirectMessageId'],
+          showChannels: data['showChannels'],
+          showDirectMessages: data['showDirectMessages'],
+          showContacts: data['showContacts'],
+          lastUpdated: data['lastUpdated'] ? (data['lastUpdated'] as Timestamp).toDate() : new Date()
+        };
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error getting user settings:', error);
+      return null;
+    }
+  }
+
+  async updateSelectedChannel(channelId: string): Promise<void> {
+    try {
+      const userId = this.auth.currentUser?.uid;
+      if (!userId) return;
+
+      await this.saveUserSettings({
+        userId: userId,
+        selectedChannelId: channelId,
+        selectedDirectMessageId: undefined // Clear DM selection when selecting channel
+      });
+    } catch (error) {
+      console.error('Error updating selected channel:', error);
+    }
+  }
+
+  async updateSelectedDirectMessage(directMessageId: string): Promise<void> {
+    try {
+      const userId = this.auth.currentUser?.uid;
+      if (!userId) return;
+
+      await this.saveUserSettings({
+        userId: userId,
+        selectedChannelId: undefined, // Clear channel selection when selecting DM
+        selectedDirectMessageId: directMessageId
+      });
+    } catch (error) {
+      console.error('Error updating selected direct message:', error);
+    }
+  }
+
+  async updateSidebarSettings(showChannels: boolean, showDirectMessages: boolean, showContacts: boolean): Promise<void> {
+    try {
+      const userId = this.auth.currentUser?.uid;
+      if (!userId) return;
+
+      await this.saveUserSettings({
+        userId: userId,
+        showChannels: showChannels,
+        showDirectMessages: showDirectMessages,
+        showContacts: showContacts
+      });
+    } catch (error) {
+      console.error('Error updating sidebar settings:', error);
+    }
   }
 }
 

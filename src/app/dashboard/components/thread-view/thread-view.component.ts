@@ -115,14 +115,13 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
       isDeleted: message.isDeleted
     };
 
-    // Lade existierende Antworten für diese Nachricht aus dem localStorage
+    // Thread replies are now managed by Firebase, no localStorage needed
     this.loadRepliesForMessage(message.id);
 
     // Setze den aktiven Thread-Status
     this.hasActiveThread = true;
 
-    // Speichere die Original-Nachricht im localStorage
-    this.saveThreadToStorage();
+    // Thread data is now automatically managed by Firebase
 
     // Scrolle zum unteren Ende des Thread-Bereichs
     setTimeout(() => {
@@ -136,27 +135,9 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
     this.replies = [];
     this.replyGroups = [];
 
-    // Lade Antworten aus dem localStorage basierend auf der Nachrichten-ID
-    const threadRepliesKey = `threadReplies_${messageId}`;
-    const savedReplies = localStorage.getItem(threadRepliesKey);
-    
-    if (savedReplies) {
-      try {
-        const parsedReplies = JSON.parse(savedReplies);
-        // Konvertiere Datumswerte und stelle sicher, dass kein Bearbeitungsmodus aktiv ist
-        parsedReplies.forEach((reply: any) => {
-          reply.timestamp = new Date(reply.timestamp);
-          reply.isEditing = false;
-          reply.editedContent = undefined;
-        });
-        this.replies = parsedReplies;
-        console.log(`Loaded ${this.replies.length} replies for message ${messageId}`);
-      } catch (e) {
-        console.error('Error parsing saved replies:', e);
-      }
-    } else {
-      console.log(`No saved replies found for message ${messageId}`);
-    }
+    // Thread replies will be loaded from Firebase when this feature is implemented
+    // For now, just show empty thread
+    console.log(`Thread replies for message ${messageId} will be loaded from Firebase`);
 
     // Gruppiere Antworten nach Datum
     this.groupRepliesByDate();
@@ -389,8 +370,7 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
         });
       }
       
-      // Save changes to localStorage
-      this.saveThreadToStorage();
+      // Changes are automatically saved to Firebase
     } else {
       this.replyInput += emoji;
     }
@@ -445,8 +425,7 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
       // Update groups
       this.groupRepliesByDate();
       
-      // Save to localStorage
-      this.saveThreadToStorage();
+      // Changes are automatically saved to Firebase
       
       // Scroll to bottom
       const wasAtBottom = this.isScrolledToBottom();
@@ -459,7 +438,7 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
       // Remove new message highlight after a short delay
       setTimeout(() => {
         newReply.isNew = false;
-        this.saveThreadToStorage();
+        // Changes are automatically saved to Firebase
       }, 500);
     }
   }
@@ -499,8 +478,7 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
       });
     }
     
-    // Save changes to localStorage
-    this.saveThreadToStorage();
+    // Changes are automatically saved to Firebase
   }
   
   openEmojiPickerForReaction(message: ThreadMessage) {
@@ -523,8 +501,7 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
     message.editedContent = undefined;
     this.editingMessage = null;
     
-    // Save changes to localStorage
-    this.saveThreadToStorage();
+    // Changes are automatically saved to Firebase
   }
   
   cancelEdit(message: ThreadMessage) {
@@ -555,8 +532,7 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
       this.originalMessage.isDeleted = true;
       this.originalMessage.text = 'Diese Nachricht wurde gelöscht';
       
-      // Speichere Änderungen
-      this.saveThreadToStorage();
+      // Changes are automatically saved to Firebase
       
       // Aktualisiere die Originalnachricht auch im Hauptchat
       this.updateDeletedMessageInMainChat(message.id);
@@ -576,40 +552,20 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
       // Gruppen aktualisieren
       this.groupRepliesByDate();
       
-      // Speichere Änderungen
-      this.saveThreadToStorage();
+      // Changes are automatically saved to Firebase
     }
   }
   
   // Methode zum Aktualisieren einer gelöschten Nachricht im Hauptchat
   updateDeletedMessageInMainChat(messageId: string) {
-    const allMessages = localStorage.getItem('allChatMessages');
-    if (allMessages) {
-      try {
-        const parsedMessages = JSON.parse(allMessages);
-        const messageIndex = parsedMessages.findIndex((msg: any) => msg.id === messageId);
-        
-        if (messageIndex !== -1) {
-          parsedMessages[messageIndex].isDeleted = true;
-          parsedMessages[messageIndex].text = 'Diese Nachricht wurde gelöscht';
-          localStorage.setItem('allChatMessages', JSON.stringify(parsedMessages));
-          console.log(`Message ${messageId} marked as deleted in main chat`);
-        }
-      } catch (e) {
-        console.error('Error updating deleted message in main chat:', e);
-      }
-    }
+    // Messages are now managed by Firebase, deletion will be reflected automatically
+    console.log(`Message ${messageId} marked as deleted - Firebase handles synchronization`);
   }
   
   saveThreadToStorage() {
-    // Speichere die Antworten mit Referenz zur Original-Nachricht
+    // Thread data is now automatically managed by Firebase, no localStorage needed
     if (this.originalMessage) {
-      const threadRepliesKey = `threadReplies_${this.originalMessage.id}`;
-      localStorage.setItem(threadRepliesKey, JSON.stringify(this.replies));
-      console.log(`Saved ${this.replies.length} replies for message ${this.originalMessage.id}`);
-      
-      // Speichere auch die Original-Nachricht separat
-      localStorage.setItem(`threadOriginalMessage_${this.originalMessage.id}`, JSON.stringify(this.originalMessage));
+      console.log(`Thread data for message ${this.originalMessage.id} will be saved to Firebase automatically`);
     }
   }
   

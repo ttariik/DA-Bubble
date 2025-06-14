@@ -131,7 +131,7 @@ export class SidebarComponent implements OnInit, OnChanges {
         
         // Add to direct messages array
         this.directMessages = [...this.directMessages, directMessage];
-        this.saveDirectMessagesToStorage();
+        // Direct message data will be automatically synced through Firebase subscriptions
       }
       
       // Select the direct message to open the chat
@@ -143,14 +143,20 @@ export class SidebarComponent implements OnInit, OnChanges {
 
   toggleChannels() {
     this.showChannels = !this.showChannels;
+    // Save setting to Firebase instead of localStorage
+    this.firestoreService.updateSidebarSettings(this.showChannels, this.showDirectMessages, this.showContacts);
   }
   
   toggleDirectMessages() {
     this.showDirectMessages = !this.showDirectMessages;
+    // Save setting to Firebase instead of localStorage
+    this.firestoreService.updateSidebarSettings(this.showChannels, this.showDirectMessages, this.showContacts);
   }
   
   toggleContacts() {
     this.showContacts = !this.showContacts;
+    // Save setting to Firebase instead of localStorage
+    this.firestoreService.updateSidebarSettings(this.showChannels, this.showDirectMessages, this.showContacts);
   }
   
   addChannel() {
@@ -196,18 +202,13 @@ export class SidebarComponent implements OnInit, OnChanges {
     this.selectedDirectMessageId = null; 
     this.channelSelected.emit(channel);
     
-    localStorage.setItem('selectedChannelId', channel.id);
-    // Clear any selected direct message
-    localStorage.removeItem('selectedDirectMessageId');
+    // Save selection to Firebase instead of localStorage
+    this.firestoreService.updateSelectedChannel(channel.id);
     
     if (channel.unread > 0) {
       channel.unread = 0;
-      this.saveChannelsToStorage();
+      // Channel data will be automatically synced through Firebase subscriptions
     }
-  }
-  
-  saveChannelsToStorage() {
-    localStorage.setItem('channels', JSON.stringify(this.channels));
   }
   
   editWorkspace() {
@@ -222,8 +223,7 @@ export class SidebarComponent implements OnInit, OnChanges {
     // Entferne den Channel aus dem lokalen Array
     this.channels = this.channels.filter(channel => channel.id !== channelId);
     
-    // Speichere die aktualisierte Channel-Liste im Local Storage
-    this.saveChannelsToStorage();
+    // Channel data will be automatically synced through Firebase subscriptions
     
     // Wenn der gelöschte Channel der aktuell ausgewählte war, wähle stattdessen den ersten Channel aus
     if (this.selectedChannelId === channelId && this.channels.length > 0) {
@@ -239,18 +239,13 @@ export class SidebarComponent implements OnInit, OnChanges {
     this.selectedChannelId = '';
     this.directMessageSelected.emit(directMessage);
     
-    localStorage.setItem('selectedDirectMessageId', directMessage.id);
-    // Clear any selected channel
-    localStorage.removeItem('selectedChannelId');
+    // Save selection to Firebase instead of localStorage
+    this.firestoreService.updateSelectedDirectMessage(directMessage.id);
     
     if (directMessage.unread > 0) {
       directMessage.unread = 0;
-      this.saveDirectMessagesToStorage();
+      // Direct message data will be automatically synced through Firebase subscriptions
     }
-  }
-  
-  saveDirectMessagesToStorage() {
-    localStorage.setItem('directMessages', JSON.stringify(this.directMessages));
   }
   
   formatDate(date: Date | null): string {
@@ -267,7 +262,7 @@ export class SidebarComponent implements OnInit, OnChanges {
     return `${day}.${month}.${year}`;
   }
   
-  ngOnInit() {
+  async ngOnInit() {
     // Initialize channels$ with Firestore channels
     this.channels$ = this.authService.user$.pipe(
       filter((user): user is User => !!user),
@@ -290,7 +285,7 @@ export class SidebarComponent implements OnInit, OnChanges {
     // Subscribe to channels$ to update the local channels array
     this.channels$.subscribe(channels => {
       this.channels = channels;
-      this.saveChannelsToStorage();
+      // Channel data is now managed by Firebase, no local storage needed
     });
 
     // Subscribe to direct messages
@@ -299,89 +294,63 @@ export class SidebarComponent implements OnInit, OnChanges {
       switchMap(user => this.firestoreService.getUserDirectMessages())
     ).subscribe(messages => {
       this.directMessages = messages;
-      this.saveDirectMessagesToStorage();
+      // Direct message data is now managed by Firebase, no local storage needed
       
       // Load selected content after messages are updated
       this.loadSelectedContent();
     });
 
-    // Load settings from localStorage
-    const showChannelsSetting = localStorage.getItem('showChannels');
-    if (showChannelsSetting !== null) {
-      this.showChannels = showChannelsSetting === 'true';
-    }
-    
-    const showDirectMessagesSetting = localStorage.getItem('showDirectMessages');
-    if (showDirectMessagesSetting !== null) {
-      this.showDirectMessages = showDirectMessagesSetting === 'true';
+    // Load settings from Firebase instead of localStorage
+    try {
+      const settings = await this.firestoreService.getUserSettings();
+      if (settings) {
+        this.showChannels = settings.showChannels !== undefined ? settings.showChannels : true;
+        this.showDirectMessages = settings.showDirectMessages !== undefined ? settings.showDirectMessages : true;
+        this.showContacts = settings.showContacts !== undefined ? settings.showContacts : true;
+      }
+    } catch (error) {
+      console.error('Error loading user settings:', error);
+      // Use defaults if Firebase settings can't be loaded
+      this.showChannels = true;
+      this.showDirectMessages = true;
+      this.showContacts = true;
     }
   }
   
-  loadChannelsFromLocalStorage() {
-    const storedChannels = localStorage.getItem('channels');
-    if (storedChannels) {
-      try {
-        this.channels = JSON.parse(storedChannels);
-      } catch (e) {
-        console.error('Failed to parse stored channels:', e);
-      }
-    }
-    
-    const storedDirectMessages = localStorage.getItem('directMessages');
-    if (storedDirectMessages) {
-      try {
-        // Ensure we don't lose our defaults if localStorage doesn't have all properties
-        const parsedDMs = JSON.parse(storedDirectMessages);
-        
-        // If the parsed array is empty, keep using our defaults
-        if (parsedDMs && parsedDMs.length > 0) {
-          // For each direct message in the storage
-          parsedDMs.forEach((storedDM: DirectMessage) => {
-            // Find matching DM in our defaults
-            const existingDMIndex = this.directMessages.findIndex(dm => dm.id === storedDM.id);
-            
-            if (existingDMIndex >= 0) {
-              // If found, merge stored data with default
-              this.directMessages[existingDMIndex] = {
-                ...this.directMessages[existingDMIndex],
-                ...storedDM
-              };
-            } else {
-              // If not found, add it
-              this.directMessages.push(storedDM);
-            }
-          });
+  async loadSelectedContent() {
+    try {
+      // Get user settings from Firebase instead of localStorage
+      const settings = await this.firestoreService.getUserSettings();
+      
+      if (settings) {
+        // Try to load the previously selected channel or direct message
+        if (settings.selectedChannelId) {
+          const channel = this.channels.find(c => c.id === settings.selectedChannelId);
+          if (channel) {
+            this.selectChannel(channel);
+            return; // Exit early if we found a channel
+          }
         }
-      } catch (e) {
-        console.error('Failed to parse stored direct messages:', e);
+        
+        if (settings.selectedDirectMessageId) {
+          const directMessage = this.directMessages.find(dm => dm.id === settings.selectedDirectMessageId);
+          if (directMessage) {
+            this.selectDirectMessage(directMessage);
+            return; // Exit early if we found a direct message
+          }
+        }
       }
-    }
-  }
-  
-  loadSelectedContent() {
-    // Try to load the previously selected channel or direct message
-    const selectedChannelId = localStorage.getItem('selectedChannelId');
-    const selectedDirectMessageId = localStorage.getItem('selectedDirectMessageId');
-    
-    if (selectedChannelId) {
-      const channel = this.channels.find(c => c.id === selectedChannelId);
-      if (channel) {
-        this.selectChannel(channel);
-        return; // Exit early if we found a channel
+      
+      // Fallback: Select the first channel if nothing was selected before
+      if (this.channels.length > 0) {
+        this.selectChannel(this.channels[0]);
       }
-    }
-    
-    if (selectedDirectMessageId) {
-      const directMessage = this.directMessages.find(dm => dm.id === selectedDirectMessageId);
-      if (directMessage) {
-        this.selectDirectMessage(directMessage);
-        return; // Exit early if we found a direct message
+    } catch (error) {
+      console.error('Error loading selected content:', error);
+      // Fallback on error
+      if (this.channels.length > 0) {
+        this.selectChannel(this.channels[0]);
       }
-    }
-    
-    // Fallback: Select the first channel if nothing was selected before
-    if (this.channels.length > 0) {
-      this.selectChannel(this.channels[0]);
     }
   }
   
@@ -407,7 +376,7 @@ export class SidebarComponent implements OnInit, OnChanges {
       const existingChannelIndex = this.channels.findIndex(c => c.id === this.newChannelId);
       if (existingChannelIndex === -1) {
         this.channels.push(newChannel);
-        this.saveChannelsToStorage();
+        // Channel data is now managed by Firebase, no local storage needed
         
         // Select the newly created channel
         this.selectChannel(newChannel);
@@ -423,7 +392,7 @@ export class SidebarComponent implements OnInit, OnChanges {
       this.firestoreService.getUserDirectMessages().subscribe(
         (messages) => {
           this.directMessages = messages;
-          this.saveDirectMessagesToStorage();
+          // Direct message data is now managed by Firebase, no local storage needed
         },
         (error) => {
           console.error('Error refreshing direct messages:', error);
@@ -472,8 +441,7 @@ export class SidebarComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['directMessages'] && !changes['directMessages'].firstChange) {
-      // Save the updated direct messages to storage
-      this.saveDirectMessagesToStorage();
+      // Direct message data is now managed by Firebase, no local storage needed
     }
   }
 
@@ -548,14 +516,14 @@ export class SidebarComponent implements OnInit, OnChanges {
       // Remove from the local array
       this.directMessages = this.directMessages.filter(dm => dm.id !== this.dmToDelete.id);
       
-      // Update localStorage
-      this.saveDirectMessagesToStorage();
+      // Direct message data is now managed by Firebase, no local storage needed
       
       // If the deleted DM was selected, clear the selection
       if (this.selectedDirectMessageId === this.dmToDelete.id) {
         this.selectedDirectMessageId = null;
         this.directMessageSelected.emit(undefined);
-        localStorage.removeItem('selectedDirectMessageId');
+        // Clear selection in Firebase instead of localStorage
+        await this.firestoreService.updateSelectedDirectMessage('');
       }
       
       console.log('Direct message deleted successfully');

@@ -193,8 +193,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       takeUntil(this.destroy$)
     ).subscribe(messages => {
       this.directMessages = messages;
-      // Optimize localStorage operations
-      this.optimizeLocalStorageWrite('directMessages', messages);
       this.cd.markForCheck();
     });
 
@@ -367,9 +365,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   handleDirectMessageSelected(directMessage: DirectMessage) {
     this.selectedDirectMessage = directMessage;
     this.isDirectMessageActive = true;
-    
-    // Store the selection in localStorage
-    localStorage.setItem('selectedDirectMessageId', directMessage.id);
+    this.firestoreService.updateSelectedDirectMessage(directMessage.id);
   }
   
   handleChannelDeleted(channelId: string) {
@@ -410,72 +406,68 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.chatArea.changeChannel(this.selectedChannel.name, this.selectedChannel.id);
       }
       
-      // Speichere die Auswahl im lokalen Speicher
-      localStorage.setItem('selectedChannelId', this.selectedChannel.id);
+      this.firestoreService.updateSelectedChannel(this.selectedChannel.id);
     }
   }
 
-  loadSelectedContent() {
-    // First check if there's a selected direct message
-    const savedDirectMessageId = localStorage.getItem('selectedDirectMessageId');
-    if (savedDirectMessageId) {
-      // Load direct messages from localStorage
-      const savedDirectMessages = localStorage.getItem('directMessages');
-      if (savedDirectMessages) {
-        try {
-          const directMessages = JSON.parse(savedDirectMessages);
-          // Find the direct message with the saved ID
-          const selectedDirectMessage = directMessages.find((dm: any) => dm.id === savedDirectMessageId);
+  async loadSelectedContent() {
+    try {
+      const settings = await this.firestoreService.getUserSettings();
+      
+      if (settings) {
+        // First check if there's a selected direct message
+        if (settings.selectedDirectMessageId) {
+          // Find the direct message with the saved ID from the current directMessages
+          const selectedDirectMessage = this.directMessages.find(dm => dm.id === settings.selectedDirectMessageId);
           if (selectedDirectMessage) {
             this.selectedDirectMessage = selectedDirectMessage;
             this.isDirectMessageActive = true;
             return; // Skip loading channel
           }
-        } catch (e) {
-          console.error('Error parsing saved direct messages:', e);
         }
-      }
-    }
-    
-    // If no direct message is selected, load channel
-    this.loadSelectedChannel();
-    
-    // Wenn die Chat-Area verfügbar ist, lade den "Entwicklerteam"-Channel
-    setTimeout(() => {
-      if (this.chatArea && this.selectedChannel.id === '1') {
-        this.chatArea.changeChannel(this.selectedChannel.name, this.selectedChannel.id);
-      }
-    }, 0);
-  }
-
-  loadSelectedChannel() {
-    // Load the selected channel ID from localStorage
-    const savedChannelId = localStorage.getItem('selectedChannelId');
-    if (savedChannelId) {
-      // Load channels from localStorage
-      const savedChannels = localStorage.getItem('channels');
-      if (savedChannels) {
-        try {
-          const channels = JSON.parse(savedChannels);
-          // Find the channel with the saved ID
-          const selectedChannel = channels.find((c: any) => c.id === savedChannelId);
-          if (selectedChannel) {
-            this.selectedChannel = selectedChannel;
-            this.isDirectMessageActive = false;
-            return;
+        
+        // If no direct message is selected or found, load channel
+        if (settings.selectedChannelId) {
+          // Find the channel with the saved ID from sidebar channels
+          if (this.sidebar && this.sidebar.channels) {
+            const selectedChannel = this.sidebar.channels.find(c => c.id === settings.selectedChannelId);
+            if (selectedChannel) {
+              this.selectedChannel = selectedChannel;
+              this.isDirectMessageActive = false;
+              
+              // Load the channel in chat area
+              setTimeout(() => {
+                if (this.chatArea) {
+                  this.chatArea.changeChannel(this.selectedChannel.name, this.selectedChannel.id);
+                }
+              }, 0);
+              return;
+            }
           }
-        } catch (e) {
-          console.error('Error parsing saved channels:', e);
         }
       }
+      
+      // Fallback: Default to "Entwicklerteam" channel
+      this.selectedChannel = { id: '1', name: 'Entwicklerteam', unread: 0 };
+      this.isDirectMessageActive = false;
+      
+      // Save the default selection to Firebase
+      await this.firestoreService.updateSelectedChannel('1');
+      
+      // Load the default channel in chat area
+      setTimeout(() => {
+        if (this.chatArea && this.selectedChannel.id === '1') {
+          this.chatArea.changeChannel(this.selectedChannel.name, this.selectedChannel.id);
+        }
+      }, 0);
+      
+    } catch (error) {
+      console.error('Error loading selected content:', error);
+      
+      // Fallback on error
+      this.selectedChannel = { id: '1', name: 'Entwicklerteam', unread: 0 };
+      this.isDirectMessageActive = false;
     }
-    
-    // Standardmäßig immer auf den "Entwicklerteam"-Channel (ID 1) zurückfallen, wenn kein Channel geladen werden konnte
-    this.selectedChannel = { id: '1', name: 'Entwicklerteam', unread: 0 };
-    this.isDirectMessageActive = false;
-    
-    // Speichere die Auswahl im localStorage
-    localStorage.setItem('selectedChannelId', '1');
   }
 
   openEmojiPicker() {
@@ -859,33 +851,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
       // Add the new DM to the list
       this.directMessages = [...this.directMessages, directMessage];
       
-      // Save to localStorage
-      localStorage.setItem('directMessages', JSON.stringify(this.directMessages));
-      
-      // Switch to the new DM
+      // Switch to the new DM and save to Firebase
       this.selectedDirectMessage = directMessage;
       this.isDirectMessageActive = true;
-      localStorage.setItem('selectedDirectMessageId', directMessage.id);
+      this.firestoreService.updateSelectedDirectMessage(directMessage.id);
     } else {
       // If DM already exists, just switch to it
       this.selectedDirectMessage = existingDM;
       this.isDirectMessageActive = true;
-      localStorage.setItem('selectedDirectMessageId', existingDM.id);
-    }
-  }
-
-  // Optimize localStorage operations
-  private optimizeLocalStorageWrite(key: string, data: any) {
-    try {
-      // Only write if data has actually changed
-      const currentData = localStorage.getItem(key);
-      const newData = JSON.stringify(data);
-      
-      if (currentData !== newData) {
-        localStorage.setItem(key, newData);
-      }
-    } catch (error) {
-      console.error('Error writing to localStorage:', error);
+      this.firestoreService.updateSelectedDirectMessage(existingDM.id);
     }
   }
 }
