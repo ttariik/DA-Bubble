@@ -114,8 +114,6 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
       isEdited: message.isEdited,
       isDeleted: message.isDeleted
     };
-
-    // Thread replies are now managed by Firebase, no localStorage needed
     this.loadRepliesForMessage(message.id);
 
     // Setze den aktiven Thread-Status
@@ -563,7 +561,6 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
   }
   
   saveThreadToStorage() {
-    // Thread data is now automatically managed by Firebase, no localStorage needed
     if (this.originalMessage) {
       console.log(`Thread data for message ${this.originalMessage.id} will be saved to Firebase automatically`);
     }

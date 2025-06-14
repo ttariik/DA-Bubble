@@ -1096,7 +1096,6 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
     });
   }
 
-  // User Settings methods to replace localStorage
   async saveUserSettings(settings: UserSettings): Promise<void> {
     try {
       const userId = this.auth.currentUser?.uid;

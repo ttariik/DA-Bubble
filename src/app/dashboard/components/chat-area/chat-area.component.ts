@@ -947,7 +947,6 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
 
   // Temporary stub method to prevent linter errors - does nothing
   saveMessagesToStorage() {
-    // NO-OP: We don't save to localStorage anymore, only use Firestore
     console.log('💡 saveMessagesToStorage called but ignored - using Firestore only');
   }
   
@@ -1371,8 +1370,6 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
             
             // Update local storage
             this.allMessages = this.allMessages.filter(msg => msg.channelId !== this.channelId);
-            
-            // Messages are now managed by Firebase, no localStorage clearing needed
             console.log('🧹 Messages cleared from channel - Firebase handles persistence');
             
             console.log('🎉 All messages deleted successfully');

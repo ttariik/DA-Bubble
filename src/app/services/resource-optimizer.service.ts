@@ -240,9 +240,7 @@ export class ResourceOptimizerService {
    * Clears old cache entries
    */
   private clearOldCacheEntries(): void {
-    // Clear in-memory cache instead of localStorage
     const cacheKeys = ['directMessages', 'channels', 'messages'];
-    // Simply clear the cache - no localStorage operations needed
     console.log('Clearing old cache entries (in-memory only)');
   }
 
