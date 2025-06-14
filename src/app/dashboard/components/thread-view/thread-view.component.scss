@@ -927,7 +927,6 @@
   position: relative;
 }
 
-// Styles für den leeren Thread-Zustand
 .empty-thread-state {
   display: flex;
   flex-direction: column;
@@ -946,7 +945,6 @@
     left: -50%;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle at center, rgba(68, 77, 242, 0.05) 0%, transparent 70%);
     animation: backgroundFloat 12s ease-in-out infinite;
     z-index: 0;
   }
@@ -1009,84 +1007,9 @@
     transform: translateY(0px) scale(1);
     filter: drop-shadow(0 0 20px rgba(68, 77, 242, 0.3));
   }
-  25% {
+  50% {
     transform: translateY(-10px) scale(1.05);
     filter: drop-shadow(0 5px 25px rgba(68, 77, 242, 0.4));
-  }
-  50% {
-    transform: translateY(-5px) scale(1.08);
-    filter: drop-shadow(0 10px 30px rgba(68, 77, 242, 0.5));
-  }
-  75% {
-    transform: translateY(-8px) scale(1.03);
-    filter: drop-shadow(0 3px 22px rgba(68, 77, 242, 0.35));
-  }
-}
-
-@keyframes ripple {
-  0% {
-    transform: translate(-50%, -50%) scale(0.8);
-    opacity: 0.8;
-  }
-  50% {
-    transform: translate(-50%, -50%) scale(1.2);
-    opacity: 0.4;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(1.5);
-    opacity: 0;
-  }
-}
-
-@keyframes rotate {
-  0% {
-    transform: translate(-50%, -50%) rotate(0deg);
-  }
-  100% {
-    transform: translate(-50%, -50%) rotate(360deg);
-  }
-}
-
-@keyframes backgroundFloat {
-  0%, 100% {
-    transform: translate(-50%, -50%) rotate(0deg);
-  }
-  33% {
-    transform: translate(-45%, -55%) rotate(120deg);
-  }
-  66% {
-    transform: translate(-55%, -45%) rotate(240deg);
-  }
-}
-
-@keyframes contentSlideIn {
-  0% {
-    opacity: 0;
-    transform: translateY(30px) scale(0.95);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes titleGlow {
-  0% {
-    filter: brightness(1);
-  }
-  100% {
-    filter: brightness(1.1);
-  }
-}
-
-@keyframes fadeInUp {
-  0% {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  100% {
-    opacity: 0.9;
-    transform: translateY(0);
   }
 }
 
@@ -1099,7 +1022,6 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: titleGlow 2s ease-in-out infinite alternate;
   font-family: "Nunito", sans-serif;
 }
 
@@ -1112,7 +1034,6 @@
   animation: fadeInUp 1s ease-out 0.3s both;
 }
 
-// Styling für das Hover-Menü der ursprünglichen Nachricht
 .original-message-hover-menu {
   position: absolute;
   top: 10px;
