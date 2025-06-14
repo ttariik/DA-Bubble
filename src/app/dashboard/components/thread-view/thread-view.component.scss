@@ -1002,17 +1002,6 @@
   }
 }
 
-@keyframes floatAndGlow {
-  0%, 100% {
-    transform: translateY(0px) scale(1);
-    filter: drop-shadow(0 0 20px rgba(68, 77, 242, 0.3));
-  }
-  50% {
-    transform: translateY(-10px) scale(1.05);
-    filter: drop-shadow(0 5px 25px rgba(68, 77, 242, 0.4));
-  }
-}
-
 .empty-title {
   font-size: 1.8rem;
   font-weight: 700;
