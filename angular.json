@@ -46,11 +46,8 @@
               "fonts": true
             },
             "sourceMap": false,
-            "buildOptimizer": true,
             "namedChunks": false,
-            "extractLicenses": true,
-            "vendorChunk": true,
-            "commonChunk": true
+            "extractLicenses": true
           },
           "configurations": {
             "production": {
@@ -73,20 +70,14 @@
                 "fonts": true
               },
               "sourceMap": false,
-              "buildOptimizer": true,
               "namedChunks": false,
-              "extractLicenses": true,
-              "vendorChunk": true,
-              "commonChunk": true,
-              "aot": true
+              "extractLicenses": true
             },
             "development": {
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true,
-              "namedChunks": true,
-              "vendorChunk": true,
-              "buildOptimizer": false
+              "namedChunks": true
             }
           },
           "defaultConfiguration": "production"
