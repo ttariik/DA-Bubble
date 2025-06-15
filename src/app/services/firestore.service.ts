@@ -547,6 +547,12 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
    */
   async leaveChannel(channelId: string, userId: string): Promise<void> {
     try {
+      // Schütze den Hauptkanal "Entwicklerteam" vor dem Verlassen
+      if (channelId === '1') {
+        console.warn('Der Hauptkanal "Entwicklerteam" kann nicht verlassen werden.');
+        return Promise.reject(new Error('Der Hauptkanal "Entwicklerteam" kann nicht verlassen werden.'));
+      }
+      
       // Referenz zum Channel-Dokument
       const channelRef = doc(this.firestore, 'channels', channelId);
       const channelDoc = await getDoc(channelRef);
@@ -858,6 +864,7 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
       }
     } catch (error) {
       console.error('Error ensuring default channel:', error);
+      throw error;
     }
   }
 

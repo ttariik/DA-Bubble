@@ -214,6 +214,12 @@ export class SidebarComponent implements OnInit, OnChanges {
   }
   
   removeChannelFromUI(channelId: string) {
+    // Schütze den Hauptkanal "Entwicklerteam" vor dem Entfernen
+    if (channelId === '1') {
+      console.warn('Der Hauptkanal "Entwicklerteam" kann nicht entfernt werden.');
+      return;
+    }
+    
     // Entferne den Channel aus dem lokalen Array
     this.channels = this.channels.filter(channel => channel.id !== channelId);
     
@@ -258,16 +264,39 @@ export class SidebarComponent implements OnInit, OnChanges {
     this.channels$ = this.authService.user$.pipe(
       filter((user): user is User => !!user),
       switchMap((user) => {
+        // Ensure user is added to the default "Entwicklerteam" channel
+        this.ensureUserInDefaultChannel(user.uid);
+        
         // Get all user channels from Firestore
         return this.firestoreService.getUserChannels(user.uid).pipe(
           map(firestoreChannels => {
             // Convert Firestore channels to local channel format
-            return firestoreChannels.map(fc => ({
+            const channels = firestoreChannels.map(fc => ({
               id: fc.id || '',
               name: fc.channelName || '',
               description: fc.channelDescription || '',
               unread: fc.unread || 0
             }));
+            
+            // Always ensure "Entwicklerteam" channel is present as first channel
+            const entwicklerteamExists = channels.some(channel => channel.id === '1' && channel.name === 'Entwicklerteam');
+            if (!entwicklerteamExists) {
+              channels.unshift({
+                id: '1',
+                name: 'Entwicklerteam',
+                description: 'Der Hauptkanal für das Entwicklerteam',
+                unread: 0
+              });
+            } else {
+              // Move Entwicklerteam to first position if it exists but is not at the beginning
+              const entwicklerteamIndex = channels.findIndex(channel => channel.id === '1' && channel.name === 'Entwicklerteam');
+              if (entwicklerteamIndex > 0) {
+                const entwicklerteamChannel = channels.splice(entwicklerteamIndex, 1)[0];
+                channels.unshift(entwicklerteamChannel);
+              }
+            }
+            
+            return channels;
           })
         );
       })
@@ -285,24 +314,23 @@ export class SidebarComponent implements OnInit, OnChanges {
       switchMap(user => this.firestoreService.getUserDirectMessages())
     ).subscribe(messages => {
       this.directMessages = messages;
-      // Direct message data is now managed by Firebase, no local storage needed
-      
-      // Load selected content after messages are updated
-      this.loadSelectedContent();
     });
+
+    // Subscribe to contacts
+    this.contacts$ = this.firestoreService.getAllContacts();
+    
+    // Load selected content
+    this.loadSelectedContent();
+  }
+  
+  /**
+   * Stellt sicher, dass der Benutzer zum Entwicklerteam-Channel hinzugefügt wird
+   */
+  private async ensureUserInDefaultChannel(userId: string) {
     try {
-      const settings = await this.firestoreService.getUserSettings();
-      if (settings) {
-        this.showChannels = settings.showChannels !== undefined ? settings.showChannels : true;
-        this.showDirectMessages = settings.showDirectMessages !== undefined ? settings.showDirectMessages : true;
-        this.showContacts = settings.showContacts !== undefined ? settings.showContacts : true;
-      }
+      await this.firestoreService.ensureDefaultChannel(userId);
     } catch (error) {
-      console.error('Error loading user settings:', error);
-      // Use defaults if Firebase settings can't be loaded
-      this.showChannels = true;
-      this.showDirectMessages = true;
-      this.showContacts = true;
+      console.error('Error ensuring user in default channel:', error);
     }
   }
   
@@ -489,32 +517,25 @@ export class SidebarComponent implements OnInit, OnChanges {
   }
 
   async confirmDeleteDirectMessage() {
-    if (!this.dmToDelete) return;
-
-    try {
-      const userId = this.authService.currentUser?.uid;
-      if (!userId) {
-        console.error('No user logged in');
-        return;
+    if (this.dmToDelete) {
+      try {
+        const currentUserId = this.authService.currentUser?.uid;
+        if (currentUserId) {
+          // Delete the direct message from Firestore
+          await this.firestoreService.deleteDirectMessage(currentUserId, this.dmToDelete.id);
+          
+          // Remove from local array
+          this.directMessages = this.directMessages.filter(dm => dm.id !== this.dmToDelete.id);
+          
+          console.log('Direct message deleted successfully');
+        }
+      } catch (error) {
+        console.error('Error deleting direct message:', error);
+        alert('Fehler beim Löschen der Direktnachricht. Bitte versuche es später erneut.');
       }
-
-      await this.firestoreService.deleteDirectMessage(userId, this.dmToDelete.id);
-
-      this.directMessages = this.directMessages.filter(dm => dm.id !== this.dmToDelete.id);
-      
-      
-      // If the deleted DM was selected, clear the selection
-      if (this.selectedDirectMessageId === this.dmToDelete.id) {
-        this.selectedDirectMessageId = null;
-        this.directMessageSelected.emit(undefined);
-        await this.firestoreService.updateSelectedDirectMessage('');
-      }
-      
-      console.log('Direct message deleted successfully');
-    } catch (error) {
-      console.error('Error deleting direct message:', error);
     }
-
+    
+    // Close modal
     this.closeDeleteDMModal();
   }
 } 
