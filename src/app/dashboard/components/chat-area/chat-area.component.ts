@@ -221,6 +221,8 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
   }
   loadMessages() {
     console.log('🔄 Loading messages for channel:', this.channelId, 'isDirect:', this.isDirect);
+    console.log('🔄 Current user:', this.auth.currentUser?.uid);
+    console.log('🔄 Firestore instance:', !!this.firestore);
     
     // Unsubscribe from previous subscription if it exists
     if (this.messageSubscription) {
@@ -234,10 +236,13 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
       console.log('🔗 Creating new message subscription for channel:', this.channelId);
       
       try {
-        this.messageSubscription = (this.isDirect ? 
+        const messageObservable = this.isDirect ? 
           this.firestoreService.getDirectMessages(this.channelId.replace('dm_', '')) :
-          this.firestoreService.getChannelMessages(this.channelId)
-        ).pipe(
+          this.firestoreService.getChannelMessages(this.channelId);
+          
+        console.log('🔗 Message observable created, subscribing...');
+        
+        this.messageSubscription = messageObservable.pipe(
           takeUntil(this.destroy$)
         ).subscribe({
           next: (messages) => {

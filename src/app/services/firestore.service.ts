@@ -22,7 +22,7 @@ import {
   deleteDoc
 } from '@angular/fire/firestore';
 import { User } from '../models/user.class';
-import { map, Observable, from, of, forkJoin, combineLatest, switchMap, shareReplay, distinctUntilChanged, debounceTime } from 'rxjs';
+import { map, Observable, from, of, forkJoin, combineLatest, switchMap, shareReplay, distinctUntilChanged, debounceTime, tap } from 'rxjs';
 import { Auth } from '@angular/fire/auth';
 
 
@@ -419,19 +419,29 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
 
   // Optimized channel loading
   getAllChannels(): Observable<Channel[]> {
+    console.log('🔄 getAllChannels called');
+    
     if (!this.allChannels$) {
+      console.log('🔄 Creating new channels observable');
       const channelsRef = collection(this.firestore, 'channels');
       this.allChannels$ = collectionData(channelsRef, { idField: 'id' }).pipe(
+        tap(rawChannels => console.log('📥 Raw channels from Firebase:', rawChannels.length, rawChannels)),
         distinctUntilChanged(),
-        map(channels => channels.map(channel => ({
-          id: channel['id'],
-          name: channel['channelName'],
-          description: channel['channelDescription'] || '',
-          members: channel['members'] || [],
-          unread: 0
-        }))),
+        map(channels => {
+          const mappedChannels = channels.map(channel => ({
+            id: channel['id'],
+            name: channel['channelName'],
+            description: channel['channelDescription'] || '',
+            members: channel['members'] || [],
+            unread: 0
+          }));
+          console.log('🔄 Mapped channels:', mappedChannels.length, mappedChannels);
+          return mappedChannels;
+        }),
         shareReplay(1)
       );
+    } else {
+      console.log('🔄 Using cached channels observable');
     }
     return this.allChannels$;
   }
@@ -781,19 +791,25 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
 
   // Get all contacts for the current user
   getAllContacts(): Observable<Contact[]> {
+    console.log('🔄 getAllContacts called');
     const contactsRef = collection(this.firestore, 'contacts');
     return collectionData(contactsRef, { idField: 'id' }).pipe(
-      map(contacts => contacts.map(contact => ({
-        id: contact['id'],
-        name: contact['name'],
-        avatar: contact['avatar'] || 'assets/icons/avatars/default.svg',
-        online: contact['online'] || false,
-        unread: contact['unread'] || 0,
-        email: contact['email'],
-        title: contact['title'],
-        department: contact['department'],
-        phone: contact['phone']
-      })))
+      tap(rawContacts => console.log('📥 Raw contacts from Firebase:', rawContacts.length, rawContacts)),
+      map(contacts => {
+        const mappedContacts = contacts.map(contact => ({
+          id: contact['id'],
+          name: contact['name'],
+          avatar: contact['avatar'] || 'assets/icons/avatars/default.svg',
+          online: contact['online'] || false,
+          unread: contact['unread'] || 0,
+          email: contact['email'],
+          title: contact['title'],
+          department: contact['department'],
+          phone: contact['phone']
+        }));
+        console.log('🔄 Mapped contacts:', mappedContacts.length, mappedContacts);
+        return mappedContacts;
+      })
     );
   }
 
@@ -1044,13 +1060,26 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
     }
   }
 
-  // Clear cache when needed
+  // Cache management methods
   clearCache() {
     this.userCache.clear();
     this.channelCache.clear();
     this.messageCache.clear();
     this.allUsers$ = null;
     this.allChannels$ = null;
+    console.log('🧹 Firebase cache cleared');
+  }
+
+  clearChannelCache() {
+    this.allChannels$ = null;
+    this.channelCache.clear();
+    console.log('🧹 Channel cache cleared');
+  }
+
+  clearUserCache() {
+    this.allUsers$ = null;
+    this.userCache.clear();
+    console.log('🧹 User cache cleared');
   }
 
   async createDirectMessage(userId: string, otherUserId: string): Promise<string> {
@@ -1197,6 +1226,24 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
     } catch (error) {
       console.error('Error updating sidebar settings:', error);
     }
+  }
+
+  // Force refresh methods to bypass cache
+  forceRefreshChannels(): Observable<Channel[]> {
+    console.log('🔄 Force refreshing channels from Firebase');
+    this.clearChannelCache();
+    return this.getAllChannels();
+  }
+
+  forceRefreshContacts(): Observable<Contact[]> {
+    console.log('🔄 Force refreshing contacts from Firebase');
+    return this.getAllContacts();
+  }
+
+  forceRefreshUsers(): Observable<User[]> {
+    console.log('🔄 Force refreshing users from Firebase');
+    this.clearUserCache();
+    return this.getAllUsers();
   }
 }
 

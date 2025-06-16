@@ -39,18 +39,18 @@ export const appConfig: ApplicationConfig = {
     provideFirestore(() => {
       const firestore = getFirestore();
       
-      // Only enable emulator in development
-      if (!environment.production && !firestore.app.options.projectId?.includes('production')) {
-        try {
-          connectFirestoreEmulator(firestore, 'localhost', 8080);
-        } catch (err) {
-          // Emulator connection failed, continue with production Firestore
-          console.warn('Failed to connect to Firestore emulator, using production:', err);
-        }
-      }
+      // TEMPORARILY DISABLED: Only enable emulator in development
+      // if (!environment.production && !firestore.app.options.projectId?.includes('production')) {
+      //   try {
+      //     connectFirestoreEmulator(firestore, 'localhost', 8080);
+      //   } catch (err) {
+      //     // Emulator connection failed, continue with production Firestore
+      //     console.warn('Failed to connect to Firestore emulator, using production:', err);
+      //   }
+      // }
       
-             // Enable persistence with error handling
-       enableIndexedDbPersistence(firestore)
+      // Enable persistence with error handling
+      enableIndexedDbPersistence(firestore)
       .catch(err => {
         if (err.code === 'failed-precondition') {
           console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time.');

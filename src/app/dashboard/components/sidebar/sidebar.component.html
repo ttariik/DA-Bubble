@@ -15,6 +15,18 @@
       </div>
     </div>
 
+    <!-- Debug Refresh Button (temporarily added for Firebase debugging) -->
+    <div class="debug-section" style="padding: 8px; border-bottom: 1px solid #e0e0e0; background-color: #f8f9ff;">
+      <button 
+        class="refresh-button" 
+        (click)="refreshData()"
+        style="width: 100%; padding: 8px; background-color: #444df2; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;"
+        title="Daten von Firebase neu laden"
+      >
+        🔄 Firebase Daten aktualisieren
+      </button>
+    </div>
+
     <!-- Channels Section -->
     <div class="section">
       <div class="section-header" (click)="toggleChannels()">

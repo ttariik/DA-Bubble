@@ -259,22 +259,26 @@ export class SidebarComponent implements OnInit, OnChanges {
     return `${day}.${month}.${year}`;
   }
   
-  async ngOnInit() {
+  ngOnInit() {
+    console.log('🔄 Sidebar ngOnInit called');
+    
     // Initialize channels$ with Firestore channels
     this.channels$ = this.authService.user$.pipe(
       filter((user): user is User => !!user),
+      tap(user => console.log('👤 User authenticated:', user.uid)),
       switchMap((user) => {
         // Ensure user is added to the default "Entwicklerteam" channel
         this.ensureUserInDefaultChannel(user.uid);
         
-        // Get all user channels from Firestore
-        return this.firestoreService.getUserChannels(user.uid).pipe(
+        // Force refresh to get latest data from Firebase
+        return this.firestoreService.forceRefreshChannels().pipe(
           map(firestoreChannels => {
+            console.log('📊 Processing channels from Firebase:', firestoreChannels.length);
             // Convert Firestore channels to local channel format
             const channels = firestoreChannels.map(fc => ({
               id: fc.id || '',
-              name: fc.channelName || '',
-              description: fc.channelDescription || '',
+              name: fc.name || '',
+              description: fc.description || '',
               unread: fc.unread || 0
             }));
             
@@ -296,6 +300,7 @@ export class SidebarComponent implements OnInit, OnChanges {
               }
             }
             
+            console.log('✅ Final channels list:', channels);
             return channels;
           })
         );
@@ -304,20 +309,25 @@ export class SidebarComponent implements OnInit, OnChanges {
 
     // Subscribe to channels$ to update the local channels array
     this.channels$.subscribe(channels => {
+      console.log('📥 Channels subscription update:', channels.length, 'channels');
       this.channels = channels;
       // Channel data is now managed by Firebase, no local storage needed
     });
 
-    // Subscribe to direct messages
+    // Subscribe to direct messages with force refresh
     this.authService.user$.pipe(
       filter((user): user is User => !!user),
-      switchMap(user => this.firestoreService.getUserDirectMessages())
+      switchMap(user => {
+        console.log('🔄 Loading direct messages for user:', user.uid);
+        return this.firestoreService.getUserDirectMessages();
+      })
     ).subscribe(messages => {
+      console.log('📥 Direct messages subscription update:', messages.length, 'messages');
       this.directMessages = messages;
     });
 
-    // Subscribe to contacts
-    this.contacts$ = this.firestoreService.getAllContacts();
+    // Subscribe to contacts with force refresh
+    this.contacts$ = this.firestoreService.forceRefreshContacts();
     
     // Load selected content
     this.loadSelectedContent();
@@ -537,5 +547,34 @@ export class SidebarComponent implements OnInit, OnChanges {
     
     // Close modal
     this.closeDeleteDMModal();
+  }
+
+  // Manual refresh methods for debugging
+  refreshData() {
+    console.log('🔄 Manual data refresh triggered');
+    
+    // Clear all caches
+    this.firestoreService.clearCache();
+    
+    // Force refresh channels
+    this.channels$ = this.firestoreService.forceRefreshChannels();
+    this.channels$.subscribe(channels => {
+      console.log('🔄 Manual refresh - channels updated:', channels.length);
+      this.channels = channels;
+    });
+    
+    // Force refresh contacts
+    this.contacts$ = this.firestoreService.forceRefreshContacts();
+    
+    // Force refresh direct messages
+    const user = this.authService.currentUser;
+    if (user) {
+      this.firestoreService.getUserDirectMessages().subscribe(messages => {
+        console.log('🔄 Manual refresh - direct messages updated:', messages.length);
+        this.directMessages = messages;
+      });
+    }
+    
+    console.log('✅ Manual refresh completed');
   }
 } 
