@@ -389,25 +389,40 @@ export class DashboardComponent implements OnInit, OnDestroy {
    * Wird aufgerufen, wenn ein Benutzer einen Channel verlässt
    */
   handleChannelLeft(channelId: string) {
-    console.log(`Channel mit ID ${channelId} wurde verlassen`);
+    console.log('🚪 Dashboard: User left channel with ID:', channelId);
     
-    // Channel aus der Sidebar entfernen
+    // Channel aus der Sidebar entfernen und refreshen
     if (this.sidebar) {
+      console.log('🗑️ Dashboard: Removing channel from sidebar UI');
       this.sidebar.removeChannelFromUI(channelId);
     }
     
     // Wenn der verlassene Channel der ausgewählte war, wechsle zum Standardkanal
-    if (this.selectedChannel.id === channelId && this.sidebar.channels.length > 0) {
-      // Wähle den ersten verfügbaren Channel aus (normalerweise Entwicklerteam)
-      this.selectedChannel = this.sidebar.channels[0];
+    if (this.selectedChannel.id === channelId) {
+      console.log('🔄 Dashboard: Switching to default channel since current was left');
       
-      // Aktualisiere den Chat-Bereich mit dem neuen ausgewählten Channel
-      if (this.chatArea) {
-        this.chatArea.changeChannel(this.selectedChannel.name, this.selectedChannel.id);
-      }
-      
-      this.firestoreService.updateSelectedChannel(this.selectedChannel.id);
+      // Warte auf den Force-Refresh und dann wechsle zum ersten Channel
+      setTimeout(() => {
+        if (this.sidebar && this.sidebar.channels.length > 0) {
+          // Wähle den ersten verfügbaren Channel aus (normalerweise Entwicklerteam)
+          this.selectedChannel = this.sidebar.channels[0];
+          
+          console.log('✅ Dashboard: Switched to channel:', this.selectedChannel.name);
+          
+          // Aktualisiere den Chat-Bereich mit dem neuen ausgewählten Channel
+          if (this.chatArea) {
+            this.chatArea.changeChannel(this.selectedChannel.name, this.selectedChannel.id);
+          }
+          
+          // Speichere die Auswahl in Firebase
+          this.firestoreService.updateSelectedChannel(this.selectedChannel.id);
+        } else {
+          console.log('⚠️ Dashboard: No channels available after leaving');
+        }
+      }, 1200); // Etwas länger warten, da jetzt auch der Force-Refresh passiert
     }
+    
+    console.log('✅ Dashboard: Channel leave process completed');
   }
 
   async loadSelectedContent() {

@@ -49,8 +49,8 @@ export const appConfig: ApplicationConfig = {
       //   }
       // }
       
-      // Enable persistence with error handling
-      enableIndexedDbPersistence(firestore)
+             // Enable persistence with error handling
+       enableIndexedDbPersistence(firestore)
       .catch(err => {
         if (err.code === 'failed-precondition') {
           console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time.');

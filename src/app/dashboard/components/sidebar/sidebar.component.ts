@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AddChannelModalComponent } from '../add-channel-modal/add-channel-modal.component';
 import { FirestoreService, Channel, ChannelStats, DirectMessage, Contact } from '../../../services/firestore.service';
-import { filter, map, switchMap, tap } from 'rxjs/operators';
+import { filter, map, switchMap, tap, debounceTime } from 'rxjs/operators';
 import { Observable, forkJoin, of, from } from 'rxjs';
 import { AddPeopleModalComponent } from '../add-people-modal/add-people-modal.component';
 import { ContactProfileModalComponent, ContactProfile } from '../contact-profile-modal/contact-profile-modal.component';
@@ -213,25 +213,22 @@ export class SidebarComponent implements OnInit, OnChanges {
     this.sidebarCollapsed = !this.sidebarCollapsed;
   }
   
+  /**
+   * Entfernt einen Channel aus der UI nach dem Verlassen
+   * @param channelId - Die ID des zu entfernenden Channels
+   */
   removeChannelFromUI(channelId: string) {
-    // Schütze den Hauptkanal "Entwicklerteam" vor dem Entfernen
-    if (channelId === '1') {
-      console.warn('Der Hauptkanal "Entwicklerteam" kann nicht entfernt werden.');
-      return;
-    }
+    console.log('🗑️ Removing channel from UI:', channelId);
     
-    // Entferne den Channel aus dem lokalen Array
+    // Entferne den Channel aus der lokalen Liste sofort für bessere UX
     this.channels = this.channels.filter(channel => channel.id !== channelId);
     
-    // Channel data will be automatically synced through Firebase subscriptions
+    // Verwende die neue Force-Refresh-Methode
+    setTimeout(() => {
+      this.forceRefreshUserChannels();
+    }, 500); // Kurze Verzögerung, damit Firebase-Update sicher abgeschlossen ist
     
-    // Wenn der gelöschte Channel der aktuell ausgewählte war, wähle stattdessen den ersten Channel aus
-    if (this.selectedChannelId === channelId && this.channels.length > 0) {
-      this.selectChannel(this.channels[0]);
-    }
-    
-    // Benachrichtige den übergeordneten Komponenten über die Löschung
-    this.channelDeleted.emit(channelId);
+    console.log('✅ Channel removed from UI, triggering refresh');
   }
   
   selectDirectMessage(directMessage: DirectMessage) {
@@ -270,15 +267,15 @@ export class SidebarComponent implements OnInit, OnChanges {
         // Ensure user is added to the default "Entwicklerteam" channel
         this.ensureUserInDefaultChannel(user.uid);
         
-        // Force refresh to get latest data from Firebase
-        return this.firestoreService.forceRefreshChannels().pipe(
+        // Get user-specific channels (only channels the user is a member of)
+        return this.firestoreService.getUserChannels(user.uid).pipe(
           map(firestoreChannels => {
-            console.log('📊 Processing channels from Firebase:', firestoreChannels.length);
+            console.log('📊 Processing user channels from Firebase:', firestoreChannels.length);
             // Convert Firestore channels to local channel format
             const channels = firestoreChannels.map(fc => ({
               id: fc.id || '',
-              name: fc.name || '',
-              description: fc.description || '',
+              name: fc.channelName || '',
+              description: fc.channelDescription || '',
               unread: fc.unread || 0
             }));
             
@@ -300,7 +297,7 @@ export class SidebarComponent implements OnInit, OnChanges {
               }
             }
             
-            console.log('✅ Final channels list:', channels);
+            console.log('✅ Final user channels list:', channels);
             return channels;
           })
         );
@@ -576,5 +573,63 @@ export class SidebarComponent implements OnInit, OnChanges {
     }
     
     console.log('✅ Manual refresh completed');
+  }
+
+  /**
+   * Force refresh der User-spezifischen Channels
+   * Wird nach dem Verlassen eines Channels aufgerufen
+   */
+  forceRefreshUserChannels() {
+    const currentUser = this.authService.currentUser;
+    if (!currentUser) {
+      console.log('⚠️ No current user for channel refresh');
+      return;
+    }
+
+    console.log('🔄 Force refreshing user channels for:', currentUser.uid);
+    
+    // Erstelle eine komplett neue Observable-Kette
+    this.channels$ = this.firestoreService.getUserChannels(currentUser.uid).pipe(
+      // Warte kurz, damit Firebase-Änderungen sicher propagiert sind
+      debounceTime(300),
+      map(firestoreChannels => {
+        console.log('📊 Fresh user channels from Firebase after leave:', firestoreChannels.length);
+        
+        // Convert Firestore channels to local channel format
+        const channels = firestoreChannels.map(fc => ({
+          id: fc.id || '',
+          name: fc.channelName || '',
+          description: fc.channelDescription || '',
+          unread: fc.unread || 0
+        }));
+        
+        // Always ensure "Entwicklerteam" channel is present as first channel
+        const entwicklerteamExists = channels.some(channel => channel.id === '1' && channel.name === 'Entwicklerteam');
+        if (!entwicklerteamExists) {
+          channels.unshift({
+            id: '1',
+            name: 'Entwicklerteam',
+            description: 'Der Hauptkanal für das Entwicklerteam',
+            unread: 0
+          });
+        } else {
+          // Move Entwicklerteam to first position if it exists but is not at the beginning
+          const entwicklerteamIndex = channels.findIndex(channel => channel.id === '1' && channel.name === 'Entwicklerteam');
+          if (entwicklerteamIndex > 0) {
+            const entwicklerteamChannel = channels.splice(entwicklerteamIndex, 1)[0];
+            channels.unshift(entwicklerteamChannel);
+          }
+        }
+        
+        console.log('✅ Refreshed user channels:', channels.map(c => `${c.id}: ${c.name}`));
+        return channels;
+      })
+    );
+    
+    // Subscribe to the refreshed channel list
+    this.channels$.subscribe(channels => {
+      console.log('📥 User channels updated after refresh:', channels.length, 'channels');
+      this.channels = channels;
+    });
   }
 } 

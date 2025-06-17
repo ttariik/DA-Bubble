@@ -131,10 +131,12 @@ export class FirestoreService {
 
   // Optimized user queries with caching
   getUserChannels(uid: string): Observable<any[]> {
+    console.log('🔍 getUserChannels called for user:', uid);
     const channelsRef = collection(this.firestore, 'channels');
     const q = query(channelsRef, where('members', 'array-contains', uid));
     
     return collectionData(q, { idField: 'id' }).pipe(
+      tap(channels => console.log('📥 Raw user channels from Firebase:', channels.length, channels.map(c => c['channelName']))),
       distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)),
       shareReplay(1)
     ) as Observable<any[]>;
@@ -557,10 +559,13 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
    */
   async leaveChannel(channelId: string, userId: string): Promise<void> {
     try {
+      console.log('🚪 FirestoreService: Leaving channel:', { channelId, userId });
+      
       // Schütze den Hauptkanal "Entwicklerteam" vor dem Verlassen
       if (channelId === '1') {
-        console.warn('Der Hauptkanal "Entwicklerteam" kann nicht verlassen werden.');
-        return Promise.reject(new Error('Der Hauptkanal "Entwicklerteam" kann nicht verlassen werden.'));
+        const error = new Error('Der Hauptkanal "Entwicklerteam" kann nicht verlassen werden.');
+        console.warn('⚠️ FirestoreService:', error.message);
+        return Promise.reject(error);
       }
       
       // Referenz zum Channel-Dokument
@@ -568,23 +573,36 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
       const channelDoc = await getDoc(channelRef);
       
       if (!channelDoc.exists()) {
-        console.error(`Channel mit ID ${channelId} existiert nicht.`);
-        return Promise.resolve();
+        const error = new Error(`Channel mit ID ${channelId} existiert nicht.`);
+        console.error('❌ FirestoreService:', error.message);
+        return Promise.reject(error);
       }
       
       // Aktuelle Mitgliederliste holen
       const data = channelDoc.data();
       const members = data['members'] || [];
       
+      console.log('👥 Current members:', members.length, 'Removing user:', userId);
+      
       // Benutzer aus der Mitgliederliste entfernen
       const updatedMembers = members.filter((memberId: string) => memberId !== userId);
+      
+      if (updatedMembers.length === members.length) {
+        console.log('ℹ️ User was not in the channel members list');
+      }
       
       // Mitgliederliste aktualisieren
       await updateDoc(channelRef, { members: updatedMembers });
       
+      console.log('✅ FirestoreService: User successfully removed from channel');
+      console.log('👥 Updated members count:', updatedMembers.length);
+      
+      // Cache invalidieren, damit die UI sich aktualisiert
+      this.clearChannelCache();
+      
       return Promise.resolve();
     } catch (error) {
-      console.error('Fehler beim Verlassen des Channels:', error);
+      console.error('❌ FirestoreService: Error leaving channel:', error);
       return Promise.reject(error);
     }
   }

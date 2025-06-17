@@ -1167,9 +1167,11 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
       return;
     }
 
+    console.log('🚪 Leaving channel:', this.channelId, 'User:', this.currentUserId);
+
     // Entferne den Benutzer aus dem Channel in Firestore
     this.firestoreService.leaveChannel(this.channelId, this.currentUserId).then(() => {
-      console.log(`Channel ${this.channelName} (ID: ${this.channelId}) verlassen`);
+      console.log(`✅ Successfully left channel ${this.channelName} (ID: ${this.channelId})`);
       
       // Schließe die Dialoge
       this.showLeaveConfirmDialog = false;
@@ -1180,9 +1182,22 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
       
       // Benachrichtige die übergeordnete Komponente, dass der Channel verlassen wurde
       this.channelLeft.emit(this.channelId);
+      
+      // Erfolgreiche Rückmeldung
+      console.log('🎉 Channel successfully left and UI updated');
+      
     }).catch(error => {
-      console.error('Fehler beim Verlassen des Channels:', error);
-      alert('Beim Verlassen des Channels ist ein Fehler aufgetreten. Bitte versuche es später erneut.');
+      console.error('❌ Error leaving channel:', error);
+      
+      // Unterscheide zwischen verschiedenen Fehlertypen
+      if (error.message && error.message.includes('Entwicklerteam')) {
+        alert('Der Hauptkanal "Entwicklerteam" kann nicht verlassen werden.');
+      } else if (error.message && error.message.includes('nicht')) {
+        alert('Dieser Channel existiert nicht mehr.');
+      } else {
+        alert('Beim Verlassen des Channels ist ein Fehler aufgetreten. Bitte versuche es später erneut.');
+      }
+      
       this.showLeaveConfirmDialog = false;
       this.closeChannelInfoModal();
     });
