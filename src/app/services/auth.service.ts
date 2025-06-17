@@ -7,6 +7,7 @@ import {
 } from '@angular/fire/auth';
 import { Auth, signInWithPopup, GoogleAuthProvider, signOut, User,  signInWithEmailAndPassword, authState } from '@angular/fire/auth';
 import { doc, Firestore, getDoc, setDoc } from '@angular/fire/firestore';
+import { Storage } from '@angular/fire/storage';
 import { async, BehaviorSubject, filter, from, Observable } from 'rxjs';
 import { FirestoreService } from './firestore.service';
 
@@ -21,7 +22,7 @@ public currentUser$ = this.user$.pipe(
   filter((user): user is User => !!user)
 );
 
-  constructor(private auth: Auth, private firestore: Firestore) {
+  constructor(private auth: Auth, private firestore: Firestore, private storage: Storage) {
 
   }
 
@@ -58,7 +59,7 @@ loginWithGoogle(): Observable<User> {
       }
 
       // Ensure user is added to the default channel
-      const firestoreService = new FirestoreService(this.firestore, this.auth);
+      const firestoreService = new FirestoreService(this.firestore, this.auth, this.storage);
       await firestoreService.ensureDefaultChannel(user.uid);
 
       return user;
@@ -89,7 +90,7 @@ loginWithGoogle(): Observable<User> {
     return createUserWithEmailAndPassword(this.auth, email, password)
       .then(async (userCredential) => {
         // Ensure user is added to the default channel
-        const firestoreService = new FirestoreService(this.firestore, this.auth);
+        const firestoreService = new FirestoreService(this.firestore, this.auth, this.storage);
         await firestoreService.ensureDefaultChannel(userCredential.user.uid);
         return userCredential.user;
       })
@@ -109,7 +110,7 @@ loginWithGoogle(): Observable<User> {
     return signInWithEmailAndPassword(this.auth, email, password)
       .then(async (userCredential) => {
         // Ensure user is added to the default channel
-        const firestoreService = new FirestoreService(this.firestore, this.auth);
+        const firestoreService = new FirestoreService(this.firestore, this.auth, this.storage);
         await firestoreService.ensureDefaultChannel(userCredential.user.uid);
         return userCredential.user;
       })

@@ -131,6 +131,41 @@
               </div>
               <div *ngIf="!message.isEditing" class="message-bubble" [class.deleted-message]="message.isDeleted">
                 {{ message.text }}
+                
+                <!-- File Attachment Display -->
+                <div class="file-attachment" *ngIf="message.fileAttachment && !message.isDeleted">
+                  <div class="file-attachment-content" 
+                       [class.image-attachment]="message.fileAttachment.fileType.startsWith('image/')">
+                    
+                    <!-- Image Preview -->
+                    <div class="image-preview" *ngIf="message.fileAttachment.fileType.startsWith('image/')">
+                      <img [src]="message.fileAttachment.downloadUrl" 
+                           [alt]="message.fileAttachment.fileName"
+                           (click)="message.fileAttachment.downloadUrl && openFileInNewTab(message.fileAttachment.downloadUrl)">
+                    </div>
+                    
+                    <!-- File Info for non-images -->
+                    <div class="file-info-display" *ngIf="!message.fileAttachment.fileType.startsWith('image/')">
+                      <div class="file-icon-large">
+                        {{ getFileIcon(message.fileAttachment.fileType) }}
+                      </div>
+                      <div class="file-details">
+                        <div class="file-name-display">{{ message.fileAttachment.fileName }}</div>
+                        <div class="file-size-display">{{ formatFileSize(message.fileAttachment.fileSize) }}</div>
+                      </div>
+                      <a [href]="message.fileAttachment.downloadUrl" 
+                         download 
+                         class="download-btn"
+                         target="_blank">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                          <polyline points="7 10 12 15 17 10"></polyline>
+                          <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                      </a>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <!-- Message Hover Menu - only show when not editing and not deleted -->
@@ -180,8 +215,50 @@
     </div>
 
     <!-- Message Input -->
-    <div class="message-input-container">
+    <div class="message-input-container" 
+         [class.drag-over]="dragOverActive"
+         (dragover)="onDragOver($event)"
+         (dragleave)="onDragLeave($event)"
+         (drop)="onDrop($event)">
+      
+      <!-- File Preview -->
+      <div class="file-preview-container" *ngIf="showFilePreview">
+        <div class="file-preview">
+          <div class="file-preview-content">
+            <div class="file-icon">{{ filePreviewData?.icon }}</div>
+            <div class="file-info">
+              <div class="file-name">{{ filePreviewData?.name }}</div>
+              <div class="file-size">{{ filePreviewData?.size }}</div>
+            </div>
+            <div class="file-preview-image" *ngIf="filePreviewData?.previewUrl">
+              <img [src]="filePreviewData.previewUrl" [alt]="filePreviewData.name">
+            </div>
+          </div>
+          <button class="remove-file-btn" (click)="removeFilePreview()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Drag and Drop Overlay -->
+      <div class="drag-drop-overlay" *ngIf="dragOverActive">
+        <div class="drag-drop-content">
+          <div class="drag-drop-icon">📎</div>
+          <div class="drag-drop-text">Datei hier ablegen zum Hochladen</div>
+        </div>
+      </div>
+
       <div class="message-input-wrapper">
+        <!-- Hidden File Input -->
+        <input type="file" 
+               id="fileInput" 
+               (change)="onFileSelected($event)" 
+               [accept]="allowedFileTypes.join(',')"
+               style="display: none;">
+
         <textarea
           class="message-input"
           [placeholder]="isDirect ? 'Nachricht an ' + directContact?.name + ' senden' : 'Nachricht an #' + channelName + ' senden'"
@@ -190,21 +267,31 @@
           (keyup)="handleInputKeyup($event)"
         ></textarea>
         <div class="input-actions">
-          <div>
+          <div class="left-actions">
             <button class="react-button emoji-button" (click)="openEmojiPicker()">
               <img src="./assets/icons/dashboard/reaction.svg" alt="Emoji" />
             </button>
             <button class="react-button" (click)="insertMention()">
               <img src="./assets/icons/dashboard/mark.svg" alt="Mention" />
             </button>
+            <button class="react-button file-button" (click)="triggerFileInput()" [disabled]="isUploading">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14,2 14,8 20,8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10,9 9,9 8,9"></polyline>
+              </svg>
+            </button>
           </div>
 
           <button
             class="send-button"
-            [disabled]="!messageInput.trim() || isSending"
+            [disabled]="(!messageInput.trim() && !selectedFile) || isSending || isUploading"
             (click)="sendMessage()"
           >
-            <img src="./assets/icons/dashboard/send.svg" alt="" />
+            <span *ngIf="isUploading" class="upload-spinner">⏳</span>
+            <img *ngIf="!isUploading" src="./assets/icons/dashboard/send.svg" alt="Senden" />
           </button>
         </div>
       </div>

@@ -6,6 +6,7 @@ import { routes } from './app.routes';
 import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
 import { getAuth, provideAuth } from '@angular/fire/auth';
 import { getFirestore, provideFirestore, enableIndexedDbPersistence, connectFirestoreEmulator, CACHE_SIZE_UNLIMITED } from '@angular/fire/firestore';
+import { getStorage, provideStorage } from '@angular/fire/storage';
 import { environment } from '../environments/environment';
 import { provideServiceWorker } from '@angular/service-worker';
 
@@ -36,6 +37,7 @@ export const appConfig: ApplicationConfig = {
       messagingSenderId: "50180363425" 
     })), 
     provideAuth(() => getAuth()), 
+    provideStorage(() => getStorage()),
     provideFirestore(() => {
       const firestore = getFirestore();
       

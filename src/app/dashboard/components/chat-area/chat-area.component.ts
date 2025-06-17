@@ -5,6 +5,7 @@ import { FirestoreService, Message as FirestoreMessage } from '../../../services
 import { AddPeopleModalComponent } from '../add-people-modal/add-people-modal.component';
 import { Auth } from '@angular/fire/auth';
 import { Firestore, collection, addDoc, serverTimestamp, doc, updateDoc } from '@angular/fire/firestore';
+import { Storage } from '@angular/fire/storage';
 import { Dialog, DialogModule } from '@angular/cdk/dialog';
 import { DeleteChannelMessagesModalComponent } from '../delete-channel-messages-modal/delete-channel-messages-modal.component';
 import { ResourceOptimizerService } from '../../../services/resource-optimizer.service';
@@ -72,6 +73,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
   private dialog = inject(Dialog);
   private cdr = inject(ChangeDetectorRef);
   private resourceOptimizer = inject(ResourceOptimizerService);
+  private storage = inject(Storage);
 
   messageInput: string = '';
   showEmojiPicker: boolean = false;
@@ -80,6 +82,25 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
   emojiPickerTargetMessage: Message | null = null;
   editingMessage: Message | null = null;
   isSending: boolean = false;
+  
+  // File upload properties
+  selectedFile: File | null = null;
+  isUploading: boolean = false;
+  showFilePreview: boolean = false;
+  filePreviewData: any = null;
+  dragOverActive: boolean = false;
+  allowedFileTypes: string[] = [
+    'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+    'application/pdf',
+    'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'text/plain', 'text/csv',
+    'application/zip', 'application/x-rar-compressed',
+    'video/mp4', 'video/avi', 'video/mkv',
+    'audio/mp3', 'audio/wav', 'audio/ogg'
+  ];
+  maxFileSize: number = 10 * 1024 * 1024; // 10MB
   
   // Channel info modal
   showChannelDescriptionModal: boolean = false;
@@ -465,6 +486,12 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
   }
   
   async sendMessage() {
+    // Check if we have a file to upload
+    if (this.selectedFile) {
+      await this.sendMessageWithFile();
+      return;
+    }
+
     // Prevent double sending
     if (this.isSending) {
       console.log('⏳ Message is already being sent, ignoring click');
@@ -1508,5 +1535,133 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
         message.reactions = message.reactions?.filter(r => r.type !== reactionType);
       }
     }
+  }
+
+  // File Upload Methods
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.handleFileSelection(file);
+    }
+  }
+
+  handleFileSelection(file: File) {
+    // Validate file type
+    if (!this.allowedFileTypes.includes(file.type)) {
+      alert('Dateityp nicht unterstützt. Bitte wählen Sie eine andere Datei.');
+      return;
+    }
+
+    // Validate file size
+    if (file.size > this.maxFileSize) {
+      alert('Datei ist zu groß. Maximale Dateigröße: 10MB.');
+      return;
+    }
+
+    this.selectedFile = file;
+    this.createFilePreview(file);
+    this.showFilePreview = true;
+  }
+
+  createFilePreview(file: File) {
+    this.filePreviewData = {
+      name: file.name,
+      size: this.firestoreService.formatFileSize(file.size),
+      type: file.type,
+      icon: this.firestoreService.getFileIcon(file.type)
+    };
+
+    // Create preview URL for images
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.filePreviewData.previewUrl = e.target.result;
+        this.cdr.detectChanges();
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  removeFilePreview() {
+    this.selectedFile = null;
+    this.showFilePreview = false;
+    this.filePreviewData = null;
+  }
+
+  async sendMessageWithFile() {
+    if (!this.selectedFile) {
+      await this.sendMessage();
+      return;
+    }
+
+    if (this.isUploading || this.isSending) return;
+
+    try {
+      this.isUploading = true;
+      this.isSending = true;
+
+      // Upload file to Firebase Storage
+      const fileData = await this.firestoreService.uploadFile(this.selectedFile, this.channelId);
+
+      // Send message with file attachment
+      await this.firestoreService.sendMessageWithFile(
+        this.channelId,
+        this.messageInput.trim(),
+        fileData
+      );
+
+      // Clear input and file
+      this.messageInput = '';
+      this.removeFilePreview();
+
+      console.log('Message with file sent successfully');
+    } catch (error) {
+      console.error('Error sending message with file:', error);
+      alert('Fehler beim Senden der Nachricht mit Datei. Bitte versuchen Sie es erneut.');
+    } finally {
+      this.isUploading = false;
+      this.isSending = false;
+    }
+  }
+
+  // Drag and Drop Methods
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.dragOverActive = true;
+  }
+
+  onDragLeave(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.dragOverActive = false;
+  }
+
+  onDrop(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.dragOverActive = false;
+
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      this.handleFileSelection(files[0]);
+    }
+  }
+
+  triggerFileInput() {
+    const fileInput = document.getElementById('fileInput') as HTMLInputElement;
+    fileInput?.click();
+  }
+
+  openFileInNewTab(url: string) {
+    window.open(url, '_blank');
+  }
+
+  getFileIcon(fileType: string): string {
+    return this.firestoreService.getFileIcon(fileType);
+  }
+
+  formatFileSize(bytes: number): string {
+    return this.firestoreService.formatFileSize(bytes);
   }
 } 

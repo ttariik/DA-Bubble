@@ -21,6 +21,7 @@ import {
   QuerySnapshot,
   deleteDoc
 } from '@angular/fire/firestore';
+import { Storage, ref, uploadBytes, getDownloadURL, deleteObject } from '@angular/fire/storage';
 import { User } from '../models/user.class';
 import { map, Observable, from, of, forkJoin, combineLatest, switchMap, shareReplay, distinctUntilChanged, debounceTime, tap } from 'rxjs';
 import { Auth } from '@angular/fire/auth';
@@ -69,6 +70,13 @@ export interface Message {
   isThreadMessage?: boolean;
   isDeleted?: boolean;
   isEdited?: boolean;
+  fileAttachment?: {
+    fileName: string;
+    fileUrl: string;
+    fileType: string;
+    fileSize: number;
+    downloadUrl?: string;
+  };
 }
 
 export interface SearchResult {
@@ -127,7 +135,7 @@ export class FirestoreService {
   private allUsers$: Observable<User[]> | null = null;
   private allChannels$: Observable<Channel[]> | null = null;
 
-  constructor(private firestore: Firestore, private auth: Auth) {}
+  constructor(private firestore: Firestore, private auth: Auth, private storage: Storage) {}
 
   // Optimized user queries with caching
   getUserChannels(uid: string): Observable<any[]> {
@@ -1288,9 +1296,109 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
   }
 
   forceRefreshUsers(): Observable<User[]> {
-    console.log('🔄 Force refreshing users from Firebase');
-    this.clearUserCache();
+    this.allUsers$ = null;
     return this.getAllUsers();
+  }
+
+  // File Upload Methods
+  async uploadFile(file: File, channelId: string): Promise<{ fileName: string; fileUrl: string; fileType: string; fileSize: number; downloadUrl: string }> {
+    try {
+      // Create a unique filename
+      const timestamp = Date.now();
+      const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const fileName = `${timestamp}_${sanitizedFileName}`;
+      const filePath = `chat-files/${channelId}/${fileName}`;
+      
+      // Create a reference to the file location
+      const fileRef = ref(this.storage, filePath);
+      
+      // Upload the file
+      const uploadResult = await uploadBytes(fileRef, file);
+      
+      // Get the download URL
+      const downloadUrl = await getDownloadURL(uploadResult.ref);
+      
+      return {
+        fileName: file.name,
+        fileUrl: filePath,
+        fileType: file.type,
+        fileSize: file.size,
+        downloadUrl: downloadUrl
+      };
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      throw error;
+    }
+  }
+
+  async deleteFile(fileUrl: string): Promise<void> {
+    try {
+      const fileRef = ref(this.storage, fileUrl);
+      await deleteObject(fileRef);
+    } catch (error) {
+      console.error('Error deleting file:', error);
+      throw error;
+    }
+  }
+
+  async sendMessageWithFile(channelId: string, messageText: string, fileData: any): Promise<void> {
+    try {
+      const currentUser = this.auth.currentUser;
+      if (!currentUser) {
+        throw new Error('User not authenticated');
+      }
+
+      // Get user data from cache or fetch
+      const userData = await this.getSingelUser(currentUser.uid);
+      
+      const messageData = {
+        text: messageText || '',
+        userId: currentUser.uid,
+        userName: (userData as any).name || currentUser.displayName || 'Unbekannter Benutzer',
+        userAvatar: (userData as any).avatar || 'assets/icons/avatars/default.svg',
+        channelId: channelId,
+        timestamp: serverTimestamp(),
+        fileAttachment: fileData
+      };
+
+      const messagesRef = collection(this.firestore, 'messages');
+      await addDoc(messagesRef, messageData);
+      
+      console.log('Message with file sent successfully');
+    } catch (error) {
+      console.error('Error sending message with file:', error);
+      throw error;
+    }
+  }
+
+  getFileIcon(fileType: string): string {
+    if (fileType.startsWith('image/')) {
+      return '🖼️';
+    } else if (fileType === 'application/pdf') {
+      return '📄';
+    } else if (fileType.startsWith('video/')) {
+      return '🎥';
+    } else if (fileType.startsWith('audio/')) {
+      return '🎵';
+    } else if (fileType.includes('word') || fileType.includes('document')) {
+      return '📝';
+    } else if (fileType.includes('excel') || fileType.includes('spreadsheet')) {
+      return '📊';
+    } else if (fileType.includes('powerpoint') || fileType.includes('presentation')) {
+      return '📈';
+    } else if (fileType.includes('zip') || fileType.includes('rar')) {
+      return '🗜️';
+    } else {
+      return '📎';
+    }
+  }
+
+  formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   }
 }
 
