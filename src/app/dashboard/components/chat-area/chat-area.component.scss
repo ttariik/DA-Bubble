@@ -2058,6 +2058,34 @@
     border-radius: 8px;
     border-left: 4px solid #f57c00;
   }
+
+  .delete-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    color: #e74c3c;
+    font-size: 14px;
+    background-color: rgba(231, 76, 60, 0.1);
+    padding: 16px;
+    border-radius: 8px;
+    border-left: 4px solid #e74c3c;
+    margin: 16px 0;
+
+    svg {
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    div {
+      flex: 1;
+      line-height: 1.5;
+    }
+
+    strong {
+      color: #c0392b;
+      font-weight: 600;
+    }
+  }
 }
 
 .leave-confirm-actions {

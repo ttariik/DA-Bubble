@@ -551,17 +551,17 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
   }
 
   /**
-   * Lässt einen Benutzer einen Channel verlassen
+   * Lässt einen Benutzer einen Channel verlassen und löscht den Channel komplett aus Firebase
    * 
    * @param channelId - Die ID des zu verlassenden Channels
    * @param userId - Die ID des Benutzers, der den Channel verlassen möchte
-   * @returns Ein Promise, das aufgelöst wird, wenn der Channel erfolgreich verlassen wurde
+   * @returns Ein Promise, das aufgelöst wird, wenn der Channel erfolgreich gelöscht wurde
    */
   async leaveChannel(channelId: string, userId: string): Promise<void> {
     try {
-      console.log('🚪 FirestoreService: Leaving channel:', { channelId, userId });
+      console.log('🚪 FirestoreService: Leaving and deleting channel:', { channelId, userId });
       
-      // Schütze den Hauptkanal "Entwicklerteam" vor dem Verlassen
+      // Schütze den Hauptkanal "Entwicklerteam" vor dem Verlassen/Löschen
       if (channelId === '1') {
         const error = new Error('Der Hauptkanal "Entwicklerteam" kann nicht verlassen werden.');
         console.warn('⚠️ FirestoreService:', error.message);
@@ -578,32 +578,61 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
         return Promise.reject(error);
       }
       
-      // Aktuelle Mitgliederliste holen
+      // Channel-Info für Logging
       const data = channelDoc.data();
       const members = data['members'] || [];
+      const channelName = data['channelName'] || 'Unbekannt';
       
-      console.log('👥 Current members:', members.length, 'Removing user:', userId);
+      console.log('🗑️ Deleting channel completely:', { 
+        channelId, 
+        channelName, 
+        memberCount: members.length,
+        leavingUser: userId 
+      });
       
-      // Benutzer aus der Mitgliederliste entfernen
-      const updatedMembers = members.filter((memberId: string) => memberId !== userId);
+      // Channel wird IMMER komplett gelöscht, egal wie viele Mitglieder noch da sind
+      await this.deleteChannelCompletely(channelId);
       
-      if (updatedMembers.length === members.length) {
-        console.log('ℹ️ User was not in the channel members list');
-      }
-      
-      // Mitgliederliste aktualisieren
-      await updateDoc(channelRef, { members: updatedMembers });
-      
-      console.log('✅ FirestoreService: User successfully removed from channel');
-      console.log('👥 Updated members count:', updatedMembers.length);
+      console.log('✅ Channel and all messages successfully deleted from Firebase');
       
       // Cache invalidieren, damit die UI sich aktualisiert
       this.clearChannelCache();
       
       return Promise.resolve();
     } catch (error) {
-      console.error('❌ FirestoreService: Error leaving channel:', error);
+      console.error('❌ FirestoreService: Error deleting channel:', error);
       return Promise.reject(error);
+    }
+  }
+
+  /**
+   * Löscht einen Channel komplett aus Firebase einschließlich aller Nachrichten
+   * 
+   * @param channelId - Die ID des zu löschenden Channels
+   * @returns Ein Promise, das aufgelöst wird, wenn der Channel erfolgreich gelöscht wurde
+   */
+  private async deleteChannelCompletely(channelId: string): Promise<void> {
+    try {
+      console.log('🗑️ Deleting channel completely:', channelId);
+      
+      // Schütze den Hauptkanal "Entwicklerteam" vor dem Löschen
+      if (channelId === '1') {
+        console.warn('⚠️ Cannot delete main channel "Entwicklerteam"');
+        return;
+      }
+      
+      // 1. Erst alle Nachrichten des Channels löschen
+      await this.deleteAllChannelMessages(channelId);
+      
+      // 2. Dann den Channel selbst löschen
+      const channelRef = doc(this.firestore, 'channels', channelId);
+      await deleteDoc(channelRef);
+      
+      console.log('✅ Channel and all messages successfully deleted from Firebase');
+      
+    } catch (error) {
+      console.error('❌ Error deleting channel completely:', error);
+      throw error;
     }
   }
 

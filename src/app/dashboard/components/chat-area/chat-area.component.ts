@@ -1155,6 +1155,13 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
       return;
     }
 
+    console.log('🔍 Channel will be deleted:', { 
+      channelId: this.channelId,
+      channelName: this.channelName,
+      memberCount: this.memberCount, 
+      currentUser: this.currentUserId 
+    });
+
     // Zeige den Bestätigungsdialog an
     this.showLeaveConfirmDialog = true;
   }
@@ -1166,12 +1173,12 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
       this.closeChannelInfoModal();
       return;
     }
+    
+    console.log(`🗑️ Deleting channel:`, this.channelId, 'User:', this.currentUserId);
 
-    console.log('🚪 Leaving channel:', this.channelId, 'User:', this.currentUserId);
-
-    // Entferne den Benutzer aus dem Channel in Firestore
+    // Lösche den Channel komplett aus Firebase
     this.firestoreService.leaveChannel(this.channelId, this.currentUserId).then(() => {
-      console.log(`✅ Successfully left channel ${this.channelName} (ID: ${this.channelId})`);
+      console.log(`🗑️ Successfully deleted channel ${this.channelName} (ID: ${this.channelId})`);
       
       // Schließe die Dialoge
       this.showLeaveConfirmDialog = false;
@@ -1180,22 +1187,22 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
       // Lösche die Nachrichten des Channels aus dem lokalen Speicher
       this.deleteChannelMessages(this.channelId);
       
-      // Benachrichtige die übergeordnete Komponente, dass der Channel verlassen wurde
+      // Benachrichtige die übergeordnete Komponente, dass der Channel gelöscht wurde
       this.channelLeft.emit(this.channelId);
       
       // Erfolgreiche Rückmeldung
-      console.log('🎉 Channel successfully left and UI updated');
+      console.log('🎉 Channel successfully deleted from Firebase and UI updated');
       
     }).catch(error => {
-      console.error('❌ Error leaving channel:', error);
+      console.error('❌ Error deleting channel:', error);
       
       // Unterscheide zwischen verschiedenen Fehlertypen
       if (error.message && error.message.includes('Entwicklerteam')) {
-        alert('Der Hauptkanal "Entwicklerteam" kann nicht verlassen werden.');
+        alert('Der Hauptkanal "Entwicklerteam" kann nicht gelöscht werden.');
       } else if (error.message && error.message.includes('nicht')) {
         alert('Dieser Channel existiert nicht mehr.');
       } else {
-        alert('Beim Verlassen des Channels ist ein Fehler aufgetreten. Bitte versuche es später erneut.');
+        alert(`Beim Löschen des Channels ist ein Fehler aufgetreten. Bitte versuche es später erneut.`);
       }
       
       this.showLeaveConfirmDialog = false;
