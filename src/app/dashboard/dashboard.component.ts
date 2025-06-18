@@ -302,6 +302,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   async loadData() {
     this.activUserId = await this.authService.getActiveUserId();
+    console.log('🎯 Active User ID loaded:', this.activUserId);
+    
+    // Stelle sicher, dass der aktuelle Benutzer auch geladen wird
+    if (this.authService.currentUser) {
+      console.log('📱 Current user from auth:', this.authService.currentUser.displayName);
+    }
+    
+    this.cd.markForCheck();
   }
 
   loadAllUsers() {
@@ -319,6 +327,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
     if (user) {
       this.activUser = user;
+    } else if (this.authService.currentUser) {
+      // Fallback für Google-Nutzer, falls nicht in listOfAllUsers gefunden
+      const currentUser = this.authService.currentUser;
+      this.activUser = new User({
+        userId: currentUser.uid,
+        firstName: currentUser.displayName?.split(' ')[0] || 'Benutzer',
+        lastName: currentUser.displayName?.split(' ').slice(1).join(' ') || '',
+        email: currentUser.email || '',
+        avatar: currentUser.photoURL || 'assets/icons/avatars/noProfile.svg',
+        isActive: true
+      });
     }
     this.cd.markForCheck();
   }
@@ -876,5 +895,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.isDirectMessageActive = true;
       this.firestoreService.updateSelectedDirectMessage(existingDM.id);
     }
+  }
+
+  getProfileImageUrl(): string {
+    if (!this.activUser || !this.activUser.avatar) {
+      return 'assets/icons/avatars/noProfile.svg';
+    }
+
+    // Überprüfen ob es eine Google-URL ist (beginnt mit http)
+    if (this.activUser.avatar.startsWith('http')) {
+      return this.activUser.avatar;
+    }
+
+    // Fallback für lokale Avatare
+    return `assets/icons/avatars/${this.activUser.avatar}`;
+  }
+
+  onImageError(event: any) {
+    // Fallback-Bild setzen, wenn das Laden des Profilbilds fehlschlägt
+    event.target.src = 'assets/icons/avatars/noProfile.svg';
   }
 }

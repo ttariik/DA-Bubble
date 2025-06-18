@@ -182,15 +182,11 @@
         {{ activUser.firstName }} {{ activUser.lastName }}
       </div>
       <div class="user-avatar">
-        @if (auth.google) {
-        <img src="{{ activUser.avatar }}" alt="Profil Images" />
-        }@else{
-        <img
-          src="assets/icons/avatars/{{ activUser.avatar }}"
-          alt="Profil Images"
+        <img 
+          [src]="getProfileImageUrl()" 
+          [alt]="activUser.firstName + ' ' + activUser.lastName || 'Profil Bild'"
+          (error)="onImageError($event)"
         />
-        }
-
         <div class="status-indicator" [class.active]="activUser.isActive"></div>
       </div>
       <div class="dropdown-icon" [class.rotated]="profileMenuOpen">
