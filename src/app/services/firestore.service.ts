@@ -1168,23 +1168,61 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
   }
 
   async sendDirectMessage(dmId: string, message: any): Promise<void> {
-    const messagesRef = collection(this.firestore, 'messages');
-    const dmRef = doc(this.firestore, 'directMessages', dmId);
+    try {
+      const messagesRef = collection(this.firestore, 'messages');
+      const dmRef = doc(this.firestore, 'directMessages', dmId);
 
-    // Add the message
-    await addDoc(messagesRef, {
-      ...message,
-      channelId: `dm_${dmId}`,
-      timestamp: serverTimestamp()
-    });
+      // Add the message
+      await addDoc(messagesRef, {
+        ...message,
+        channelId: `dm_${dmId}`,
+        timestamp: serverTimestamp()
+      });
 
-    // Update the DM's last message
-    await updateDoc(dmRef, {
-      lastMessage: {
+      // Check if DirectMessage document exists, create or update accordingly
+      const dmDoc = await getDoc(dmRef);
+      const lastMessageData = {
         text: message.text,
         timestamp: serverTimestamp()
+      };
+
+      if (dmDoc.exists()) {
+        // Update existing document
+        await updateDoc(dmRef, {
+          lastMessage: lastMessageData
+        });
+      } else {
+        // Create new document if it doesn't exist
+        // If dmId starts with 'contact_', this is a contact-based DM
+        let users: string[] = [];
+        
+        if (dmId.startsWith('contact_')) {
+          // For contact-based DMs, we need to include the current user and the contact ID
+          const currentUserId = this.auth.currentUser?.uid;
+          if (currentUserId) {
+            users = [currentUserId, dmId];
+          }
+        } else {
+          // For regular user-to-user DMs, the dmId should be the other user's ID
+          const currentUserId = this.auth.currentUser?.uid;
+          if (currentUserId) {
+            users = [currentUserId, dmId];
+          }
+        }
+
+        await setDoc(dmRef, {
+          users: users,
+          createdAt: serverTimestamp(),
+          lastMessage: lastMessageData,
+          unread: 0
+        });
+        
+        console.log(`Created new DirectMessage document with ID: ${dmId} and users:`, users);
       }
-    });
+    } catch (error) {
+      console.error('Error sending direct message:', error);
+      throw error;
+    }
   }
 
   async saveUserSettings(settings: UserSettings): Promise<void> {
