@@ -466,6 +466,7 @@
   display: flex;
   flex-direction: column;
   height: calc(100% - 140px); 
+      background: linear-gradient(135deg, #f8f9ff 0%, #f0f3ff 50%, #e8ecff 100%);
 }
 
 .messages-scroll-area {
@@ -1018,6 +1019,7 @@
   padding: 16px;
   background: white;
   border-top: 1px solid #e0e0e0;
+  background: linear-gradient(135deg, #f8f9ff 0%, #f0f3ff 50%, #e8ecff 100%);
 
   .message-input-wrapper {
     display: flex;

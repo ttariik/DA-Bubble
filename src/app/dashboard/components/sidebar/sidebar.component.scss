@@ -637,7 +637,7 @@
   transition: width 0.3s ease;
   overflow: hidden;
   position: relative;
-  background-color: white;
+// background: linear-gradient(135deg, #f8f9ff 0%, #f0f3ff 50%, #e8ecff 100%);
   
   &.collapsed {
     width: 0;
