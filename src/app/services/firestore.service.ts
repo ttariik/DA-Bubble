@@ -157,20 +157,19 @@ export class FirestoreService {
       return of([]);
     }
 
-    // Check cache first
-    const cacheKey = `dm_${userId}`;
-    const cached = this.messageCache.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
-      return of(cached.data as DirectMessage[]);
-    }
-
     const dmRef = collection(this.firestore, 'directMessages');
     const q = query(dmRef, where('users', 'array-contains', userId));
 
     return collectionData(q, { idField: 'id' }).pipe(
       debounceTime(100), // Prevent rapid-fire queries
-      distinctUntilChanged(),
+      distinctUntilChanged((prev, curr) => {
+        // More sophisticated comparison to detect real changes
+        if (prev.length !== curr.length) return false;
+        return JSON.stringify(prev.map(p => p.id).sort()) === JSON.stringify(curr.map(c => c.id).sort());
+      }),
       switchMap(async (dms: any[]) => {
+        console.log('📥 Raw DirectMessage documents from Firebase:', dms.length);
+        
         const dmPromises = dms.map(async (dm: FirestoreDirectMessage & { id: string }) => {
           const otherUserId = dm['users'].find((id: string) => id !== userId);
           if (!otherUserId) return null;
@@ -233,12 +232,12 @@ export class FirestoreService {
         const resolvedDMs = await Promise.all(dmPromises);
         const filteredDMs = resolvedDMs.filter((dm): dm is DirectMessage => dm !== null);
         
-        // Cache the result
-        this.messageCache.set(cacheKey, { data: filteredDMs, timestamp: Date.now() });
+        console.log('🔄 Processed DirectMessages for UI:', filteredDMs.length, filteredDMs.map(dm => dm.name));
         
         return filteredDMs;
       }),
-      shareReplay(1)
+      // Remove shareReplay to ensure fresh subscriptions after deletions
+      tap(dms => console.log('📤 Emitting DirectMessages to subscribers:', dms.length))
     );
   }
 
@@ -994,7 +993,11 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
 
   async deleteDirectMessage(userId: string, otherUserId: string): Promise<void> {
     try {
-      // Find the direct message document
+      console.log('🗑️ Attempting to delete direct message between:', userId, 'and', otherUserId);
+      
+      let dmDocToDelete = null;
+      
+      // Method 1: Find by users array (standard user-to-user DMs)
       const dmRef = collection(this.firestore, 'directMessages');
       const q = query(
         dmRef,
@@ -1002,32 +1005,60 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
       );
       
       const querySnapshot = await getDocs(q);
-      const dmDoc = querySnapshot.docs.find(doc => {
+      dmDocToDelete = querySnapshot.docs.find(doc => {
         const data = doc.data();
         return data['users'].includes(otherUserId);
       });
 
-      if (dmDoc) {
+      // Method 2: If not found and otherUserId starts with 'contact_', try direct document lookup
+      if (!dmDocToDelete && otherUserId.startsWith('contact_')) {
+        console.log('🔍 Trying direct document lookup for contact:', otherUserId);
+        const directDocRef = doc(this.firestore, 'directMessages', otherUserId);
+        const directDoc = await getDoc(directDocRef);
+        
+        if (directDoc.exists()) {
+          // Create a document-like object with id and ref for consistency
+          dmDocToDelete = {
+            id: otherUserId,
+            ref: directDocRef,
+            exists: () => true,
+            data: () => directDoc.data()
+          };
+          console.log('✅ Found DM document by direct lookup with ID:', otherUserId);
+        }
+      }
+
+      if (dmDocToDelete && dmDocToDelete.id) {
+        const dmId = dmDocToDelete.id;
+        console.log('🗑️ Deleting DM document with ID:', dmId);
+        
         // Delete the direct message document
-        await deleteDoc(dmDoc.ref);
+        await deleteDoc(dmDocToDelete.ref);
 
         // Delete all messages associated with this DM
         const messagesRef = collection(this.firestore, 'messages');
         const messagesQuery = query(
           messagesRef,
-          where('channelId', '==', `dm_${dmDoc.id}`)
+          where('channelId', '==', `dm_${dmId}`)
         );
         
         const messagesSnapshot = await getDocs(messagesQuery);
         const deleteMessagePromises = messagesSnapshot.docs.map(doc => deleteDoc(doc.ref));
         await Promise.all(deleteMessagePromises);
 
-        console.log('Direct message and associated messages deleted successfully');
+        console.log('✅ Direct message and associated messages deleted successfully');
+        
+        // Clear cache to ensure fresh data on next request
+        this.clearCache();
       } else {
-        console.log('Direct message not found');
+        const errorMsg = !dmDocToDelete 
+          ? 'Direktnachricht konnte nicht gefunden werden' 
+          : 'Direktnachricht hat keine gültige ID';
+        console.log('❌ Direct message deletion failed:', errorMsg);
+        throw new Error(errorMsg);
       }
     } catch (error) {
-      console.error('Error deleting direct message:', error);
+      console.error('❌ Error deleting direct message:', error);
       throw error;
     }
   }
@@ -1168,23 +1199,61 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
   }
 
   async sendDirectMessage(dmId: string, message: any): Promise<void> {
-    const messagesRef = collection(this.firestore, 'messages');
-    const dmRef = doc(this.firestore, 'directMessages', dmId);
+    try {
+      const messagesRef = collection(this.firestore, 'messages');
+      const dmRef = doc(this.firestore, 'directMessages', dmId);
 
-    // Add the message
-    await addDoc(messagesRef, {
-      ...message,
-      channelId: `dm_${dmId}`,
-      timestamp: serverTimestamp()
-    });
+      // Add the message
+      await addDoc(messagesRef, {
+        ...message,
+        channelId: `dm_${dmId}`,
+        timestamp: serverTimestamp()
+      });
 
-    // Update the DM's last message
-    await updateDoc(dmRef, {
-      lastMessage: {
+      // Check if DirectMessage document exists, create or update accordingly
+      const dmDoc = await getDoc(dmRef);
+      const lastMessageData = {
         text: message.text,
         timestamp: serverTimestamp()
+      };
+
+      if (dmDoc.exists()) {
+        // Update existing document
+        await updateDoc(dmRef, {
+          lastMessage: lastMessageData
+        });
+      } else {
+        // Create new document if it doesn't exist
+        // If dmId starts with 'contact_', this is a contact-based DM
+        let users: string[] = [];
+        
+        if (dmId.startsWith('contact_')) {
+          // For contact-based DMs, we need to include the current user and the contact ID
+          const currentUserId = this.auth.currentUser?.uid;
+          if (currentUserId) {
+            users = [currentUserId, dmId];
+          }
+        } else {
+          // For regular user-to-user DMs, the dmId should be the other user's ID
+          const currentUserId = this.auth.currentUser?.uid;
+          if (currentUserId) {
+            users = [currentUserId, dmId];
+          }
+        }
+
+        await setDoc(dmRef, {
+          users: users,
+          createdAt: serverTimestamp(),
+          lastMessage: lastMessageData,
+          unread: 0
+        });
+        
+        console.log(`Created new DirectMessage document with ID: ${dmId} and users:`, users);
       }
-    });
+    } catch (error) {
+      console.error('Error sending direct message:', error);
+      throw error;
+    }
   }
 
   async saveUserSettings(settings: UserSettings): Promise<void> {

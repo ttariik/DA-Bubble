@@ -524,25 +524,50 @@ export class SidebarComponent implements OnInit, OnChanges {
   }
 
   async confirmDeleteDirectMessage() {
-    if (this.dmToDelete) {
-      try {
-        const currentUserId = this.authService.currentUser?.uid;
-        if (currentUserId) {
-          // Delete the direct message from Firestore
-          await this.firestoreService.deleteDirectMessage(currentUserId, this.dmToDelete.id);
-          
-          // Remove from local array
-          this.directMessages = this.directMessages.filter(dm => dm.id !== this.dmToDelete.id);
-          
-          console.log('Direct message deleted successfully');
-        }
-      } catch (error) {
-        console.error('Error deleting direct message:', error);
-        alert('Fehler beim Löschen der Direktnachricht. Bitte versuche es später erneut.');
+    if (!this.dmToDelete) {
+      console.error('❌ No direct message to delete');
+      alert('Fehler: Keine Direktnachricht zum Löschen ausgewählt');
+      this.closeDeleteDMModal();
+      return;
+    }
+
+    if (!this.dmToDelete.id) {
+      console.error('❌ Direct message has no valid ID');
+      alert('Fehler: Direktnachricht hat keine gültige ID');
+      this.closeDeleteDMModal();
+      return;
+    }
+
+    try {
+      const currentUserId = this.authService.currentUser?.uid;
+      if (!currentUserId) {
+        alert('Fehler: Kein Benutzer angemeldet');
+        this.closeDeleteDMModal();
+        return;
       }
+
+      console.log('🗑️ Attempting to delete DM with ID:', this.dmToDelete.id);
+      
+      // Delete the direct message from Firestore
+      await this.firestoreService.deleteDirectMessage(currentUserId, this.dmToDelete.id);
+      
+      // Clear the selection if the deleted DM was selected
+      if (this.selectedDirectMessageId === this.dmToDelete.id) {
+        this.selectedDirectMessageId = null;
+        this.directMessageSelected.emit(undefined);
+      }
+      
+      console.log('✅ Direct message deleted successfully');
+      
+      // Note: We don't manually update the directMessages array here
+      // because it will be automatically updated through the Firebase subscription in the dashboard
+    } catch (error) {
+      console.error('❌ Error deleting direct message:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unbekannter Fehler';
+      alert(`Fehler beim Löschen der Direktnachricht: ${errorMessage}`);
     }
     
-    // Close modal
+    // Close modal regardless of success or failure
     this.closeDeleteDMModal();
   }
 
