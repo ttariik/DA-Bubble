@@ -65,7 +65,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
   @Output() threadOpened = new EventEmitter<Message>();
   @Output() channelLeft = new EventEmitter<string>();
   @Output() directMessageStarted = new EventEmitter<DirectMessage>();
-
+  
   private destroy$ = new Subject<void>();
   private firestoreService = inject(FirestoreService);
   private auth = inject(Auth);

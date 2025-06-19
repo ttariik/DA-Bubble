@@ -182,9 +182,11 @@
         {{ activUser.firstName }} {{ activUser.lastName }}
       </div>
       <div class="user-avatar">
-        <img 
-          [src]="getProfileImageUrl()" 
-          [alt]="activUser.firstName + ' ' + activUser.lastName || 'Profil Bild'"
+        <img
+          [src]="getProfileImageUrl()"
+          [alt]="
+            activUser.firstName + ' ' + activUser.lastName || 'Profil Bild'
+          "
           (error)="onImageError($event)"
         />
         <div class="status-indicator" [class.active]="activUser.isActive"></div>
@@ -313,7 +315,7 @@
           >
         </div>
         <button class="close-button" (click)="toggleThreadView()">
-          <img src="assets/icons/close.svg" alt="Schließen">
+          <img src="assets/icons/close.svg" alt="Schließen" />
         </button>
       </div>
 

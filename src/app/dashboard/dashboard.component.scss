@@ -548,6 +548,10 @@
     box-shadow: none;
   }
 
+  .hidden {
+    display: none;
+  }
+
   &:hover {
     box-shadow: 0 20px 40px rgba(68, 77, 242, 0.2);
     border-color: rgba(68, 77, 242, 0.3)
@@ -1476,6 +1480,10 @@
     padding: 0;
   }
 
+  .hidden {
+    display: none;
+  }
+
   .thread-section, .chat-area, .workspace-menu {
     display: none;
   }
@@ -1486,6 +1494,10 @@
     margin: 0;
      width: 100%;
     padding: 0;
+
+    .hidden {
+    display: none;
+  }
   }
 
   .main-header {

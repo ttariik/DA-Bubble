@@ -128,6 +128,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     isActive: true,
   };
 
+  isMobileView = false;
+  isChatOpenOnMobile = false;
   showEmojiPicker: boolean = false;
   
   // New properties for tagging
@@ -166,6 +168,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private searchPerformanceOptimized = false;
 
+  @HostListener('window:resize')
+  onResize() {
+  this.isMobileView = window.innerWidth <= 520;
+  }
+
   constructor(public auth : AuthService) {
     // Set up debounced search for tagging with takeUntil
     this.tagSearchSubject.pipe(
@@ -196,6 +203,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.cd.markForCheck();
     });
 
+    this.onResize(); 
     this.loadData();
     this.loadAllUsers();
     this.loadSelectedContent();
@@ -379,6 +387,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (this.chatArea) {
       this.chatArea.changeChannel(channel.name, channel.id);
     }
+
+    if (this.isMobileView) {
+    this.isChatOpenOnMobile = true;
+  }
   }
   
   handleDirectMessageSelected(directMessage: DirectMessage) {
