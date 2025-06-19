@@ -1472,6 +1472,8 @@
     border: none;
     box-shadow: none;
     flex-direction: unset;
+    width: 100%;
+    padding: 0;
   }
 
   .thread-section, .chat-area, .workspace-menu {
@@ -1482,6 +1484,8 @@
     width: 100%;
     max-width: 1440px;
     margin: 0;
+     width: 100%;
+    padding: 0;
   }
 
   .main-header {
@@ -1545,6 +1549,12 @@
         height: 20px;
       }
     }
+  }
+}
+
+@media (min-width:300px) and (max-width:520px){
+    .chat-area{
+    display: none;
   }
 }
 

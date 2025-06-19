@@ -16,7 +16,7 @@
     </div>
 
     <!-- Debug Refresh Button (temporarily added for Firebase debugging) -->
-    <div class="debug-section" style="padding: 8px; border-bottom: 1px solid #e0e0e0; background-color: #f8f9ff;">
+    <!-- <div class="debug-section" style="padding: 8px; border-bottom: 1px solid #e0e0e0; background-color: #f8f9ff;">
       <button 
         class="refresh-button" 
         (click)="refreshData()"
@@ -25,7 +25,7 @@
       >
         🔄 Firebase Daten aktualisieren
       </button>
-    </div>
+    </div> -->
 
     <!-- Channels Section -->
     <div class="section">
@@ -122,8 +122,8 @@
                 <div class="unread-badge" *ngIf="dm.unread > 0">
                   {{ dm.unread }}
                 </div>
-                <button 
-                  class="delete-dm-button" 
+                <button
+                  class="delete-dm-button"
                   (click)="handleDeleteDirectMessage(dm, $event)"
                   title="Direktnachricht löschen"
                 >
@@ -208,8 +208,8 @@
                 <div class="unread-badge" *ngIf="contact.unread > 0">
                   {{ contact.unread }}
                 </div>
-                <button 
-                  class="delete-contact-button" 
+                <button
+                  class="delete-contact-button"
                   (click)="handleDeleteContact(contact, $event)"
                   title="Kontakt löschen"
                 >
