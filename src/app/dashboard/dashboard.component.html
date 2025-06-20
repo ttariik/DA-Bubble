@@ -32,149 +32,155 @@
       </div>
 
       <!-- Search Results Dropdown -->
-      <div
-        class="search-results-dropdown"
-        *ngIf="showSearchDropdown"
-        [@searchDropdownAnimation]="showSearchDropdown ? 'open' : 'closed'"
-      >
-        <div class="search-results-header">
-          <span>Suchergebnisse für "{{ lastSearchQuery }}"</span>
-          <button class="close-search-btn" (click)="closeSearchDropdowns()">
-            ×
-          </button>
-        </div>
-
-        <div class="search-results-content">
-          <div *ngIf="isSearching" class="search-loading">
-            <div class="loading-spinner"></div>
-            <span>Suche läuft...</span>
+      @if (showSearchDropdown) {
+        <div
+          class="search-results-dropdown"
+          [@searchDropdownAnimation]="showSearchDropdown ? 'open' : 'closed'"
+        >
+          <div class="search-results-header">
+            <span>Suchergebnisse für "{{ lastSearchQuery }}"</span>
+            <button class="close-search-btn" (click)="closeSearchDropdowns()">
+              ×
+            </button>
           </div>
 
-          <div
-            *ngIf="!isSearching && searchResults.length === 0"
-            class="no-results"
-          >
-            <span>Keine Ergebnisse gefunden.</span>
-          </div>
-
-          <div
-            *ngIf="!isSearching && searchResults.length > 0"
-            class="results-list"
-          >
-            <!-- Channel Results -->
-            <ng-container *ngIf="getChannelResults().length > 0">
-              <div class="result-section">
-                <div class="section-title">Channels</div>
-                <div
-                  *ngFor="let result of getChannelResults(); let i = index"
-                  class="result-item channel-result"
-                  [class.selected]="
-                    selectedSearchResultIndex === searchResults.indexOf(result)
-                  "
-                  (click)="selectSearchResult(result)"
-                >
-                  <div class="result-icon">#</div>
-                  <div class="result-content">
-                    <div
-                      class="result-name"
-                      [innerHTML]="
-                        result.highlight ? result.highlight[0] : result.name
-                      "
-                    ></div>
-                  </div>
-                </div>
+          <div class="search-results-content">
+            @if (isSearching) {
+              <div class="search-loading">
+                <div class="loading-spinner"></div>
+                <span>Suche läuft...</span>
               </div>
-            </ng-container>
+            }
 
-            <!-- User Results -->
-            <ng-container *ngIf="getUserResults().length > 0">
-              <div class="result-section">
-                <div class="section-title">Personen</div>
-                <div
-                  *ngFor="let result of getUserResults(); let i = index"
-                  class="result-item user-result"
-                  [class.selected]="
-                    selectedSearchResultIndex === searchResults.indexOf(result)
-                  "
-                  (click)="selectSearchResult(result)"
-                >
-                  <div class="result-avatar">
-                    <img [src]="result.avatar" [alt]="result.name" />
-                  </div>
-                  <div class="result-content">
-                    <div
-                      class="result-name"
-                      [innerHTML]="
-                        result.highlight ? result.highlight[0] : result.name
-                      "
-                    ></div>
-                  </div>
-                </div>
+            @if (!isSearching && searchResults.length === 0) {
+              <div class="no-results">
+                <span>Keine Ergebnisse gefunden.</span>
               </div>
-            </ng-container>
+            }
 
-            <!-- Message Results -->
-            <ng-container *ngIf="getMessageResults().length > 0">
-              <div class="result-section">
-                <div class="section-title">Nachrichten</div>
-                <div
-                  *ngFor="let result of getMessageResults(); let i = index"
-                  class="result-item message-result"
-                  [class.selected]="
-                    selectedSearchResultIndex === searchResults.indexOf(result)
-                  "
-                  (click)="selectSearchResult(result)"
-                >
-                  <div class="result-content">
-                    <div class="message-meta">
-                      <span class="message-sender">{{ result.sender }}</span>
-                      <span class="message-channel"
-                        ># {{ result.channelName }}</span
+            @if (!isSearching && searchResults.length > 0) {
+              <div class="results-list">
+                <!-- Channel Results -->
+                @if (getChannelResults().length > 0) {
+                  <div class="result-section">
+                    <div class="section-title">Channels</div>
+                    @for (result of getChannelResults(); track result.id; let i = $index) {
+                      <div
+                        class="result-item channel-result"
+                        [class.selected]="
+                          selectedSearchResultIndex === searchResults.indexOf(result)
+                        "
+                        (click)="selectSearchResult(result)"
                       >
-                      <span class="message-time">{{
-                        result.timestamp | date : "short"
-                      }}</span>
-                    </div>
-                    <div
-                      class="message-text"
-                      [innerHTML]="
-                        result.highlight
-                          ? result.highlight[0]
-                          : result.messageText
-                      "
-                    ></div>
+                        <div class="result-icon">#</div>
+                        <div class="result-content">
+                          <div
+                            class="result-name"
+                            [innerHTML]="
+                              result.highlight ? result.highlight[0] : result.name
+                            "
+                          ></div>
+                        </div>
+                      </div>
+                    }
                   </div>
-                </div>
+                }
+
+                <!-- User Results -->
+                @if (getUserResults().length > 0) {
+                  <div class="result-section">
+                    <div class="section-title">Personen</div>
+                    @for (result of getUserResults(); track result.id; let i = $index) {
+                      <div
+                        class="result-item user-result"
+                        [class.selected]="
+                          selectedSearchResultIndex === searchResults.indexOf(result)
+                        "
+                        (click)="selectSearchResult(result)"
+                      >
+                        <div class="result-avatar">
+                          <img [src]="result.avatar" [alt]="result.name" />
+                        </div>
+                        <div class="result-content">
+                          <div
+                            class="result-name"
+                            [innerHTML]="
+                              result.highlight ? result.highlight[0] : result.name
+                            "
+                          ></div>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
+
+                <!-- Message Results -->
+                @if (getMessageResults().length > 0) {
+                  <div class="result-section">
+                    <div class="section-title">Nachrichten</div>
+                    @for (result of getMessageResults(); track result.id; let i = $index) {
+                      <div
+                        class="result-item message-result"
+                        [class.selected]="
+                          selectedSearchResultIndex === searchResults.indexOf(result)
+                        "
+                        (click)="selectSearchResult(result)"
+                      >
+                        <div class="result-content">
+                          <div class="message-meta">
+                            <span class="message-sender">{{ result.sender }}</span>
+                            <span class="message-channel"
+                              ># {{ result.channelName }}</span
+                            >
+                            <span class="message-time">{{
+                              result.timestamp | date : "short"
+                            }}</span>
+                          </div>
+                          <div
+                            class="message-text"
+                            [innerHTML]="
+                              result.highlight
+                                ? result.highlight[0]
+                                : result.messageText
+                            "
+                          ></div>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
               </div>
-            </ng-container>
+            }
           </div>
         </div>
-      </div>
+      }
 
       <!-- Mention Dropdown -->
-      <div
-        class="mention-dropdown"
-        *ngIf="showMentionDropdown"
-        [@searchDropdownAnimation]="showMentionDropdown ? 'open' : 'closed'"
-      >
-        <div class="mention-header">
-          <span>Erwähne einen Kontakt</span>
-        </div>
-        <div class="mention-results">
-          <div
-            *ngFor="let user of mentionResults; let i = index"
-            class="mention-item"
-            [class.selected]="selectedSearchResultIndex === i"
-            (click)="selectMention(user)"
-          >
-            <div class="mention-avatar">
-              <img [src]="user.avatar" [alt]="user.name" />
-              <div class="status-indicator" [class.online]="user.online"></div>
-            </div>
-            <div class="mention-name">{{ user.name }}</div>
+      @if (showMentionDropdown) {
+        <div
+          class="mention-dropdown"
+          [@searchDropdownAnimation]="showMentionDropdown ? 'open' : 'closed'"
+        >
+          <div class="mention-header">
+            <span>Erwähne einen Kontakt</span>
+          </div>
+          <div class="mention-results">
+            @for (user of mentionResults; track user.id; let i = $index) {
+              <div
+                class="mention-item"
+                [class.selected]="selectedSearchResultIndex === i"
+                (click)="selectMention(user)"
+              >
+                <div class="mention-avatar">
+                  <img [src]="user.avatar" [alt]="user.name" />
+                  <div class="status-indicator" [class.online]="user.online"></div>
+                </div>
+                <div class="mention-name">{{ user.name }}</div>
+              </div>
+            }
           </div>
         </div>
-      </div>
+      }
     </div>
 
     <div class="profile-container" (click)="toggleProfileMenu($event)">
@@ -277,49 +283,52 @@
 
     <div class="chat-area" [class.expanded]="sidebar.sidebarCollapsed">
       <!-- Regular channel chat -->
-      <app-chat-area
-        #chatArea
-        *ngIf="!isDirectMessageActive"
-        [channelName]="selectedChannel.name"
-        [channelId]="selectedChannel.id"
-        (mentionClicked)="showUserTaggingInChat()"
-        (threadOpened)="openThreadWithMessage($event)"
-        (channelLeft)="handleChannelLeft($event)"
-        (directMessageStarted)="handleNewDirectMessage($event)"
-      ></app-chat-area>
+      @if (!isDirectMessageActive) {
+        <app-chat-area
+          #chatArea
+          [channelName]="selectedChannel.name"
+          [channelId]="selectedChannel.id"
+          (mentionClicked)="showUserTaggingInChat()"
+          (threadOpened)="openThreadWithMessage($event)"
+          (channelLeft)="handleChannelLeft($event)"
+          (directMessageStarted)="handleNewDirectMessage($event)"
+        ></app-chat-area>
+      }
 
       <!-- Direct message chat using the same chat area component -->
-      <app-chat-area
-        #directChatArea
-        *ngIf="isDirectMessageActive && selectedDirectMessage"
-        [channelName]="selectedDirectMessage.name"
-        [channelId]="'dm_' + selectedDirectMessage.id"
-        [isDirect]="true"
-        [directContact]="selectedDirectMessage"
-        (mentionClicked)="showUserTaggingInChat()"
-        (threadOpened)="openThreadWithMessage($event)"
-      ></app-chat-area>
+      @if (isDirectMessageActive && selectedDirectMessage) {
+        <app-chat-area
+          #directChatArea
+          [channelName]="selectedDirectMessage.name"
+          [channelId]="'dm_' + selectedDirectMessage.id"
+          [isDirect]="true"
+          [directContact]="selectedDirectMessage"
+          (mentionClicked)="showUserTaggingInChat()"
+          (threadOpened)="openThreadWithMessage($event)"
+        ></app-chat-area>
+      }
     </div>
 
-    <div class="thread-section" [class.hidden]="!showThreadView">
-      <div class="thread-header">
-        <div class="thread-title">
-          Thread
-          <span class="thread-channel" *ngIf="!isDirectMessageActive"
-            ># {{ selectedChannel.name }}</span
-          >
-          <span
-            class="thread-channel"
-            *ngIf="isDirectMessageActive && selectedDirectMessage"
-            >{{ selectedDirectMessage.name }}</span
-          >
+    @if (!showThreadView) {
+    } @else {
+      <div class="thread-section">
+        <div class="thread-header">
+          <div class="thread-title">
+            Thread
+            @if (!isDirectMessageActive) {
+              <span class="thread-channel"># {{ selectedChannel.name }}</span>
+            }
+            @if (isDirectMessageActive && selectedDirectMessage) {
+              <span class="thread-channel">{{ selectedDirectMessage.name }}</span>
+            }
+          </div>
+          <button class="close-button" (click)="toggleThreadView()">
+            <img src="assets/icons/close.svg" alt="Schließen" />
+          </button>
         </div>
-        <button class="close-button" (click)="toggleThreadView()">
-          <img src="assets/icons/close.svg" alt="Schließen" />
-        </button>
-      </div>
 
-      <app-thread-view (closeThread)="toggleThreadView()"></app-thread-view>
-    </div>
+        <app-thread-view (closeThread)="toggleThreadView()"></app-thread-view>
+      </div>
+    }
   </div>
 </div>
