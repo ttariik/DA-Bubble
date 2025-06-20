@@ -1,61 +1,73 @@
-<div class="modal-backdrop" *ngIf="isVisible" (click)="closeModal($event)" [@fadeInOut]>
-  <div class="modal-container" (click)="$event.stopPropagation()" [@scaleInOut]>
-    <div class="modal-header">
-      <h2>Channel erstellen</h2>
-      <button class="close-button" (click)="closeModal($event)" aria-label="Schließen">
-        <img src="assets/icons/close.svg" alt="Schließen">
-      </button>
-    </div>
-    
-    <div class="modal-content">
-      <p class="modal-description">
-        Channels dienen deinem Team zur Kommunikation. Am besten sollten sie themenbezogen sein #marketing zum Beispiel.
-      </p>
+@if (isVisible) {
+  <div class="modal-backdrop" (click)="closeModal($event)" [@fadeInOut]>
+    <div class="modal-container" (click)="$event.stopPropagation()" [@scaleInOut]>
+      <div class="modal-header">
+        <h2>Channel erstellen</h2>
+        <button class="close-button" (click)="closeModal($event)" aria-label="Schließen">
+          <img src="assets/icons/close.svg" alt="Schließen">
+        </button>
+      </div>
       
-      <form [formGroup]="channelForm" (ngSubmit)="createChannel()">
-        <div class="form-group">
-          <label for="channelName">Channel-Name</label>
-          <div class="input-container" [class.error]="shouldShowError('name')">
-            <span class="hash-symbol">#</span>
-            <input 
-              type="text" 
-              id="channelName" 
-              formControlName="name" 
-              placeholder="z.B. Kooperationsprojekte" 
-              class="channel-input"
-              #nameInput
-            >
-          </div>
-          <div class="validation-feedback" *ngIf="shouldShowError('name')">
-            <span *ngIf="channelForm.get('name')?.errors?.['required']">Ein Channelname wird benötigt.</span>
-            <span *ngIf="channelForm.get('name')?.errors?.['minlength']">Der Name muss mindestens 3 Zeichen lang sein.</span>
-            <span *ngIf="channelForm.get('name')?.errors?.['maxlength']">Der Name darf maximal 20 Zeichen lang sein.</span>
-          </div>
-          <div class="char-count" [class.near-limit]="isNearCharLimit('name')" [class.at-limit]="isAtCharLimit('name')">
-            {{ getCharCount('name') }}/20
-          </div>
-        </div>
+      <div class="modal-content">
+        <p class="modal-description">
+          Channels dienen deinem Team zur Kommunikation. Am besten sollten sie themenbezogen sein #marketing zum Beispiel.
+        </p>
         
-        <div class="form-group">
-          <label for="channelDescription">Beschreibung <span class="optional">(optional)</span></label>
-          <textarea 
-            id="channelDescription" 
-            formControlName="description" 
-            placeholder="Dein Text hier" 
-            class="description-input"
-          ></textarea>
-        </div>
-        
-        <div class="button-container">
-          <button type="button" class="cancel-button" (click)="closeModal($event)">
-            Abbrechen
-          </button>
-          <button type="submit" class="create-button" [disabled]="channelForm.invalid">
-            <span class="button-text">Erstellen</span>
-            <span class="button-icon" *ngIf="!channelForm.invalid">→</span>
-          </button>
-        </div>
-      </form>
+        <form [formGroup]="channelForm" (ngSubmit)="createChannel()">
+          <div class="form-group">
+            <label for="channelName">Channel-Name</label>
+            <div class="input-container" [class.error]="shouldShowError('name')">
+              <span class="hash-symbol">#</span>
+              <input 
+                type="text" 
+                id="channelName" 
+                formControlName="name" 
+                placeholder="z.B. Kooperationsprojekte" 
+                class="channel-input"
+                #nameInput
+              >
+            </div>
+            @if (shouldShowError('name')) {
+              <div class="validation-feedback">
+                @if (channelForm.get('name')?.errors?.['required']) {
+                  <span>Ein Channelname wird benötigt.</span>
+                }
+                @if (channelForm.get('name')?.errors?.['minlength']) {
+                  <span>Der Name muss mindestens 3 Zeichen lang sein.</span>
+                }
+                @if (channelForm.get('name')?.errors?.['maxlength']) {
+                  <span>Der Name darf maximal 20 Zeichen lang sein.</span>
+                }
+              </div>
+            }
+            <div class="char-count" [class.near-limit]="isNearCharLimit('name')" [class.at-limit]="isAtCharLimit('name')">
+              {{ getCharCount('name') }}/20
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="channelDescription">Beschreibung <span class="optional">(optional)</span></label>
+            <textarea 
+              id="channelDescription" 
+              formControlName="description" 
+              placeholder="Dein Text hier" 
+              class="description-input"
+            ></textarea>
+          </div>
+          
+          <div class="button-container">
+            <button type="button" class="cancel-button" (click)="closeModal($event)">
+              Abbrechen
+            </button>
+            <button type="submit" class="create-button" [disabled]="channelForm.invalid">
+              <span class="button-text">Erstellen</span>
+              @if (!channelForm.invalid) {
+                <span class="button-icon">→</span>
+              }
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
-</div>
+}
