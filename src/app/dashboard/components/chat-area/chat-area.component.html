@@ -4,13 +4,13 @@
     <div class="channel-info">
       <div class="channel-name">
         <!-- Show hash for channels, avatar for direct messages -->
-        <ng-container *ngIf="!isDirect">
+        @if (!isDirect) {
           <div class="clickable-channel-name" (click)="openChannelInfoModal()">
             <span class="channel-text"># {{ channelName }}</span>
             <img src="assets/svg/keyboard_arrow_down.svg" alt="Dropdown" class="dropdown-arrow">
           </div>
-        </ng-container>
-        <ng-container *ngIf="isDirect && directContact">
+        }
+        @if (isDirect && directContact) {
           <div class="direct-contact-info">
             <div class="direct-contact-avatar">
               <img [src]="directContact.avatar" [alt]="directContact.name">
@@ -18,32 +18,37 @@
             </div>
             <span class="direct-contact-name">{{ directContact.name }}</span>
           </div>
-        </ng-container>
+        }
       </div>
       <div class="channel-details">
-        <div class="member-count" *ngIf="!isDirect">
-          <span class="member-count-text">{{ memberCount }}</span>
-        </div>
+        @if (!isDirect) {
+          <div class="member-count">
+            <span class="member-count-text">{{ memberCount }}</span>
+          </div>
+        }
       </div>
     </div>
     <div class="channel-actions">
-      <div class="members-avatars" *ngIf="!isDirect">
-        <div
-          *ngFor="let member of channelMembers.slice(0, 3)"
-          class="member-avatar"
-        >
-          <img [src]="member.avatar" [alt]="member.name" />
+      @if (!isDirect) {
+        <div class="members-avatars">
+          @for (member of channelMembers.slice(0, 3); track member.id) {
+            <div class="member-avatar">
+              <img [src]="member.avatar" [alt]="member.name" />
+            </div>
+          }
         </div>
-      </div>
-      <button class="add-people-button" *ngIf="!isDirect" (click)="openAddPeopleModal()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-          <circle cx="8.5" cy="7" r="4"></circle>
-          <line x1="20" y1="8" x2="20" y2="14"></line>
-          <line x1="23" y1="11" x2="17" y2="11"></line>
-        </svg>
-        <span>Neue Mitglieder hinzufügen</span>
-      </button>
+      }
+      @if (!isDirect) {
+        <button class="add-people-button" (click)="openAddPeopleModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="8.5" cy="7" r="4"></circle>
+            <line x1="20" y1="8" x2="20" y2="14"></line>
+            <line x1="23" y1="11" x2="17" y2="11"></line>
+          </svg>
+          <span>Neue Mitglieder hinzufügen</span>
+        </button>
+      }
       <div class="more-options">
         <button class="more-options-button" (click)="toggleMoreOptions($event)">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -52,16 +57,18 @@
             <circle cx="12" cy="20" r="2"></circle>
           </svg>
         </button>
-        <div class="more-options-dropdown" *ngIf="showMoreOptions">
-          <button class="dropdown-item delete-all" (click)="deleteAllMessages()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 6h18"></path>
-              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-            </svg>
-            <span>Alle Nachrichten löschen</span>
-          </button>
-        </div>
+        @if (showMoreOptions) {
+          <div class="more-options-dropdown">
+            <button class="dropdown-item delete-all" (click)="deleteAllMessages()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 6h18"></path>
+                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+              </svg>
+              <span>Alle Nachrichten löschen</span>
+            </button>
+          </div>
+        }
       </div>
     </div>
   </div>
@@ -69,148 +76,184 @@
   <!-- Content Area (Scroll + Input) -->
   <div class="content-area">
     <!-- Deletion Loading Overlay -->
-    <div *ngIf="isDeletingAllMessages" class="deletion-overlay" [class.fade-out]="isOverlayFadingOut">
-      <div class="deletion-animation">
-        <div class="delete-icon-large">🗑️</div>
-        <div class="delete-progress">
-          <div class="delete-progress-bar"></div>
-        </div>
-        <div class="delete-text">Alle Nachrichten werden gelöscht...</div>
-        <div class="delete-particles">
-          <div class="particle" *ngFor="let i of [1,2,3,4,5,6,7,8]"></div>
+    @if (isDeletingAllMessages) {
+      <div class="deletion-overlay" [class.fade-out]="isOverlayFadingOut">
+        <div class="deletion-animation">
+          <div class="delete-icon-large">🗑️</div>
+          <div class="delete-progress">
+            <div class="delete-progress-bar"></div>
+          </div>
+          <div class="delete-text">Alle Nachrichten werden gelöscht...</div>
+          <div class="delete-particles">
+            @for (i of [1,2,3,4,5,6,7,8]; track i) {
+              <div class="particle"></div>
+            }
+          </div>
         </div>
       </div>
-    </div>
+    }
     
     <!-- Messages Area -->
     <div class="messages-container">
       <div class="messages-scroll-area" #scrollContainer>
         <!-- Loop through message groups by date -->
-        <div *ngFor="let group of messageGroups; trackBy: trackByGroup">
-          <!-- Date Separator -->
-          <div class="date-separator">
-            <div class="date-line"></div>
-            <div class="date-text">{{ group.label }}</div>
-            <div class="date-line"></div>
-          </div>
-
-          <!-- Messages in this date group -->
-          <div *ngFor="let message of group.messages; trackBy: trackByMessageId" 
-              class="message-item" 
-              [class.own-message]="message.userId === currentUserId"
-              [class.new-message]="message.isNew">
-            
-            <!-- Avatar for other users' messages (left side) -->
-            <div class="message-avatar other-user-avatar" *ngIf="message.userId !== currentUserId">
-              <img [src]="message.userAvatar" [alt]="message.userName" />
+        @for (group of messageGroups; track group.date) {
+          <div>
+            <!-- Date Separator -->
+            <div class="date-separator">
+              <div class="date-line"></div>
+              <div class="date-text">{{ group.label }}</div>
+              <div class="date-line"></div>
             </div>
-            
-            <div class="message-content" [class.own-message-content]="message.userId === currentUserId">
-              <div class="message-header">
-                <div class="message-sender" [style.text-align]="message.userId === currentUserId ? 'right' : 'left'">
-                  {{ message.userName }}
-                </div>
-                <div class="message-time">
-                  {{ message.timestamp | date : "HH:mm" }} Uhr
-                  <span *ngIf="message.isEdited && !message.isDeleted" class="edited-tag">(bearbeitet)</span>
-                  <span *ngIf="message.isDeleted" class="deleted-tag">(gelöscht)</span>
-                </div>
-              </div>
-              
-              <!-- Show editor when editing, otherwise show message bubble -->
-              <div *ngIf="message.isEditing" class="message-edit-container">
-                <textarea 
-                  class="message-edit-input" 
-                  [(ngModel)]="message.editedContent"
-                  (keydown)="handleEditKeydown($event, message)"
-                ></textarea>
-                <div class="edit-actions">
-                  <button class="edit-action-btn cancel" (click)="cancelEdit(message)">Abbrechen</button>
-                  <button class="edit-action-btn save" (click)="saveEditedMessage(message)">Speichern</button>
-                </div>
-              </div>
-              <div *ngIf="!message.isEditing" class="message-bubble" [class.deleted-message]="message.isDeleted">
-                {{ message.text }}
+
+            <!-- Messages in this date group -->
+            @for (message of group.messages; track message.id) {
+              <div class="message-item" 
+                   [class.own-message]="message.userId === currentUserId"
+                   [class.new-message]="message.isNew">
                 
-                <!-- File Attachment Display -->
-                <div class="file-attachment" *ngIf="message.fileAttachment && !message.isDeleted">
-                  <div class="file-attachment-content" 
-                       [class.image-attachment]="message.fileAttachment.fileType.startsWith('image/')">
-                    
-                    <!-- Image Preview -->
-                    <div class="image-preview" *ngIf="message.fileAttachment.fileType.startsWith('image/')">
-                      <img [src]="message.fileAttachment.downloadUrl" 
-                           [alt]="message.fileAttachment.fileName"
-                           (click)="message.fileAttachment.downloadUrl && openFileInNewTab(message.fileAttachment.downloadUrl)">
+                <!-- Avatar for other users' messages (left side) -->
+                @if (message.userId !== currentUserId) {
+                  <div class="message-avatar other-user-avatar">
+                    <img [src]="message.userAvatar" [alt]="message.userName" />
+                  </div>
+                }
+                
+                <div class="message-content" [class.own-message-content]="message.userId === currentUserId">
+                  <div class="message-header">
+                    <div class="message-sender" [style.text-align]="message.userId === currentUserId ? 'right' : 'left'">
+                      {{ message.userName }}
                     </div>
-                    
-                    <!-- File Info for non-images -->
-                    <div class="file-info-display" *ngIf="!message.fileAttachment.fileType.startsWith('image/')">
-                      <div class="file-icon-large">
-                        {{ getFileIcon(message.fileAttachment.fileType) }}
-                      </div>
-                      <div class="file-details">
-                        <div class="file-name-display">{{ message.fileAttachment.fileName }}</div>
-                        <div class="file-size-display">{{ formatFileSize(message.fileAttachment.fileSize) }}</div>
-                      </div>
-                      <a [href]="message.fileAttachment.downloadUrl" 
-                         download 
-                         class="download-btn"
-                         target="_blank">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                          <polyline points="7 10 12 15 17 10"></polyline>
-                          <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
-                      </a>
+                    <div class="message-time">
+                      {{ message.timestamp | date : "HH:mm" }} Uhr
+                      @if (message.isEdited && !message.isDeleted) {
+                        <span class="edited-tag">(bearbeitet)</span>
+                      }
+                      @if (message.isDeleted) {
+                        <span class="deleted-tag">(gelöscht)</span>
+                      }
                     </div>
                   </div>
-                </div>
-              </div>
+                  
+                  <!-- Show editor when editing, otherwise show message bubble -->
+                  @if (message.isEditing) {
+                    <div class="message-edit-container">
+                      <textarea 
+                        class="message-edit-input" 
+                        [(ngModel)]="message.editedContent"
+                        (keydown)="handleEditKeydown($event, message)"
+                      ></textarea>
+                      <div class="edit-actions">
+                        <button class="edit-action-btn cancel" (click)="cancelEdit(message)">Abbrechen</button>
+                        <button class="edit-action-btn save" (click)="saveEditedMessage(message)">Speichern</button>
+                      </div>
+                    </div>
+                  }
+                  @if (!message.isEditing) {
+                    <div class="message-bubble" [class.deleted-message]="message.isDeleted">
+                      {{ message.text }}
+                      
+                      <!-- File Attachment Display -->
+                      @if (message.fileAttachment && !message.isDeleted) {
+                        <div class="file-attachment">
+                          <div class="file-attachment-content" 
+                               [class.image-attachment]="message.fileAttachment.fileType.startsWith('image/')">
+                            
+                            <!-- Image Preview -->
+                            @if (message.fileAttachment.fileType.startsWith('image/')) {
+                              <div class="image-preview">
+                                <img [src]="message.fileAttachment.downloadUrl" 
+                                     [alt]="message.fileAttachment.fileName"
+                                     (click)="message.fileAttachment.downloadUrl && openFileInNewTab(message.fileAttachment.downloadUrl)">
+                              </div>
+                            }
+                            
+                            <!-- File Info for non-images -->
+                            @if (!message.fileAttachment.fileType.startsWith('image/')) {
+                              <div class="file-info-display">
+                                <div class="file-icon-large">
+                                  {{ getFileIcon(message.fileAttachment.fileType) }}
+                                </div>
+                                <div class="file-details">
+                                  <div class="file-name-display">{{ message.fileAttachment.fileName }}</div>
+                                  <div class="file-size-display">{{ formatFileSize(message.fileAttachment.fileSize) }}</div>
+                                </div>
+                                <a [href]="message.fileAttachment.downloadUrl" 
+                                   download 
+                                   class="download-btn"
+                                   target="_blank">
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                  </svg>
+                                </a>
+                              </div>
+                            }
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  }
 
-              <!-- Message Hover Menu - only show when not editing and not deleted -->
-              <div *ngIf="!message.isEditing && !message.isDeleted" class="message-hover-menu">
-                <button class="hover-menu-btn emoji-btn" (click)="addDirectReaction(message, '👍')">👍</button>
-                <button class="hover-menu-btn emoji-btn" (click)="addDirectReaction(message, '😊')">😊</button>
-                <button class="hover-menu-btn keyboard-btn" (click)="openEmojiPickerForReaction(message)">⌨️</button>
-                <button class="hover-menu-btn thread-btn" (click)="openThread(message)">💬</button>
-                <!-- Only show dropdown with edit/delete for user's own messages -->
-                <div class="hover-menu-dropdown" *ngIf="message.userId === currentUserId">
-                  <button class="hover-menu-btn more-btn">⋮</button>
-                  <div class="dropdown-content">
-                    <button class="dropdown-item" (click)="editMessage(message)">Nachricht bearbeiten</button>
-                    <button class="dropdown-item delete-action" (click)="deleteMessage(message)">Nachricht löschen</button>
-                  </div>
-                </div>
-              </div>
+                  <!-- Message Hover Menu - only show when not editing and not deleted -->
+                  @if (!message.isEditing && !message.isDeleted) {
+                    <div class="message-hover-menu">
+                      <button class="hover-menu-btn emoji-btn" (click)="addDirectReaction(message, '👍')">👍</button>
+                      <button class="hover-menu-btn emoji-btn" (click)="addDirectReaction(message, '😊')">😊</button>
+                      <button class="hover-menu-btn keyboard-btn" (click)="openEmojiPickerForReaction(message)">⌨️</button>
+                      <button class="hover-menu-btn thread-btn" (click)="openThread(message)">💬</button>
+                      <!-- Only show dropdown with edit/delete for user's own messages -->
+                      @if (message.userId === currentUserId) {
+                        <div class="hover-menu-dropdown">
+                          <button class="hover-menu-btn more-btn">⋮</button>
+                          <div class="dropdown-content">
+                            <button class="dropdown-item" (click)="editMessage(message)">Nachricht bearbeiten</button>
+                            <button class="dropdown-item delete-action" (click)="deleteMessage(message)">Nachricht löschen</button>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  }
 
-              <!-- Message Actions -->
-              <div class="message-actions" *ngIf="!message.isDeleted">
-                <div class="reactions" *ngIf="message.reactions?.length">
-                  <div
-                    *ngFor="let reaction of message.reactions"
-                    class="reaction-badge"
-                    (click)="addDirectReaction(message, reaction.emoji)"
-                    [class.user-reacted]="reaction.userIds.includes(currentUserId)"
-                  >
-                    {{ reaction.emoji }} {{ reaction.count }}
-                  </div>
+                  <!-- Message Actions -->
+                  @if (!message.isDeleted) {
+                    <div class="message-actions">
+                      @if (message.reactions?.length) {
+                        <div class="reactions">
+                          @for (reaction of message.reactions; track reaction.emoji) {
+                            <div
+                              class="reaction-badge"
+                              (click)="addDirectReaction(message, reaction.emoji)"
+                              [class.user-reacted]="reaction.userIds.includes(currentUserId)"
+                            >
+                              {{ reaction.emoji }} {{ reaction.count }}
+                            </div>
+                          }
+                        </div>
+                      }
+                      @if (message.threadCount && message.threadCount > 0) {
+                        <div class="thread-info">
+                          <div class="thread-count" (click)="openThread(message)">
+                            <span class="thread-icon">💬</span>
+                            <span class="thread-text">{{ message.threadCount }} Antworten</span>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  }
                 </div>
-                <div class="thread-info" *ngIf="message.threadCount && message.threadCount > 0">
-                  <div class="thread-count" (click)="openThread(message)">
-                    <span class="thread-icon">💬</span>
-                    <span class="thread-text">{{ message.threadCount }} Antworten</span>
+                
+                <!-- Avatar for own messages (right side) -->
+                @if (message.userId === currentUserId) {
+                  <div class="message-avatar own-user-avatar">
+                    <img [src]="message.userAvatar" [alt]="message.userName" />
                   </div>
-                </div>
+                }
               </div>
-            </div>
-            
-            <!-- Avatar for own messages (right side) -->
-            <div class="message-avatar own-user-avatar" *ngIf="message.userId === currentUserId">
-              <img [src]="message.userAvatar" [alt]="message.userName" />
-            </div>
+            }
           </div>
-        </div>
+        }
       </div>
     </div>
 
@@ -222,34 +265,40 @@
          (drop)="onDrop($event)">
       
       <!-- File Preview -->
-      <div class="file-preview-container" *ngIf="showFilePreview">
-        <div class="file-preview">
-          <div class="file-preview-content">
-            <div class="file-icon">{{ filePreviewData?.icon }}</div>
-            <div class="file-info">
-              <div class="file-name">{{ filePreviewData?.name }}</div>
-              <div class="file-size">{{ filePreviewData?.size }}</div>
+      @if (showFilePreview) {
+        <div class="file-preview-container">
+          <div class="file-preview">
+            <div class="file-preview-content">
+              <div class="file-icon">{{ filePreviewData?.icon }}</div>
+              <div class="file-info">
+                <div class="file-name">{{ filePreviewData?.name }}</div>
+                <div class="file-size">{{ filePreviewData?.size }}</div>
+              </div>
+              @if (filePreviewData?.previewUrl) {
+                <div class="file-preview-image">
+                  <img [src]="filePreviewData.previewUrl" [alt]="filePreviewData.name">
+                </div>
+              }
             </div>
-            <div class="file-preview-image" *ngIf="filePreviewData?.previewUrl">
-              <img [src]="filePreviewData.previewUrl" [alt]="filePreviewData.name">
-            </div>
+            <button class="remove-file-btn" (click)="removeFilePreview()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
           </div>
-          <button class="remove-file-btn" (click)="removeFilePreview()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
         </div>
-      </div>
+      }
 
       <!-- Drag and Drop Overlay -->
-      <div class="drag-drop-overlay" *ngIf="dragOverActive">
-        <div class="drag-drop-content">
-          <div class="drag-drop-icon">📎</div>
-          <div class="drag-drop-text">Datei hier ablegen zum Hochladen</div>
+      @if (dragOverActive) {
+        <div class="drag-drop-overlay">
+          <div class="drag-drop-content">
+            <div class="drag-drop-icon">📎</div>
+            <div class="drag-drop-text">Datei hier ablegen zum Hochladen</div>
+          </div>
         </div>
-      </div>
+      }
 
       <div class="message-input-wrapper">
         <!-- Hidden File Input -->
@@ -290,256 +339,282 @@
             [disabled]="(!messageInput.trim() && !selectedFile) || isSending || isUploading"
             (click)="sendMessage()"
           >
-            <span *ngIf="isUploading" class="upload-spinner">⏳</span>
-            <img *ngIf="!isUploading" src="./assets/icons/dashboard/send.svg" alt="Senden" />
+            @if (isUploading) {
+              <span class="upload-spinner">⏳</span>
+            }
+            @if (!isUploading) {
+              <img src="./assets/icons/dashboard/send.svg" alt="Senden" />
+            }
           </button>
         </div>
       </div>
       
       <!-- Tagging Modals -->
-      <div class="tagging-modal-container" *ngIf="showUserTagging">
-        <!-- User Tagging Modal -->
-        <div class="tagging-modal user-tagging">
-          <div class="tagging-list">
-            <div 
-              *ngFor="let user of filteredUsers" 
-              class="tagging-item"
-              (click)="selectUserTag(user)"
-            >
-              <div class="user-tag-avatar">
-                <img [src]="user.avatar" [alt]="user.name">
-                <div class="status-indicator" [class.online]="user.online"></div>
-              </div>
-              <span class="user-tag-name">{{ user.name }}</span>
-            </div>
-            <div class="tagging-empty" *ngIf="filteredUsers.length === 0">
-              Keine passenden Benutzer gefunden
+      @if (showUserTagging) {
+        <div class="tagging-modal-container">
+          <!-- User Tagging Modal -->
+          <div class="tagging-modal user-tagging">
+            <div class="tagging-list">
+              @for (user of filteredUsers; track user.id) {
+                <div class="tagging-item" (click)="selectUserTag(user)">
+                  <div class="user-tag-avatar">
+                    <img [src]="user.avatar" [alt]="user.name">
+                    <div class="status-indicator" [class.online]="user.online"></div>
+                  </div>
+                  <span class="user-tag-name">{{ user.name }}</span>
+                </div>
+              }
+              @if (filteredUsers.length === 0) {
+                <div class="tagging-empty">
+                  Keine passenden Benutzer gefunden
+                </div>
+              }
             </div>
           </div>
         </div>
-      </div>
+      }
     </div>
   </div>
   
-  <div *ngIf="showEmojiPicker" class="emoji-picker-container">
-    <div class="custom-emoji-picker">
-      <div class="emoji-picker-header">
-        <div class="emoji-search">
-          <input type="text" placeholder="Suchen" class="emoji-search-input">
-          <button class="emoji-search-button">
-            <span>🔍</span>
-          </button>
-        </div>
-        <div class="emoji-picker-close" (click)="openEmojiPicker()">
-          <span>×</span>
-        </div>
-      </div>
-      
-      <div class="emoji-picker-content">
-        <div class="emoji-categories">
-          <button class="emoji-category-btn active">➕</button>
-          <button class="emoji-category-btn">😀</button>
-          <button class="emoji-category-btn">🐶</button>
-          <button class="emoji-category-btn">🍎</button>
-          <button class="emoji-category-btn">🏀</button>
-          <button class="emoji-category-btn">🚗</button>
-          <button class="emoji-category-btn">💡</button>
-          <button class="emoji-category-btn">🔣</button>
-          <button class="emoji-category-btn">🏁</button>
+  @if (showEmojiPicker) {
+    <div class="emoji-picker-container">
+      <div class="custom-emoji-picker">
+        <div class="emoji-picker-header">
+          <div class="emoji-search">
+            <input type="text" placeholder="Suchen" class="emoji-search-input">
+            <button class="emoji-search-button">
+              <span>🔍</span>
+            </button>
+          </div>
+          <div class="emoji-picker-close" (click)="openEmojiPicker()">
+            <span>×</span>
+          </div>
         </div>
         
-        <div class="emoji-list">
-          <div class="emoji-section">
-            <div class="emoji-section-title">Kürzlich verwendet</div>
-            <div class="emoji-grid">
-              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '👍'}})">👍</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😀'}})">😀</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😉'}})">😉</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😍'}})">😍</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😜'}})">😜</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😂'}})">😂</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '🤣'}})">🤣</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😱'}})">😱</button>
-            </div>
+        <div class="emoji-picker-content">
+          <div class="emoji-categories">
+            <button class="emoji-category-btn active">➕</button>
+            <button class="emoji-category-btn">😀</button>
+            <button class="emoji-category-btn">🐶</button>
+            <button class="emoji-category-btn">🍎</button>
+            <button class="emoji-category-btn">🏀</button>
+            <button class="emoji-category-btn">🚗</button>
+            <button class="emoji-category-btn">💡</button>
+            <button class="emoji-category-btn">🔣</button>
+            <button class="emoji-category-btn">🏁</button>
           </div>
           
-          <div class="emoji-section">
-            <div class="emoji-section-title">Smileys & Personen</div>
-            <div class="emoji-grid">
-              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😀'}})">😀</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😃'}})">😃</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😄'}})">😄</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😁'}})">😁</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😆'}})">😆</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😅'}})">😅</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '🤣'}})">🤣</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😂'}})">😂</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '🙂'}})">🙂</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '🙃'}})">🙃</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😉'}})">😉</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😊'}})">😊</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😇'}})">😇</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '🥰'}})">🥰</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😍'}})">😍</button>
-              <button class="emoji-btn" (click)="addEmoji({emoji: {native: '🤩'}})">🤩</button>
+          <div class="emoji-list">
+            <div class="emoji-section">
+              <div class="emoji-section-title">Kürzlich verwendet</div>
+              <div class="emoji-grid">
+                <button class="emoji-btn" (click)="addEmoji({emoji: {native: '👍'}})">👍</button>
+                <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😀'}})">😀</button>
+                <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😉'}})">😉</button>
+                <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😍'}})">😍</button>
+                <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😜'}})">😜</button>
+                <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😂'}})">😂</button>
+                <button class="emoji-btn" (click)="addEmoji({emoji: {native: '🤣'}})">🤣</button>
+                <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😱'}})">😱</button>
+              </div>
+            </div>
+            
+            <div class="emoji-section">
+              <div class="emoji-section-title">Smileys & Personen</div>
+              <div class="emoji-grid">
+                <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😀'}})">😀</button>
+                <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😃'}})">😃</button>
+                <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😄'}})">😄</button>
+                <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😁'}})">😁</button>
+                <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😆'}})">😆</button>
+                <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😅'}})">😅</button>
+                <button class="emoji-btn" (click)="addEmoji({emoji: {native: '🤣'}})">🤣</button>
+                <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😂'}})">😂</button>
+                <button class="emoji-btn" (click)="addEmoji({emoji: {native: '🙂'}})">🙂</button>
+                <button class="emoji-btn" (click)="addEmoji({emoji: {native: '🙃'}})">🙃</button>
+                <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😉'}})">😉</button>
+                <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😊'}})">😊</button>
+                <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😇'}})">😇</button>
+                <button class="emoji-btn" (click)="addEmoji({emoji: {native: '🥰'}})">🥰</button>
+                <button class="emoji-btn" (click)="addEmoji({emoji: {native: '😍'}})">😍</button>
+                <button class="emoji-btn" (click)="addEmoji({emoji: {native: '🤩'}})">🤩</button>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
+  }
 </div>
 
 <!-- Channel Description Modal -->
-<div class="channel-description-modal" *ngIf="showChannelDescriptionModal">
-  <div class="channel-description-backdrop" (click)="closeChannelInfoModal()"></div>
-  <div class="channel-description-content">
-    <div class="modal-header">
-      <h3>Channel-Info: #{{ channelName }}</h3>
-      <button class="close-button" (click)="closeChannelInfoModal()">×</button>
+@if (showChannelDescriptionModal) {
+  <div class="channel-description-modal">
+    <div class="channel-description-backdrop" (click)="closeChannelInfoModal()"></div>
+    <div class="channel-description-content">
+      <div class="modal-header">
+        <h3>Channel-Info: #{{ channelName }}</h3>
+        <button class="close-button" (click)="closeChannelInfoModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <!-- Hauptinfo anzeigen, wenn nicht in der Mitgliederliste -->
+        @if (!showMembersList) {
+          <div>
+            <h4>Channel-Name</h4>
+            <div class="channel-name-container">
+              <span class="channel-name-prefix">#</span>
+              <span>{{ channelName }}</span>
+              @if (false) {
+                <button class="edit-button"><span>Bearbeiten</span></button>
+              }
+            </div>
+            
+            <h4>Beschreibung</h4>
+            <p>{{ channelDescription || 'Dieser Channel ist für alles rund um #' + channelName + ' vorgesehen. Hier kannst du zusammen mit deinem Team Meetings abhalten, Dokumente teilen und Entscheidungen treffen.' }}</p>
+            @if (false) {
+              <button class="edit-button"><span>Bearbeiten</span></button>
+            }
+            
+            <div class="channel-stats">
+              <div class="stat-item clickable members-stat-item" (click)="toggleMembersList()">
+                <div class="stat-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                  </svg>
+                </div>
+                <div class="stat-info">
+                  <span class="stat-label">Mitglieder</span>
+                  <span class="stat-value">{{ memberCount }}</span>
+                </div>
+                <div class="view-more">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                </div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                  </svg>
+                </div>
+                <div class="stat-info">
+                  <span class="stat-label">Nachrichten</span>
+                  <span class="stat-value">{{ messageCount || '0' }}</span>
+                </div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                </div>
+                <div class="stat-info">
+                  <span class="stat-label">Erstellt am</span>
+                  <span class="stat-value">{{ channelCreatedAt ? (channelCreatedAt | date: 'dd.MM.yyyy') : 'Unbekannt' }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <h4>Erstellt von</h4>
+            <div class="creator-info">
+              <span>{{ channelCreator || 'Noah Braun' }}</span>
+            </div>
+          </div>
+        }
+        
+        <!-- Mitgliederliste anzeigen, wenn aktiviert -->
+        @if (showMembersList) {
+          <div class="members-list-container">
+            <div class="members-header">
+              <button class="back-button" (click)="toggleMembersList()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+                Zurück
+              </button>
+              <h4>Mitglieder ({{ memberCount }})</h4>
+            </div>
+            
+            <div class="members-list">
+              @for (member of channelMembers; track member.id) {
+                <div class="member-item" (click)="startDirectMessageWithMember(member)">
+                  <div class="member-avatar">
+                    <img [src]="member.avatar" [alt]="member.name">
+                    <div class="status-indicator" [class.online]="member.online"></div>
+                  </div>
+                  <div class="member-info">
+                    <div class="member-name">{{ member.name }}</div>
+                    @if (member.title || member.department) {
+                      <div class="member-title">
+                        {{ member.title }}{{ member.title && member.department ? ' • ' : '' }}{{ member.department }}
+                      </div>
+                    }
+                  </div>
+                  <div class="message-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+      <div class="modal-footer">
+        @if (channelId !== '1') {
+          <button class="channel-leave-button" (click)="leaveChannel()">
+            <span>Channel verlassen</span>
+          </button>
+        }
+        <button class="delete-messages-button" (click)="deleteAllMessages()">
+          <span>Alle Nachrichten löschen</span>
+        </button>
+        <button class="close-button" (click)="closeChannelInfoModal()">
+          <span>Schließen</span>
+        </button>
+      </div>
     </div>
-    <div class="modal-body">
-      <!-- Hauptinfo anzeigen, wenn nicht in der Mitgliederliste -->
-      <div *ngIf="!showMembersList">
-        <h4>Channel-Name</h4>
-        <div class="channel-name-container">
-          <span class="channel-name-prefix">#</span>
-          <span>{{ channelName }}</span>
-          <button class="edit-button" *ngIf="false"><span>Bearbeiten</span></button>
-        </div>
-        
-        <h4>Beschreibung</h4>
-        <p>{{ channelDescription || 'Dieser Channel ist für alles rund um #' + channelName + ' vorgesehen. Hier kannst du zusammen mit deinem Team Meetings abhalten, Dokumente teilen und Entscheidungen treffen.' }}</p>
-        <button class="edit-button" *ngIf="false"><span>Bearbeiten</span></button>
-        
-        <div class="channel-stats">
-          <div class="stat-item clickable members-stat-item" (click)="toggleMembersList()">
-            <div class="stat-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                <circle cx="9" cy="7" r="4"></circle>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-              </svg>
-            </div>
-            <div class="stat-info">
-              <span class="stat-label">Mitglieder</span>
-              <span class="stat-value">{{ memberCount }}</span>
-            </div>
-            <div class="view-more">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="9 18 15 12 9 6"></polyline>
-              </svg>
-            </div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-              </svg>
-            </div>
-            <div class="stat-info">
-              <span class="stat-label">Nachrichten</span>
-              <span class="stat-value">{{ messageCount || '0' }}</span>
-            </div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="16" y1="2" x2="16" y2="6"></line>
-                <line x1="8" y1="2" x2="8" y2="6"></line>
-                <line x1="3" y1="10" x2="21" y2="10"></line>
-              </svg>
-            </div>
-            <div class="stat-info">
-              <span class="stat-label">Erstellt am</span>
-              <span class="stat-value">{{ channelCreatedAt ? (channelCreatedAt | date: 'dd.MM.yyyy') : 'Unbekannt' }}</span>
-            </div>
-          </div>
-        </div>
-        
-        <h4>Erstellt von</h4>
-        <div class="creator-info">
-          <span>{{ channelCreator || 'Noah Braun' }}</span>
+  </div>
+}
+
+<!-- Leave Channel Confirmation Dialog -->
+@if (showLeaveConfirmDialog) {
+  <div class="leave-confirm-modal">
+    <div class="leave-confirm-backdrop" (click)="cancelLeaveChannel()"></div>
+    <div class="leave-confirm-content">
+      <h3>Channel verlassen</h3>
+      <p>Möchtest du den Channel <strong>#{{ channelName }}</strong> wirklich verlassen?</p>
+      
+      <!-- Warnung für Channel-Löschung -->
+      <div class="delete-warning">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 6h18"></path>
+          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+        </svg>
+        <div>
+          <strong>Achtung:</strong> Der Channel und alle Nachrichten werden <strong>permanent gelöscht</strong>.
+          <br>Andere Mitglieder haben danach keinen Zugriff mehr auf diesen Channel.
         </div>
       </div>
       
-      <!-- Mitgliederliste anzeigen, wenn aktiviert -->
-      <div *ngIf="showMembersList" class="members-list-container">
-        <div class="members-header">
-          <button class="back-button" (click)="toggleMembersList()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="15 18 9 12 15 6"></polyline>
-            </svg>
-            Zurück
-          </button>
-          <h4>Mitglieder ({{ memberCount }})</h4>
-        </div>
-        
-        <div class="members-list">
-          <div *ngFor="let member of channelMembers" class="member-item" (click)="startDirectMessageWithMember(member)">
-            <div class="member-avatar">
-              <img [src]="member.avatar" [alt]="member.name">
-              <div class="status-indicator" [class.online]="member.online"></div>
-            </div>
-            <div class="member-info">
-              <div class="member-name">{{ member.name }}</div>
-              <div *ngIf="member.title || member.department" class="member-title">
-                {{ member.title }}{{ member.title && member.department ? ' • ' : '' }}{{ member.department }}
-              </div>
-            </div>
-            <div class="message-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-              </svg>
-            </div>
-          </div>
-        </div>
+      <div class="leave-confirm-actions">
+        <button class="cancel-button" (click)="cancelLeaveChannel()">Abbrechen</button>
+        <button class="leave-button" (click)="confirmLeaveChannel()">
+          Channel löschen
+        </button>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="channel-leave-button" *ngIf="channelId !== '1'" (click)="leaveChannel()">
-        <span>Channel verlassen</span>
-      </button>
-      <button class="delete-messages-button" (click)="deleteAllMessages()">
-        <span>Alle Nachrichten löschen</span>
-      </button>
-      <button class="close-button" (click)="closeChannelInfoModal()">
-        <span>Schließen</span>
-      </button>
-    </div>
   </div>
-</div>
-
-<!-- Leave Channel Confirmation Dialog -->
-<div class="leave-confirm-modal" *ngIf="showLeaveConfirmDialog">
-  <div class="leave-confirm-backdrop" (click)="cancelLeaveChannel()"></div>
-  <div class="leave-confirm-content">
-    <h3>Channel verlassen</h3>
-    <p>Möchtest du den Channel <strong>#{{ channelName }}</strong> wirklich verlassen?</p>
-    
-    <!-- Warnung für Channel-Löschung -->
-    <div class="delete-warning">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M3 6h18"></path>
-        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-      </svg>
-      <div>
-        <strong>Achtung:</strong> Der Channel und alle Nachrichten werden <strong>permanent gelöscht</strong>.
-        <br>Andere Mitglieder haben danach keinen Zugriff mehr auf diesen Channel.
-      </div>
-    </div>
-    
-    <div class="leave-confirm-actions">
-      <button class="cancel-button" (click)="cancelLeaveChannel()">Abbrechen</button>
-      <button class="leave-button" (click)="confirmLeaveChannel()">
-        Channel löschen
-      </button>
-    </div>
-  </div>
-</div>
+}
 
 <!-- Add People Modal -->
 <app-add-people-modal
