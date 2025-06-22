@@ -49,37 +49,42 @@
         </div>
       </div>
 
-      <div class="section-content" *ngIf="showChannels">
-        <div class="channel-list">
-          <ng-container *ngIf="channels$ | async as allChannels">
-            <div
-              *ngFor="let channel of allChannels"
-              class="channel-item"
-              [class.active]="channel.id === selectedChannelId"
-              (click)="selectChannel(channel)"
-            >
-              <div class="channel-info">
-                <span class="channel-icon">#</span>
-                <div class="channel-name">{{ channel.name }}</div>
-              </div>
-              <div class="channel-actions">
-                <div class="unread-badge" *ngIf="channel.unread > 0">
-                  {{ channel.unread }}
+      @if (showChannels) {
+        <div class="section-content">
+          <div class="channel-list">
+            @if (channels$ | async; as allChannels) {
+              @for (channel of allChannels; track channel.id) {
+                <div
+                  class="channel-item"
+                  [class.active]="channel.id === selectedChannelId"
+                  (click)="selectChannel(channel)"
+                >
+                  <div class="channel-info">
+                    <span class="channel-icon">#</span>
+                    <div class="channel-name">{{ channel.name }}</div>
+                  </div>
+                  <div class="channel-actions">
+                    @if (channel.unread > 0) {
+                      <div class="unread-badge">
+                        {{ channel.unread }}
+                      </div>
+                    }
+                  </div>
                 </div>
-              </div>
-            </div>
-          </ng-container>
+              }
+            }
 
-          <div class="add-channel-button" (click)="addChannel()">
-            <img
-              src="assets/icons/add_circle.svg"
-              alt="Add Channel"
-              class="add-channel-icon"
-            />
-            <div class="add-channel-text">Channel hinzufügen</div>
+            <div class="add-channel-button" (click)="addChannel()">
+              <img
+                src="assets/icons/add_circle.svg"
+                alt="Add Channel"
+                class="add-channel-icon"
+              />
+              <div class="add-channel-text">Channel hinzufügen</div>
+            </div>
           </div>
         </div>
-      </div>
+      }
     </div>
 
     <!-- Direct Messages Section -->
@@ -96,58 +101,62 @@
         <div class="section-title">Direktnachrichten</div>
       </div>
 
-      <div class="section-content" *ngIf="showDirectMessages">
-        <div class="dm-list">
-          <ng-container *ngFor="let dm of directMessages; let i = index">
-            <div
-              class="dm-item"
-              [class.active]="dm.id === selectedDirectMessageId"
-              (click)="selectDirectMessage(dm)"
-            >
-              <div class="user-info">
-                <div
-                  class="user-avatar"
-                  (click)="showContactProfileModal(dm, $event)"
-                  title="Profilinfo anzeigen"
-                >
-                  <img [src]="dm.avatar" [alt]="dm.name" />
+      @if (showDirectMessages) {
+        <div class="section-content">
+          <div class="dm-list">
+            @for (dm of directMessages; track dm.id; let i = $index) {
+              <div
+                class="dm-item"
+                [class.active]="dm.id === selectedDirectMessageId"
+                (click)="selectDirectMessage(dm)"
+              >
+                <div class="user-info">
                   <div
-                    class="status-indicator"
-                    [class.online]="dm.online"
-                  ></div>
-                </div>
-                <div class="user-name">{{ dm.name }}</div>
-              </div>
-              <div class="dm-actions">
-                <div class="unread-badge" *ngIf="dm.unread > 0">
-                  {{ dm.unread }}
-                </div>
-                <button
-                  class="delete-dm-button"
-                  (click)="handleDeleteDirectMessage(dm, $event)"
-                  title="Direktnachricht löschen"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    class="user-avatar"
+                    (click)="showContactProfileModal(dm, $event)"
+                    title="Profilinfo anzeigen"
                   >
-                    <path d="M3 6h18"></path>
-                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                  </svg>
-                </button>
+                    <img [src]="dm.avatar" [alt]="dm.name" />
+                    <div
+                      class="status-indicator"
+                      [class.online]="dm.online"
+                    ></div>
+                  </div>
+                  <div class="user-name">{{ dm.name }}</div>
+                </div>
+                <div class="dm-actions">
+                  @if (dm.unread > 0) {
+                    <div class="unread-badge">
+                      {{ dm.unread }}
+                    </div>
+                  }
+                  <button
+                    class="delete-dm-button"
+                    (click)="handleDeleteDirectMessage(dm, $event)"
+                    title="Direktnachricht löschen"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M3 6h18"></path>
+                      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                    </svg>
+                  </button>
+                </div>
               </div>
-            </div>
-          </ng-container>
+            }
+          </div>
         </div>
-      </div>
+      }
     </div>
 
     <!-- Contacts Section -->
@@ -186,54 +195,60 @@
         </button>
       </div>
 
-      <div class="section-content" *ngIf="showContacts">
-        <div class="contacts-list">
-          <ng-container *ngFor="let contact of contacts$ | async">
-            <div class="contact-item" (click)="selectContact(contact)">
-              <div class="user-info">
-                <div
-                  class="user-avatar"
-                  (click)="showContactProfileModal(contact, $event)"
-                  title="Profilinfo anzeigen"
-                >
-                  <img [src]="contact.avatar" [alt]="contact.name" />
-                  <div
-                    class="status-indicator"
-                    [class.online]="contact.online"
-                  ></div>
+      @if (showContacts) {
+        <div class="section-content">
+          <div class="contacts-list">
+            @if (contacts$ | async; as contacts) {
+              @for (contact of contacts; track contact.id) {
+                <div class="contact-item" (click)="selectContact(contact)">
+                  <div class="user-info">
+                    <div
+                      class="user-avatar"
+                      (click)="showContactProfileModal(contact, $event)"
+                      title="Profilinfo anzeigen"
+                    >
+                      <img [src]="contact.avatar" [alt]="contact.name" />
+                      <div
+                        class="status-indicator"
+                        [class.online]="contact.online"
+                      ></div>
+                    </div>
+                    <div class="user-name">{{ contact.name }}</div>
+                  </div>
+                  <div class="contact-actions">
+                    @if (contact.unread > 0) {
+                      <div class="unread-badge">
+                        {{ contact.unread }}
+                      </div>
+                    }
+                    <button
+                      class="delete-contact-button"
+                      (click)="handleDeleteContact(contact, $event)"
+                      title="Kontakt löschen"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <path d="M3 6h18"></path>
+                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </div>
                 </div>
-                <div class="user-name">{{ contact.name }}</div>
-              </div>
-              <div class="contact-actions">
-                <div class="unread-badge" *ngIf="contact.unread > 0">
-                  {{ contact.unread }}
-                </div>
-                <button
-                  class="delete-contact-button"
-                  (click)="handleDeleteContact(contact, $event)"
-                  title="Kontakt löschen"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path d="M3 6h18"></path>
-                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </ng-container>
+              }
+            }
+          </div>
         </div>
-      </div>
+      }
     </div>
 
     <!-- Add Channel Modal -->
