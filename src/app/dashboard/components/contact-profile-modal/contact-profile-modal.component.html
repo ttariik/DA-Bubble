@@ -1,64 +1,84 @@
-<div class="profile-modal-container" *ngIf="isVisible" [@fadeInOut]>
-  <div class="profile-modal-backdrop" (click)="closeModal()"></div>
-  <div class="profile-modal-content" [@scaleInOut]>
-    <div class="profile-header">
-      <h3>Profil</h3>
-      <button class="close-button" (click)="closeModal()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <path d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" fill="currentColor"/>
-        </svg>
-      </button>
-    </div>
-
-    <div class="profile-avatar" *ngIf="contact">
-      <div *ngIf="contact.avatar && contact.avatar.includes('assets')" class="avatar-image">
-        <img [src]="contact.avatar" [alt]="contact.name" />
-      </div>
-      <div *ngIf="!contact.avatar || !contact.avatar.includes('assets')" class="avatar-initials" 
-           [style.background-color]="getRandomColor(contact.id)">
-        {{ getInitials(contact.name) }}
-      </div>
-      <div class="status-indicator" [class.online]="contact.online"></div>
-    </div>
-
-    <div class="profile-info" *ngIf="contact">
-      <div class="profile-name-section">
-        <h3 class="profile-name">{{ contact.name }}</h3>
-        <span class="profile-status">{{ contact.online ? 'Aktiv' : 'Nicht aktiv' }}</span>
-      </div>
-
-      <div class="profile-details">
-        <div class="detail-item" *ngIf="contact.title">
-          <h4 class="detail-label">Position</h4>
-          <p class="detail-value">{{ contact.title }}</p>
-        </div>
-
-        <div class="detail-item" *ngIf="contact.department">
-          <h4 class="detail-label">Abteilung</h4>
-          <p class="detail-value">{{ contact.department }}</p>
-        </div>
-
-        <div class="detail-item" *ngIf="contact.email">
-          <h4 class="detail-label">E-Mail-Adresse</h4>
-          <p class="detail-value">{{ contact.email }}</p>
-        </div>
-
-        <div class="detail-item" *ngIf="contact.phone">
-          <h4 class="detail-label">Telefon</h4>
-          <p class="detail-value">{{ contact.phone }}</p>
-        </div>
-
-        <!-- Fallback if no additional info is available -->
-        <div class="detail-item" *ngIf="!contact.title && !contact.department && !contact.email && !contact.phone">
-          <p class="no-details">Keine weiteren Informationen verfügbar</p>
-        </div>
-      </div>
-
-      <div class="profile-actions">
-        <button class="action-button message-button" (click)="openChat()">
-          Nachricht senden
+@if (isVisible) {
+  <div class="profile-modal-container" [@fadeInOut]>
+    <div class="profile-modal-backdrop" (click)="closeModal()"></div>
+    <div class="profile-modal-content" [@scaleInOut]>
+      <div class="profile-header">
+        <h3>Profil</h3>
+        <button class="close-button" (click)="closeModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" fill="currentColor"/>
+          </svg>
         </button>
       </div>
+
+      @if (contact) {
+        <div class="profile-avatar">
+          @if (contact.avatar && contact.avatar.includes('assets')) {
+            <div class="avatar-image">
+              <img [src]="contact.avatar" [alt]="contact.name" />
+            </div>
+          }
+          @if (!contact.avatar || !contact.avatar.includes('assets')) {
+            <div class="avatar-initials" 
+                 [style.background-color]="getRandomColor(contact.id)">
+              {{ getInitials(contact.name) }}
+            </div>
+          }
+          <div class="status-indicator" [class.online]="contact.online"></div>
+        </div>
+      }
+
+      @if (contact) {
+        <div class="profile-info">
+          <div class="profile-name-section">
+            <h3 class="profile-name">{{ contact.name }}</h3>
+            <span class="profile-status">{{ contact.online ? 'Aktiv' : 'Nicht aktiv' }}</span>
+          </div>
+
+          <div class="profile-details">
+            @if (contact.title) {
+              <div class="detail-item">
+                <h4 class="detail-label">Position</h4>
+                <p class="detail-value">{{ contact.title }}</p>
+              </div>
+            }
+
+            @if (contact.department) {
+              <div class="detail-item">
+                <h4 class="detail-label">Abteilung</h4>
+                <p class="detail-value">{{ contact.department }}</p>
+              </div>
+            }
+
+            @if (contact.email) {
+              <div class="detail-item">
+                <h4 class="detail-label">E-Mail-Adresse</h4>
+                <p class="detail-value">{{ contact.email }}</p>
+              </div>
+            }
+
+            @if (contact.phone) {
+              <div class="detail-item">
+                <h4 class="detail-label">Telefon</h4>
+                <p class="detail-value">{{ contact.phone }}</p>
+              </div>
+            }
+
+            <!-- Fallback if no additional info is available -->
+            @if (!contact.title && !contact.department && !contact.email && !contact.phone) {
+              <div class="detail-item">
+                <p class="no-details">Keine weiteren Informationen verfügbar</p>
+              </div>
+            }
+          </div>
+
+          <div class="profile-actions">
+            <button class="action-button message-button" (click)="openChat()">
+              Nachricht senden
+            </button>
+          </div>
+        </div>
+      }
     </div>
   </div>
-</div>
+}
