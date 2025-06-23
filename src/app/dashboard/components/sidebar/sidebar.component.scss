@@ -635,13 +635,15 @@
 .sidebar-wrapper {
   height: 100%;
   width: 240px;
-  transition: width 0.3s ease;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   position: relative;
 // background: linear-gradient(135deg, #f8f9ff 0%, #f0f3ff 50%, #e8ecff 100%);
   
   &.collapsed {
     width: 0;
+    transform: translateX(-100%);
   }
 }
 

@@ -533,6 +533,14 @@
   display: flex;
   flex-direction: column;
   background: linear-gradient(135deg, #f8f9ff 0%, #f0f3ff 50%, #e8ecff 100%);
+  
+  // Animation für smooth Übergang
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              min-width 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.3s ease,
+              border 0.3s ease,
+              box-shadow 0.3s ease;
 
   &.collapsed {
     width: 0;
@@ -558,12 +566,13 @@
   flex-direction: column;
   border: 1px solid #e1e1e1;
   border-radius: 16px;
-
+  
+  // Animation für smooth Expansion
+  transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 
   &.expanded {
     margin-left: 0;
   }
-
 
   app-chat-area {
     height: 100%;
@@ -750,14 +759,19 @@
 }
 
 .toggle-sidebar-icon {
-  width: 20px;
-  height: 20px;
-  transition: transform 0.3s ease;
-
+  width: 16px;
+  height: 16px;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              filter 0.2s ease;
+  
   &.rotate-left {
-    transform: rotate(-180deg);
+    transform: rotate(180deg);
   }
-
+  
+  &.rotate-right {
+    transform: rotate(0deg);
+  }
+  
   &.rotate-right {
     transform: rotate(0deg);
   }

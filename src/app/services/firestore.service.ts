@@ -137,20 +137,25 @@ export class FirestoreService {
 
   constructor(private firestore: Firestore, private auth: Auth, private storage: Storage) {}
 
-  // Optimized user queries with caching
+  // Optimized user queries with caching and stronger debouncing
   getUserChannels(uid: string): Observable<any[]> {
     console.log('🔍 getUserChannels called for user:', uid);
     const channelsRef = collection(this.firestore, 'channels');
     const q = query(channelsRef, where('members', 'array-contains', uid));
     
     return collectionData(q, { idField: 'id' }).pipe(
+      debounceTime(300), // Erhöht von 100ms auf 300ms für weniger CPU-Last
       tap(channels => console.log('📥 Raw user channels from Firebase:', channels.length, channels.map(c => c['channelName']))),
-      distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)),
-      shareReplay(1)
+      distinctUntilChanged((prev, curr) => {
+        // Optimierter Vergleich für bessere Performance
+        if (prev.length !== curr.length) return false;
+        return prev.every((p, i) => p.id === curr[i]?.id && p['channelName'] === curr[i]?.['channelName']);
+      }),
+      shareReplay({ bufferSize: 1, refCount: true }) // Memory-effizientes Caching
     ) as Observable<any[]>;
   }
 
-  // Optimized direct messages with improved caching
+  // Optimized direct messages with improved caching and better debouncing
   getUserDirectMessages(): Observable<DirectMessage[]> {
     const userId = this.auth.currentUser?.uid;
     if (!userId) {
@@ -161,11 +166,16 @@ export class FirestoreService {
     const q = query(dmRef, where('users', 'array-contains', userId));
 
     return collectionData(q, { idField: 'id' }).pipe(
-      debounceTime(100), // Prevent rapid-fire queries
+      debounceTime(500), // Erhöht von 100ms auf 500ms für weniger Energieverbrauch
       distinctUntilChanged((prev, curr) => {
-        // More sophisticated comparison to detect real changes
+        // Optimierter Vergleich - nur relevante Eigenschaften prüfen
         if (prev.length !== curr.length) return false;
-        return JSON.stringify(prev.map(p => p.id).sort()) === JSON.stringify(curr.map(c => c.id).sort());
+        return prev.every((p, i) => {
+          const c = curr[i];
+          return p.id === c?.id && 
+                 p['lastMessage']?.timestamp === c?.['lastMessage']?.timestamp &&
+                 p['unread'] === c?.['unread'];
+        });
       }),
       switchMap(async (dms: any[]) => {
         console.log('📥 Raw DirectMessage documents from Firebase:', dms.length);
@@ -284,7 +294,7 @@ export class FirestoreService {
     );
   }
 
-  // Optimized channel messages
+  // Optimized channel messages with energy saving features
   getChannelMessages(channelId: string): Observable<Message[]> {
     const cacheKey = `channel_messages_${channelId}`;
     
@@ -297,7 +307,18 @@ export class FirestoreService {
     );
 
     return collectionData(q, { idField: 'id' }).pipe(
-      distinctUntilChanged((prev, curr) => prev.length === curr.length),
+      debounceTime(300), // Reduziert CPU-Last durch weniger Updates
+      distinctUntilChanged((prev, curr) => {
+        // Schneller Vergleich nur wichtiger Eigenschaften
+        if (prev.length !== curr.length) return false;
+        return prev.every((p, i) => {
+          const c = curr[i];
+          return p?.['id'] === c?.['id'] && 
+                 p?.['timestamp']?.getTime() === c?.['timestamp']?.getTime() &&
+                 p?.['isEdited'] === c?.['isEdited'] &&
+                 p?.['isDeleted'] === c?.['isDeleted'];
+        });
+      }),
       map(messages => messages.map((msg: any) => ({
         id: msg.id,
         text: msg.text || '',
@@ -312,7 +333,7 @@ export class FirestoreService {
         isDeleted: msg.isDeleted || false,
         isEdited: msg.isEdited || false
       }))),
-      shareReplay(1)
+      shareReplay({ bufferSize: 1, refCount: true }) // Memory-effizientes Caching
     );
   }
 

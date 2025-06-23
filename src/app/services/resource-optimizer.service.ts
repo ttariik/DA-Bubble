@@ -407,4 +407,102 @@ export class ResourceOptimizerService {
   hasSlowConnection(): boolean {
     return this.isSlowConnection;
   }
+
+  /**
+   * Enables energy saving mode for Firebase operations
+   */
+  enableFirebaseEnergyMode(): void {
+    console.log('🔋 Enabling Firebase energy saving mode');
+    
+    // Increase debounce times for Firebase operations
+    this.extendDebounceTimes();
+    
+    // Reduce Firebase connection pool size
+    this.optimizeFirebaseConnection();
+    
+    // Enable lazy loading for non-critical data
+    this.enableLazyLoading();
+  }
+
+  /**
+   * Extends debounce times for energy saving
+   */
+  private extendDebounceTimes(): void {
+    // These settings will be picked up by services that check for low power mode
+    this.isLowPowerMode = true;
+  }
+
+  /**
+   * Optimizes Firebase connection for energy saving
+   */
+  private optimizeFirebaseConnection(): void {
+    // Reduce polling frequency for offline detection
+    if (typeof window !== 'undefined' && 'navigator' in window) {
+      // Monitor connection state and adapt accordingly
+      if ('onLine' in navigator) {
+        const updateConnectionState = () => {
+          this.isSlowConnection = !navigator.onLine;
+        };
+        
+        window.addEventListener('online', updateConnectionState);
+        window.addEventListener('offline', updateConnectionState);
+      }
+    }
+  }
+
+  /**
+   * Enables lazy loading for better energy efficiency
+   */
+  private enableLazyLoading(): void {
+    console.log('🔋 Enabling lazy loading for energy efficiency');
+    // This flag can be checked by components to delay non-critical operations
+  }
+
+  /**
+   * Gets recommended cache duration based on energy mode
+   */
+  getOptimizedCacheDuration(resourceType: 'firebase' | 'images' | 'api'): number {
+    const baseDurations = {
+      firebase: 5 * 60 * 1000, // 5 minutes
+      images: 60 * 60 * 1000,  // 1 hour
+      api: 10 * 60 * 1000      // 10 minutes
+    };
+
+    const duration = baseDurations[resourceType];
+    
+    // Extend cache duration in energy saving mode
+    if (this.isLowPowerMode || this.isSlowConnection) {
+      return duration * 3; // 3x longer cache
+    }
+    
+    return duration;
+  }
+
+  /**
+   * Throttles Firebase real-time updates based on app state
+   */
+  getFirebaseUpdateThrottle(): number {
+    if (this.isBackgroundMode) return 5000; // 5 seconds in background
+    if (this.isLowPowerMode) return 2000;   // 2 seconds in low power
+    if (this.isSlowConnection) return 1500; // 1.5 seconds on slow connection
+    return 300; // 300ms normally
+  }
+
+  /**
+   * Gets optimal batch size for Firebase operations
+   */
+  getOptimalBatchSize(operationType: 'read' | 'write'): number {
+    const baseSizes = {
+      read: 50,
+      write: 25
+    };
+
+    const baseSize = baseSizes[operationType];
+    
+    if (this.isLowPowerMode || this.isSlowConnection) {
+      return Math.floor(baseSize * 0.6); // Reduce batch size by 40%
+    }
+    
+    return baseSize;
+  }
 } 

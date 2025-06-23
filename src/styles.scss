@@ -77,3 +77,51 @@ body {
 body.auth-page {
   overflow-y: hidden;
 }
+
+/* Energy-saving CSS optimizations */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Battery optimization for low power mode */
+@media (prefers-reduced-motion) {
+  .sidebar-wrapper,
+  .chat-area,
+  .thread-section {
+    transition: none !important;
+    animation: none !important;
+  }
+  
+  .message-item {
+    animation: none !important;
+  }
+  
+  .loading-spinner,
+  .emoji-picker,
+  .dropdown-content {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Performance optimizations for slower devices */
+@media (max-resolution: 1dppx) {
+  .sidebar-wrapper {
+    will-change: auto;
+  }
+  
+  .chat-area {
+    will-change: auto;
+  }
+  
+  .message-bubble {
+    transform: none;
+  }
+}

@@ -1,6 +1,9 @@
-import { Component, EventEmitter, Output, ViewChild, ElementRef, AfterViewInit, OnInit, Input } from '@angular/core';
+import { Component, EventEmitter, Output, ViewChild, ElementRef, AfterViewInit, OnInit, Input, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { FirestoreService, Message } from '../../../services/firestore.service';
+import { AuthService } from '../../../services/auth.service';
+import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 
 interface ThreadMessage {
   id: string;
@@ -34,9 +37,12 @@ interface DateGroup {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './thread-view.component.html',
-  styleUrls: ['./thread-view.component.scss']
+  styleUrls: ['./thread-view.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ThreadViewComponent implements AfterViewInit, OnInit {
+export class ThreadViewComponent implements AfterViewInit, OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
+  
   @Output() closeThread = new EventEmitter<void>();
   @ViewChild('scrollContainer') scrollContainer!: ElementRef;
   
@@ -597,5 +603,10 @@ export class ThreadViewComponent implements AfterViewInit, OnInit {
     if (needsUpdate) {
       this.updateDateLabels();
     }
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 } 

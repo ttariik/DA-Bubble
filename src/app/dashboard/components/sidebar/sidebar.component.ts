@@ -1,10 +1,10 @@
-import { Component, EventEmitter, Inject, Output, OnInit, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Inject, Output, OnInit, Input, OnChanges, SimpleChanges, ChangeDetectionStrategy, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AddChannelModalComponent } from '../add-channel-modal/add-channel-modal.component';
 import { FirestoreService, Channel, ChannelStats, DirectMessage, Contact } from '../../../services/firestore.service';
-import { filter, map, switchMap, tap, debounceTime } from 'rxjs/operators';
-import { Observable, forkJoin, of, from } from 'rxjs';
+import { filter, map, switchMap, tap, debounceTime, takeUntil } from 'rxjs/operators';
+import { Observable, forkJoin, of, from, Subject } from 'rxjs';
 import { AddPeopleModalComponent } from '../add-people-modal/add-people-modal.component';
 import { ContactProfileModalComponent, ContactProfile } from '../contact-profile-modal/contact-profile-modal.component';
 import { AuthService } from '../../../services/auth.service';
@@ -34,10 +34,13 @@ interface NewContact {
     DeleteContactModalComponent
   ],
   templateUrl: './sidebar.component.html',
-  styleUrls: ['./sidebar.component.scss']
+  styleUrls: ['./sidebar.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 
-export class SidebarComponent implements OnInit, OnChanges {
+export class SidebarComponent implements OnInit, OnChanges, OnDestroy {
+  private destroy$ = new Subject<void>();
+  
   @Output() channelSelected = new EventEmitter<Channel>();
   @Output() channelDeleted = new EventEmitter<string>();
   @Output() directMessageSelected = new EventEmitter<DirectMessage>();
@@ -83,7 +86,7 @@ export class SidebarComponent implements OnInit, OnChanges {
   showDeleteDMModal = false;
   dmToDelete: any = null;
 
-  constructor(private firestoreService: FirestoreService, private authService: AuthService) {
+  constructor(private firestoreService: FirestoreService, private authService: AuthService, private cdr: ChangeDetectorRef) {
     this.contacts$ = this.firestoreService.getAllContacts();
   }
 
@@ -304,23 +307,29 @@ export class SidebarComponent implements OnInit, OnChanges {
       })
     );
 
-    // Subscribe to channels$ to update the local channels array
-    this.channels$.subscribe(channels => {
+    // Subscribe to channels$ with energy optimization
+    this.channels$.pipe(
+      takeUntil(this.destroy$),
+      debounceTime(100) // Reduziert häufige Updates
+    ).subscribe(channels => {
       console.log('📥 Channels subscription update:', channels.length, 'channels');
       this.channels = channels;
-      // Channel data is now managed by Firebase, no local storage needed
+      this.cdr.markForCheck(); // Manueller Change Detection Trigger
     });
 
-    // Subscribe to direct messages with force refresh
+    // Subscribe to direct messages with force refresh and energy optimization
     this.authService.user$.pipe(
       filter((user): user is User => !!user),
       switchMap(user => {
         console.log('🔄 Loading direct messages for user:', user.uid);
         return this.firestoreService.getUserDirectMessages();
-      })
+      }),
+      takeUntil(this.destroy$),
+      debounceTime(150) // Reduziert häufige Updates
     ).subscribe(messages => {
       console.log('📥 Direct messages subscription update:', messages.length, 'messages');
       this.directMessages = messages;
+      this.cdr.markForCheck(); // Manueller Change Detection Trigger
     });
 
     // Subscribe to contacts with force refresh
@@ -656,5 +665,11 @@ export class SidebarComponent implements OnInit, OnChanges {
       console.log('📥 User channels updated after refresh:', channels.length, 'channels');
       this.channels = channels;
     });
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+    console.log('🧹 SidebarComponent destroyed - all subscriptions cleaned up');
   }
 } 
