@@ -352,10 +352,6 @@
   border: 1px solid transparent;
   overflow: visible;
   
-  &:hover {
-    border-color: rgba(68, 77, 242, 0.1);
-    box-shadow: 0 2px 8px rgba(68, 77, 242, 0.05);
-  }
   
   &:active {
     box-shadow: 0 1px 2px rgba(68, 77, 242, 0.05);
@@ -535,9 +531,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
   background: linear-gradient(135deg, #f8f9ff 0%, #f0f3ff 50%, #e8ecff 100%);
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
 
   &.collapsed {
     width: 0;
@@ -551,11 +545,6 @@
   .hidden {
     display: none;
   }
-
-  &:hover {
-    box-shadow: 0 20px 40px rgba(68, 77, 242, 0.2);
-    border-color: rgba(68, 77, 242, 0.3)
-  }
 }
 
 .chat-area {
@@ -568,18 +557,12 @@
   flex-direction: column;
   border: 1px solid #e1e1e1;
   border-radius: 16px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-  transition: box-shadow 0.6s ease, border-color 0.5s ease;
 
 
   &.expanded {
     margin-left: 0;
   }
 
-  &:hover {
-    box-shadow: 0 20px 40px rgba(68, 77, 242, 0.2);
-    border-color: rgba(68, 77, 242, 0.3)
-  }
 
   app-chat-area {
     height: 100%;
@@ -598,56 +581,11 @@
   flex-direction: column;
   border: 2px solid rgba(68, 77, 242, 0.2);
   border-radius: 24px;
-  box-shadow: 0 16px 64px rgba(68, 77, 242, 0.15);
   overflow: hidden;
   position: relative;
-  transition: transform 0.2s ease, opacity 0.3s ease, width 0.3s ease,
-    min-width 0.3s ease, box-shadow 0.2s ease;
-  animation: threadSectionFloat 6s ease-in-out infinite;
   will-change: transform, box-shadow;
   
-  &::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle at center, rgba(68, 77, 242, 0.08) 0%, transparent 70%);
-    animation: backgroundFloat 15s ease-in-out infinite;
-    z-index: 0;
-    pointer-events: none;
-  }
-  
-  &::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(45deg, rgba(68, 77, 242, 0.02) 0%, transparent 50%, rgba(68, 77, 242, 0.02) 100%);
-    background-size: 200% 100%;
-    animation: shimmer 12s ease-in-out infinite;
-    z-index: 0;
-    pointer-events: none;
-  }
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 20px 40px rgba(68, 77, 242, 0.2);
-    border-color: rgba(68, 77, 242, 0.3);
-  }
 
-  &.hidden {
-    transform: translateX(50px);
-    opacity: 0;
-    width: 0;
-    min-width: 0;
-    margin-left: -20px;
-    border: none;
-    box-shadow: none;
-  }
 
   .thread-header {
     display: flex;
