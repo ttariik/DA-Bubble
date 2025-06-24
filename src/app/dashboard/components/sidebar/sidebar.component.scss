@@ -349,7 +349,6 @@
     justify-content: space-between;
     padding: 8px;
     border-radius: 8px;
-    cursor: pointer;
     transition: all 0.2s ease;
     margin-bottom: 12px;
     margin-top: 8px;
@@ -368,23 +367,13 @@
         font-family: "Nunito", sans-serif;
         position: relative;
         display: inline-block;
-        cursor: pointer;
         transition: color 0.3s ease, transform 0.3s ease;
       
   
       
         &:hover {
           color: #2a2ee6;
-          transform: translateY(-2px) scale(1.02);
       
-          &::after {
-            transform: scaleX(1);
-          }
-        }
-      
-        &:active {
-          transform: scale(0.98);
-          color: #1a1cc4;
         }
       }
       
