@@ -132,19 +132,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
   isChatOpenOnMobile = false;
   showEmojiPicker: boolean = false;
   
-  // New properties for tagging
   showChannelTagging: boolean = false;
   showUserTagging: boolean = false;
   tagSearchText: string = '';
   tagCursorPosition: number = 0;
   
-  // Filtered lists for tagging
   filteredChannels: Channel[] = [];
   filteredUsers: DirectMessage[] = [];
 
   profileMenuOpen: boolean = false;
-  
-  // Search functionality properties
+
   searchQuery: string = '';
   isSearching: boolean = false;
   showSearchDropdown: boolean = false;
@@ -158,13 +155,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   directMessages$: Observable<DirectMessage[]> = of([]);
   channels$!: Observable<Channel[]>;
   
-  // For performance optimization
   private tagSearchSubject = new Subject<string>();
   private searchQuerySubject = new Subject<string>();
   private subscriptions: Subscription[] = [];
   private resizeSubscription: Subscription | null = null;
 
-  // For performance optimization - centralized destroy subject
   private destroy$ = new Subject<void>();
   private searchPerformanceOptimized = false;
 
@@ -174,7 +169,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   constructor(public auth : AuthService) {
-    // Set up debounced search for tagging with takeUntil
     this.tagSearchSubject.pipe(
       debounceTime(250),
       distinctUntilChanged(),
@@ -183,7 +177,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.performTagSearch(searchText);
     });
     
-    // Set up debounced search for main search functionality with takeUntil
     this.searchQuerySubject.pipe(
       debounceTime(300),
       distinctUntilChanged(),
@@ -194,7 +187,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    // Subscribe to direct messages from Firestore with takeUntil
     this.directMessages$ = this.firestoreService.getUserDirectMessages();
     this.directMessages$.pipe(
       takeUntil(this.destroy$)
@@ -207,10 +199,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.loadData();
     this.loadAllUsers();
     this.loadSelectedContent();
-    console.log(this.auth.google);
     
-    
-    // Initialize filtered lists with optimized delay
     this.resourceOptimizer.createOptimizedInterval(
       'init-tagging-lists',
       () => this.initializeTaggingLists(),
@@ -218,7 +207,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       false
     );
     
-    // Setup throttled window resize listener with takeUntil
     fromEvent(window, 'resize').pipe(
       throttleTime(150),
       takeUntil(this.destroy$)
@@ -228,7 +216,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       });
     });
       
-    // Setup document click listener with takeUntil
     fromEvent(document, 'click').pipe(
       takeUntil(this.destroy$)
     ).subscribe((event: Event) => {
@@ -244,17 +231,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
   
   ngOnDestroy() {
-    // Emit destroy signal to complete all subscriptions
     this.destroy$.next();
     this.destroy$.complete();
-    
-    // Clear all optimized intervals
     this.resourceOptimizer.clearOptimizedInterval('init-tagging-lists');
-    
-    console.log('🧹 DashboardComponent destroyed - all subscriptions cleaned up');
   }
   
-  // Helper methods for filtering search results by type
   getChannelResults(): SearchResult[] {
     return this.searchResults.filter(result => result.type === 'channel');
   }
@@ -268,22 +249,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
   
   handleWindowResize() {
-    // Handle window resizing logic
-    // Only run heavy calculations when actually needed
     this.cd.markForCheck();
   }
 
   initializeTaggingLists() {
-    // Avoid console logs in production
     if (!this.sidebar || !this.sidebar.channels || !this.sidebar.directMessages) {
-      // Fallback channel data
       this.filteredChannels = [
         { id: '1', name: 'Entwicklerteam', unread: 0 },
         { id: '2', name: 'Allgemein', unread: 0 },
         { id: '3', name: 'Ankündigungen', unread: 0 }
       ];
       
-      // Fallback user data with realistic German names
       this.filteredUsers = [
         { id: '1', name: 'Frederik Beck', avatar: 'assets/icons/avatars/avatar1.png', online: true, unread: 0 },
         { id: '2', name: 'Sofia Müller', avatar: 'assets/icons/avatars/avatar2.png', online: true, unread: 0 },
@@ -299,7 +275,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
   
-  // Debounced search processing
   performTagSearch(searchText: string) {
     if (this.showChannelTagging) {
       this.filterChannels();
@@ -310,11 +285,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   async loadData() {
     this.activUserId = await this.authService.getActiveUserId();
-    console.log('🎯 Active User ID loaded:', this.activUserId);
-    
-    // Stelle sicher, dass der aktuelle Benutzer auch geladen wird
     if (this.authService.currentUser) {
-      console.log('📱 Current user from auth:', this.authService.currentUser.displayName);
     }
     
     this.cd.markForCheck();
@@ -336,7 +307,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (user) {
       this.activUser = user;
     } else if (this.authService.currentUser) {
-      // Fallback für Google-Nutzer, falls nicht in listOfAllUsers gefunden
       const currentUser = this.authService.currentUser;
       this.activUser = new User({
         userId: currentUser.uid,
@@ -359,7 +329,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   toggleThreadView() {
     this.showThreadView = !this.showThreadView;
     
-    // Wenn der Thread-Bereich geschlossen wird, setze den Thread zurück
     if (!this.showThreadView && this.threadView) {
       setTimeout(() => {
         this.threadView.resetThread();

@@ -31,19 +31,11 @@ export class AppComponent implements OnInit {
     private performanceMonitor: PerformanceMonitorService
   ) {
     this.user$ = this.authService.user$;
-    
-    // Initialize energy-saving features
     this.initializeEnergyOptimizations();
   }
 
   private initializeEnergyOptimizations(): void {
-    // Enable Firebase energy saving mode
     this.resourceOptimizer.enableFirebaseEnergyMode();
-    
-    // Start performance monitoring if available
-    console.log('🔋 Performance monitoring ready');
-    
-    console.log('🔋 Energy optimizations initialized');
   }
 
   ngOnInit() {
@@ -54,12 +46,10 @@ export class AppComponent implements OnInit {
         this.router.navigate(['/login']);
       }
     });
-    
-    // Log performance recommendations after app initialization
+
     setTimeout(() => {
       const recommendations = this.performanceMonitor.getPerformanceRecommendations();
       if (recommendations.length > 0) {
-        console.log('📊 Performance Recommendations:', recommendations);
       }
     }, 5000);
   }
