@@ -194,13 +194,11 @@ export class AddPeopleModalComponent implements OnChanges, OnInit {
     
     this.firestoreService.addPeopleToChannel(this.channelId, userIds)
       .then(() => {
-        console.log('Benutzer erfolgreich zum Channel hinzugefügt');
         this.peopleAdded.emit(userIds);
         this.resetForm();
         this.close.emit();
       })
       .catch(error => {
-        console.error('Fehler beim Hinzufügen von Benutzern zum Channel:', error);
         // Show error message to user (you could add a toast/notification system here)
         alert('Es gab einen Fehler beim Hinzufügen der Benutzer. Bitte versuchen Sie es später erneut.');
       });
