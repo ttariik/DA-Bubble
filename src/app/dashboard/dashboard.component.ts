@@ -337,7 +337,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   navigateHome() {
-    console.log('Reloading page');
     window.location.reload();
   }
 
@@ -385,44 +384,27 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Wird aufgerufen, wenn ein Benutzer einen Channel verlässt
-   */
   handleChannelLeft(channelId: string) {
-    console.log('🚪 Dashboard: User left channel with ID:', channelId);
     
-    // Channel aus der Sidebar entfernen und refreshen
     if (this.sidebar) {
-      console.log('🗑️ Dashboard: Removing channel from sidebar UI');
       this.sidebar.removeChannelFromUI(channelId);
     }
     
-    // Wenn der verlassene Channel der ausgewählte war, wechsle zum Standardkanal
     if (this.selectedChannel.id === channelId) {
-      console.log('🔄 Dashboard: Switching to default channel since current was left');
       
-      // Warte auf den Force-Refresh und dann wechsle zum ersten Channel
       setTimeout(() => {
         if (this.sidebar && this.sidebar.channels.length > 0) {
-          // Wähle den ersten verfügbaren Channel aus (normalerweise Entwicklerteam)
           this.selectedChannel = this.sidebar.channels[0];
-          
-          console.log('✅ Dashboard: Switched to channel:', this.selectedChannel.name);
-          
-          // Aktualisiere den Chat-Bereich mit dem neuen ausgewählten Channel
+
           if (this.chatArea) {
             this.chatArea.changeChannel(this.selectedChannel.name, this.selectedChannel.id);
           }
           
-          // Speichere die Auswahl in Firebase
           this.firestoreService.updateSelectedChannel(this.selectedChannel.id);
         } else {
-          console.log('⚠️ Dashboard: No channels available after leaving');
         }
-      }, 1200); // Etwas länger warten, da jetzt auch der Force-Refresh passiert
+      }, 1200); 
     }
-    
-    console.log('✅ Dashboard: Channel leave process completed');
   }
 
   async loadSelectedContent() {
@@ -430,27 +412,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
       const settings = await this.firestoreService.getUserSettings();
       
       if (settings) {
-        // First check if there's a selected direct message
         if (settings.selectedDirectMessageId) {
-          // Find the direct message with the saved ID from the current directMessages
           const selectedDirectMessage = this.directMessages.find(dm => dm.id === settings.selectedDirectMessageId);
           if (selectedDirectMessage) {
             this.selectedDirectMessage = selectedDirectMessage;
             this.isDirectMessageActive = true;
-            return; // Skip loading channel
+            return; 
           }
         }
         
-        // If no direct message is selected or found, load channel
         if (settings.selectedChannelId) {
-          // Find the channel with the saved ID from sidebar channels
           if (this.sidebar && this.sidebar.channels) {
             const selectedChannel = this.sidebar.channels.find(c => c.id === settings.selectedChannelId);
             if (selectedChannel) {
               this.selectedChannel = selectedChannel;
               this.isDirectMessageActive = false;
               
-              // Load the channel in chat area
               setTimeout(() => {
                 if (this.chatArea) {
                   this.chatArea.changeChannel(this.selectedChannel.name, this.selectedChannel.id);
@@ -531,7 +508,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   showUserTaggingInChat() {
-    console.log('Show user tagging requested from chat area');
     
     // Initialize the user list if needed
     this.initializeTaggingLists();
@@ -542,15 +518,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     
     // Force update
     setTimeout(() => {
-      console.log('User tagging dialog opened from chat, users:', this.filteredUsers);
     }, 0);
   }
 
   // Methode zum Öffnen des Thread-Bereichs mit einer Nachricht
   openThreadWithMessage(message: any) {
-    console.log('Opening thread in dashboard with message:', message);
-    
-    // Stelle sicher, dass der Thread-Bereich sichtbar ist
     this.showThreadView = true;
     
     // Warte auf das nächste Change Detection, damit threadView verfügbar ist
@@ -596,7 +568,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
         channel.name.toLowerCase().includes(this.tagSearchText)
       );
     }
-    console.log('Filtered channels:', this.filteredChannels);
   }
   
   filterUsers() {
@@ -612,7 +583,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
         user.name.toLowerCase().includes(this.tagSearchText)
       );
     }
-    console.log('Filtered users:', this.filteredUsers);
   }
 
   // Handle search input changes
@@ -753,8 +723,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
           // Highlight the message in chat
           setTimeout(() => {
             if (this.chatArea) {
-              // If there's a method in chat-area to highlight a message, call it here
-              console.log(`Navigating to message: ${result.messageText} in channel ${result.channelName}`);
             }
           }, 500);
         } else {
@@ -768,7 +736,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
                 // Highlight the message in chat
                 setTimeout(() => {
                   if (this.chatArea) {
-                    console.log(`Navigating to message: ${result.messageText} in channel ${result.channelName}`);
                   }
                 }, 500);
               }
