@@ -1023,7 +1023,7 @@
   font-size: 15px;
   color: #666;
   margin-top: 0;
-  margin-left: 76px; /* To align with the text next to avatar */
+  margin-left: 76px;
 }
 
 .user-mention {
@@ -1039,7 +1039,6 @@
 }
 
 .message-input-wrapper {
-  border: 1px solid #e0e0e0;
   border-radius: 20px;
   padding: 8px;
   background-color: #fff;
@@ -1067,6 +1066,7 @@
   padding: 8px;
   line-height: 1.5;
   overflow-y: auto;
+  
   
   &::placeholder {
     color: #999;
