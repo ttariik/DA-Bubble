@@ -165,7 +165,6 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
   ngOnChanges(changes: SimpleChanges) {
     // If the channel has changed, update the messages
     if (changes['channelId'] && !changes['channelId'].firstChange) {
-      console.log('🔄 Channel ID changed via Input to:', this.channelId);
       
       // Clear messages and load new ones
       this.cleanupMessages();
@@ -177,17 +176,12 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
     }
     
     if (changes['channelName'] && !changes['channelName'].firstChange) {
-      console.log('📝 Channel name changed to:', this.channelName);
       this.cdr.markForCheck();
     }
   }
   
   ngOnInit() {
-    console.log('🚀 ChatAreaComponent ngOnInit', {
-      channelId: this.channelId,
-      channelName: this.channelName,
-      isDirect: this.isDirect
-    });
+
 
     // Debug: Show all messages in database (only once during development)
     if (this.channelId === '1' && !this.isDirect) {
@@ -198,12 +192,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
     
     // Wait for authentication state to be ready
     this.auth.onAuthStateChanged((user) => {
-      console.log('🔐 Auth state changed:', {
-        hasUser: !!user,
-        uid: user?.uid,
-        email: user?.email,
-        displayName: user?.displayName
-      });
+
       
       if (user) {
         this.currentUserId = user.uid;
@@ -211,13 +200,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
                               `${user.email?.split('@')[0]}` || 
                               'Unbekannter Benutzer';
         
-        console.log('✅ User authenticated:', {
-          uid: this.currentUserId,
-          name: this.currentUserName,
-          email: user.email,
-          channelId: this.channelId,
-          willLoadMessages: !!this.channelId
-        });
+
         
         // Now load messages and other data
         if (this.channelId) {
@@ -228,46 +211,44 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
             this.loadChannelMembers();
           }
         } else {
-          console.log('⏳ Waiting for channel to be set before loading messages');
+
         }
       } else {
-        console.log('❌ No user authenticated - clearing data');
+
         this.currentUserId = '';
         this.currentUserName = '';
         this.messages = [];
       }
     });
     
-    console.log(`✅ Initialized chat for channel ${this.channelName} (ID: ${this.channelId})`);
+
   }
   loadMessages() {
-    console.log('🔄 Loading messages for channel:', this.channelId, 'isDirect:', this.isDirect);
-    console.log('🔄 Current user:', this.auth.currentUser?.uid);
-    console.log('🔄 Firestore instance:', !!this.firestore);
+
     
     // Unsubscribe from previous subscription if it exists
     if (this.messageSubscription) {
-      console.log('🔄 Unsubscribing from previous message subscription');
+
       this.messageSubscription.unsubscribe();
       this.messageSubscription = null;
     }
 
     // Subscribe to messages from Firestore immediately
     if (this.channelId) {
-      console.log('🔗 Creating new message subscription for channel:', this.channelId);
+
       
       try {
         const messageObservable = this.isDirect ? 
           this.firestoreService.getDirectMessages(this.channelId.replace('dm_', '')) :
           this.firestoreService.getChannelMessages(this.channelId);
           
-        console.log('🔗 Message observable created, subscribing...');
+
         
         this.messageSubscription = messageObservable.pipe(
           takeUntil(this.destroy$)
         ).subscribe({
           next: (messages) => {
-            console.log('📥 Received messages:', messages.length, 'messages for channel:', this.channelId);
+
             
             // Reverse since Firestore returns in desc order, but we want oldest first
             const firestoreMessages = messages.reverse();
@@ -277,7 +258,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
               m.id.startsWith('temp_') && m.channelId === this.channelId
             );
             
-            console.log('🔄 Found optimistic messages for this channel:', optimisticMessages.length);
+
             
             // Merge Firestore messages with channel-specific optimistic messages
             const mergedMessages = [...firestoreMessages];
@@ -292,7 +273,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
               );
               
               if (!existsInFirestore) {
-                console.log('📝 Keeping optimistic message:', optMsg.text.substring(0, 30) + '...');
+
                 mergedMessages.push(optMsg);
               }
             });
@@ -302,7 +283,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
             this.groupMessagesByDate();
             this.messageCount = this.messages.length;
             
-            console.log('📊 Loaded', this.messages.length, 'messages in', this.messageGroups.length, 'date groups for channel:', this.channelId);
+
             
             // Force change detection to update UI immediately
             this.cdr.markForCheck();
@@ -319,7 +300,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
         console.error('❌ Error creating message subscription:', error);
       }
     } else {
-      console.log('❌ No channel ID provided for loading messages');
+
     }
   }
   
@@ -327,11 +308,11 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
   
   // Change to a different channel
   changeChannel(channelName: string, channelId: string) {
-    console.log('🔄 Changing channel from', this.channelId, 'to', channelId);
+
     
     // Don't reload if we're already on this channel
     if (this.channelId === channelId) {
-      console.log('✅ Already on channel', channelId, '- no change needed');
+
       return;
     }
     
@@ -349,13 +330,13 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
     this.cdr.detectChanges();
     
     // Load messages for the new channel immediately
-    console.log('🚀 Loading messages for new channel:', channelId);
+
     this.loadMessages();
   }
 
   // Clean up all messages and reset UI state
   private cleanupMessages() {
-    console.log('🧹 Cleaning up messages for channel change');
+
     
     // Cancel any pending message subscriptions
     if (this.messageSubscription) {
@@ -372,7 +353,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
     this.emojiPickerTargetMessage = null;
     this.showEmojiPicker = false;
     
-    console.log('✅ Cleanup complete - messages cleared');
+
   }
   
   // Group messages by date
@@ -494,43 +475,31 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
 
     // Prevent double sending
     if (this.isSending) {
-      console.log('⏳ Message is already being sent, ignoring click');
+
       return;
     }
 
-    // Detailed logging for debugging
-    console.log('🚀 sendMessage called with:', {
-      messageInput: this.messageInput,
-      channelId: this.channelId,
-      currentUserId: this.currentUserId,
-      currentUserName: this.currentUserName,
-      isDirect: this.isDirect,
-      authUser: this.auth.currentUser?.uid
-    });
+
 
     // Validation with detailed error messages
     if (!this.messageInput || !this.messageInput.trim()) {
-      console.log('❌ Nachricht ist leer');
+
       return;
     }
 
     if (!this.channelId) {
-      console.log('❌ Keine Channel ID');
+
       alert('Fehler: Kein Channel ausgewählt.');
       return;
     }
 
     if (!this.currentUserId) {
-      console.log('❌ Kein Benutzer authentifiziert');
-      console.log('Auth state:', {
-        currentUser: this.auth.currentUser,
-        uid: this.auth.currentUser?.uid
-      });
+
       alert('Sie müssen angemeldet sein, um Nachrichten zu senden.');
       return;
     }
 
-    console.log('✅ Validierung erfolgreich - sende Nachricht...');
+
 
     const messageText = this.messageInput.trim();
     
@@ -554,7 +523,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
     // Temporarily pause message subscription to prevent conflicts
     const wasSubscribed = !!this.messageSubscription;
     if (this.messageSubscription) {
-      console.log('⏸️ Temporarily pausing message subscription during send');
+
       this.messageSubscription.unsubscribe();
       this.messageSubscription = null;
     }
@@ -572,7 +541,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
       isNew: true // Mark as new for styling
     };
 
-    console.log('🎯 Adding optimistic message for channel:', this.channelId, 'Message:', messageText.substring(0, 30) + '...');
+
 
     // Add to messages array immediately for instant display ONLY if it's for current channel
     if (optimisticMessage.channelId === this.channelId) {
@@ -581,7 +550,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
       this.messageCount = this.messages.length;
     }
     
-    console.log('🎯 Added optimistic message for instant display');
+
     
     // Scroll to bottom immediately
     setTimeout(() => {
@@ -589,20 +558,17 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
     }, 50);
 
     try {
-      console.log('🚀 Sending message to Firestore:', {
-        ...message,
-        timestamp: '[ServerTimestamp]' // Don't log the actual timestamp object
-      });
+
 
       if (this.isDirect) {
         // For direct messages
         const dmId = this.channelId.replace('dm_', '');
-        console.log('📱 Sending direct message to DM ID:', dmId);
+
         await this.firestoreService.sendDirectMessage(dmId, message);
-        console.log('✅ Direktnachricht erfolgreich gesendet');
+
       } else {
         // For channel messages - use the dedicated service method
-        console.log('💬 Sending channel message to channel:', this.channelId);
+
         
         // Add retry logic for internal errors
         let retryCount = 0;
@@ -611,13 +577,13 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
         while (retryCount < maxRetries) {
           try {
             await this.firestoreService.sendChannelMessage(this.channelId, message);
-            console.log('✅ Channel-Nachricht erfolgreich gesendet');
+
             
             // The optimistic message will be replaced by the real one from Firestore subscription
             break;
           } catch (retryError: any) {
             retryCount++;
-            console.log(`⚠️ Retry ${retryCount}/${maxRetries} for message send:`, retryError.message);
+
             
             if (retryCount >= maxRetries) {
               throw retryError;
@@ -643,7 +609,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
         this.messages.splice(optimisticIndex, 1);
         this.groupMessagesByDate();
         this.messageCount = this.messages.length;
-        console.log('🗑️ Removed optimistic message due to send failure');
+
       }
       
       // Also clean up any orphaned optimistic messages for wrong channels
@@ -653,7 +619,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
       );
       const afterCleanup = this.messages.length;
       if (beforeCleanup !== afterCleanup) {
-        console.log('🧹 Cleaned up', beforeCleanup - afterCleanup, 'orphaned optimistic messages');
+
         this.groupMessagesByDate();
         this.messageCount = this.messages.length;
       }
@@ -667,7 +633,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
       } else if (error.code === 'unavailable') {
         alert('Fehler: Firestore ist momentan nicht verfügbar. Bitte versuchen Sie es später erneut.');
       } else if (error.message?.includes('INTERNAL ASSERTION FAILED')) {
-        console.log('🔄 Internal Firestore error detected - will reload messages after delay');
+
         alert('Nachricht wurde möglicherweise gesendet. Die Seite wird aktualisiert...');
         
         // Reload the page after a short delay to reset Firestore state
@@ -684,12 +650,12 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
       // Restore message subscription after a delay if it was active
       if (wasSubscribed) {
         setTimeout(() => {
-          console.log('▶️ Restoring message subscription after send');
+
           this.loadMessages();
         }, 1000);
       }
       
-      console.log('🏁 Send process completed, isSending reset to false');
+
     }
   }
   
@@ -698,7 +664,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
       if (this.scrollContainer) {
         const element = this.scrollContainer.nativeElement;
         element.scrollTop = element.scrollHeight;
-        console.log('Scrolling to bottom', element.scrollHeight);
+
       }
     } catch (err) {
       console.error('Fehler beim Scrollen:', err);
@@ -706,7 +672,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
   }
   
   openThread(message: Message) {
-    console.log('Opening thread for message:', message);
+
     
     // Aktualisiere Thread-Count, wenn er noch nicht existiert
     if (!message.threadCount) {
@@ -763,7 +729,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
         reactions: message.reactions
       });
       
-      console.log('✅ Reaction updated in Firestore');
+      
     } catch (error) {
       console.error('❌ Error updating reaction in Firestore:', error);
     }
@@ -799,7 +765,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
           isEdited: true
         });
         
-        console.log('✅ Message successfully updated in Firestore');
+
         
         // Update local message immediately for better UX
         message.text = newText;
@@ -840,7 +806,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
       return;
     }
     
-    console.log('🗑️ Deleting message:', message.id);
+
     
     // Sofortige lokale Löschung für bessere UX
     this.deleteMessageLocally(message);
@@ -851,7 +817,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
 
   // Lokale Löschung der Nachricht
   private deleteMessageLocally(message: Message) {
-    console.log('📝 Deleting message locally:', message.id);
+
     
     // Lokale Arrays aktualisieren
     const messageIndex = this.messages.findIndex(msg => msg.id === message.id);
@@ -883,31 +849,24 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
     try {
       // Validierung
       if (!message.id || message.id.toString().startsWith('temp_')) {
-        console.log('📝 Message is local only, skipping Firestore update');
+  
         return;
       }
 
-      console.log(`🚀 Updating message in Firestore (attempt ${retryCount + 1})...`);
-      console.log('📋 Message details:', {
-        id: message.id,
-        userId: message.userId,
-        text: message.text.substring(0, 50) + '...',
-        channelId: message.channelId
-      });
+
       
       // Firestore-Update OHNE Subscription zu pausieren (um Race Conditions zu vermeiden)
       const messagesRef = collection(this.firestore, 'messages');
       const messageRef = doc(messagesRef, message.id);
       
-      console.log('📍 Firestore path:', `messages/${message.id}`);
+
       
       await updateDoc(messageRef, {
         isDeleted: true,
         text: 'Diese Nachricht wurde gelöscht'
       });
       
-      console.log('✅ Message successfully marked as deleted in Firestore!');
-      console.log('✅ Firestore update completed successfully');
+
       
     } catch (error: any) {
       console.error(`❌ Error deleting message from Firestore (attempt ${retryCount + 1}):`, error);
@@ -918,7 +877,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
       // Bei Firestore internal errors: Retry mit exponential backoff
       if (error.message?.includes('INTERNAL ASSERTION FAILED') && retryCount < maxRetries) {
         const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
-        console.log(`🔄 Retrying in ${delay}ms... (${retryCount + 1}/${maxRetries})`);
+
         
         setTimeout(() => {
           this.deleteMessageInFirestore(message, retryCount + 1);
@@ -935,7 +894,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
       
       // Andere Fehlerbehandlung
       if (error.code === 'not-found') {
-        console.log('📝 Message not found in Firestore (this is actually expected for local-only messages)');
+
       } else if (error.code === 'permission-denied') {
         console.error('❌ Permission denied for message deletion');
         // Lokale Löschung rückgängig machen
@@ -943,14 +902,14 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
         alert('Fehler: Sie haben keine Berechtigung, diese Nachricht zu löschen.');
       } else {
         console.error('❌ Unhandled Firestore error:', error);
-        console.log('📝 Keeping local deletion, but warning user about reload behavior');
+
       }
     }
   }
 
   // Nachricht lokal wiederherstellen (falls Firestore-Löschung fehlschlägt)
   private restoreMessageLocally(message: Message) {
-    console.log('🔄 Restoring message locally:', message.id);
+
     
     const messageIndex = this.messages.findIndex(msg => msg.id === message.id);
     if (messageIndex !== -1) {
@@ -970,7 +929,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
   
       // Methode zum Aktualisieren des Threads für eine gelöschte Nachricht
   updateThreadForDeletedMessage(messageId: string) {
-    console.log(`Thread-Originalnachricht ${messageId} als gelöscht markiert - Firebase handles this automatically`);
+
   }
   refreshMessageDisplay() {
     this.updateDateLabels();
@@ -979,7 +938,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
 
   // Temporary stub method to prevent linter errors - does nothing
   saveMessagesToStorage() {
-    console.log('💡 saveMessagesToStorage called but ignored - using Firestore only');
+
   }
   
   // Method to check if date labels need to be updated (e.g., at midnight)
@@ -1010,7 +969,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
   
   // Add method to handle mention button click
   insertMention() {
-    console.log('Insert mention clicked in chat area');
+
     
     // Initialize user data
     if (this.filteredUsers.length === 0) {
@@ -1035,8 +994,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
     this.tagSearchText = '';
     this.showUserTagging = true;
     
-    console.log('Mention dialog opened, showing user tagging in chat area');
-    console.log('Users available:', this.filteredUsers);
+
   }
   
   // Initialize mention data
@@ -1050,19 +1008,19 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
     const value = input.value;
     const cursorPosition = input.selectionStart;
     
-    console.log('Input keyup event in chat area:', { value, cursorPosition });
+
     
     // Store cursor position for later use
     this.tagCursorPosition = cursorPosition;
     
     // Check if we need to show user tagging
     if (this.shouldShowUserTagging(value, cursorPosition)) {
-      console.log('Should show user tagging in chat area');
+
       // Get text after @ for filtering
       const atPosition = value.lastIndexOf('@', cursorPosition - 1);
       if (atPosition !== -1) {
         this.tagSearchText = value.substring(atPosition + 1, cursorPosition).toLowerCase();
-        console.log('Tag search text:', this.tagSearchText);
+
         this.filterUsers();
         this.showUserTagging = true;
       }
@@ -1107,7 +1065,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
       );
     }
     
-    console.log('Filtered users in chat area:', this.filteredUsers);
+
   }
   
   initializeUsers() {
@@ -1150,7 +1108,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
 
   // Channel info modal methods
   openChannelInfoModal() {
-    console.log('Öffne Channel-Info-Modal für:', this.channelName);
+
     // Lade das Erstellungsdatum für den Channel
     this.loadChannelCreationDate();
     
@@ -1182,12 +1140,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
       return;
     }
 
-    console.log('🔍 Channel will be deleted:', { 
-      channelId: this.channelId,
-      channelName: this.channelName,
-      memberCount: this.memberCount, 
-      currentUser: this.currentUserId 
-    });
+
 
     // Zeige den Bestätigungsdialog an
     this.showLeaveConfirmDialog = true;
@@ -1201,11 +1154,11 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
       return;
     }
     
-    console.log(`🗑️ Deleting channel:`, this.channelId, 'User:', this.currentUserId);
+    
 
     // Lösche den Channel komplett aus Firebase
     this.firestoreService.leaveChannel(this.channelId, this.currentUserId).then(() => {
-      console.log(`🗑️ Successfully deleted channel ${this.channelName} (ID: ${this.channelId})`);
+
       
       // Schließe die Dialoge
       this.showLeaveConfirmDialog = false;
@@ -1218,7 +1171,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
       this.channelLeft.emit(this.channelId);
       
       // Erfolgreiche Rückmeldung
-      console.log('🎉 Channel successfully deleted from Firebase and UI updated');
+
       
     }).catch(error => {
       console.error('❌ Error deleting channel:', error);
@@ -1258,9 +1211,9 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
 
   // Öffnet oder schließt die Mitgliederliste im Channel-Info-Modal
   toggleMembersList() {
-    console.log('Toggle Members List - vorher:', this.showMembersList);
+
     this.showMembersList = !this.showMembersList;
-    console.log('Toggle Members List - nachher:', this.showMembersList);
+
     
     // Hier könnten wir weitere Mitglieder vom Server laden
     this.loadChannelMembers();
@@ -1284,7 +1237,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
   }
   
   async startDirectMessageWithMember(member: {id: string, name: string, avatar: string, online?: boolean, title?: string, department?: string}) {
-    console.log('Starting direct message with:', member.name);
+
     
     // Close the channel info modal
     this.closeChannelInfoModal();
@@ -1324,7 +1277,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
   }
 
   handlePeopleAdded(userIds: string[]) {
-    console.log('People added to channel:', userIds);
+
     this.closeAddPeopleModal();
     // Aktualisiere die Mitgliederliste
     this.loadChannelMembers();
@@ -1334,16 +1287,16 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
    * Versteckt das Overlay mit einer sanften Animation
    */
   private hideOverlayWithAnimation(): void {
-    console.log('🎭 Starting overlay fade-out animation');
+
     this.isOverlayFadingOut = true;
     this.cdr.detectChanges(); // Force change detection
     
     setTimeout(() => {
-      console.log('🎭 Hiding overlay completely');
+
       this.isDeletingAllMessages = false;
       this.isOverlayFadingOut = false;
       this.cdr.detectChanges(); // Force change detection
-      console.log('✅ Overlay hidden, chat should be visible now');
+
     }, 500); // Duration of fade-out animation
   }
 
@@ -1385,7 +1338,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
 
     dialogRef.closed.subscribe(async (result) => {
       if (result === true) {
-        console.log('🗑️ Starting to delete all messages for channel:', this.channelId);
+    
         
         // Close more options dropdown
         this.showMoreOptions = false;
@@ -1396,37 +1349,37 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
           this.messages = [];
           this.messageGroups = [];
           this.messageCount = 0;
-          console.log('🎯 UI cleared after animation');
+    
         });
 
         try {
           // Show loading state
           this.isDeletingAllMessages = true;
           this.cdr.detectChanges(); // Force change detection
-          console.log('🎬 Deletion overlay shown');
+    
           
           // Auto-hide overlay after exactly 3 seconds (no matter what)
           setTimeout(() => {
-            console.log('⏰ Auto-hiding deletion overlay after 3 seconds');
+
             this.hideOverlayWithAnimation();
           }, 3000);
           
           // Pause message subscription during deletion to prevent conflicts
           if (this.messageSubscription) {
-            console.log('⏸️ Temporarily pausing message subscription during deletion');
+            
             this.messageSubscription.unsubscribe();
             this.messageSubscription = null;
           }
 
           // Run Firestore deletion in background (don't wait for it)
           this.firestoreService.deleteAllChannelMessages(this.channelId).then(() => {
-            console.log('✅ All messages successfully deleted from Firestore');
+            
             
             // Update local storage
             this.allMessages = this.allMessages.filter(msg => msg.channelId !== this.channelId);
-            console.log('🧹 Messages cleared from channel - Firebase handles persistence');
             
-            console.log('🎉 All messages deleted successfully');
+            
+            
           }).catch((error) => {
             console.error('❌ Error deleting messages:', error);
             // Don't show alert here since overlay will disappear anyway
@@ -1440,7 +1393,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
           // Restore message subscription after overlay disappears
           setTimeout(() => {
             if (!this.messageSubscription && this.channelId) {
-              console.log('▶️ Restoring message subscription after deletion');
+
               this.loadMessages();
             }
           }, 4000); // Wait for overlay to fully disappear (3s + 1s buffer)
@@ -1454,10 +1407,10 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
    */
   toggleMoreOptions(event: MouseEvent) {
     event.stopPropagation(); // Verhindert, dass das Event zum Document bubbled
-    console.log('🔄 Toggling more options, current state:', this.showMoreOptions);
+
     
     this.showMoreOptions = !this.showMoreOptions;
-    console.log('🔄 New more options state:', this.showMoreOptions);
+
 
     // Event-Listener hinzufügen, um das Dropdown zu schließen, wenn außerhalb geklickt wird
     if (this.showMoreOptions) {
@@ -1474,7 +1427,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
    * Schließt das Mehr-Optionen-Dropdown
    */
   closeMoreOptions = () => {
-    console.log('🔒 Closing more options dropdown');
+
     this.showMoreOptions = false;
     document.removeEventListener('click', this.closeMoreOptions);
   }
@@ -1502,7 +1455,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
       this.dateCheckInterval = null;
     }
     
-    console.log('🧹 ChatAreaComponent destroyed - all subscriptions cleaned up');
+
   }
 
   getThreadCount(messageId: string): number {
@@ -1614,7 +1567,7 @@ export class ChatAreaComponent implements AfterViewInit, OnInit, OnChanges, OnDe
       this.messageInput = '';
       this.removeFilePreview();
 
-      console.log('Message with file sent successfully');
+      
     } catch (error) {
       console.error('Error sending message with file:', error);
       alert('Fehler beim Senden der Nachricht mit Datei. Bitte versuchen Sie es erneut.');
