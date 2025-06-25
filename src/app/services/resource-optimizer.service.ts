@@ -220,7 +220,6 @@ export class ResourceOptimizerService {
    */
   private enableSlowConnectionMode(): void {
     // Reduce data usage, increase caching
-    console.log('Slow connection detected - enabling data saving mode');
   }
 
   /**
@@ -241,7 +240,6 @@ export class ResourceOptimizerService {
    */
   private clearOldCacheEntries(): void {
     const cacheKeys = ['directMessages', 'channels', 'messages'];
-    console.log('Clearing old cache entries (in-memory only)');
   }
 
   /**
@@ -412,7 +410,6 @@ export class ResourceOptimizerService {
    * Enables energy saving mode for Firebase operations
    */
   enableFirebaseEnergyMode(): void {
-    console.log('🔋 Enabling Firebase energy saving mode');
     
     // Increase debounce times for Firebase operations
     this.extendDebounceTimes();
@@ -454,7 +451,6 @@ export class ResourceOptimizerService {
    * Enables lazy loading for better energy efficiency
    */
   private enableLazyLoading(): void {
-    console.log('🔋 Enabling lazy loading for energy efficiency');
     // This flag can be checked by components to delay non-critical operations
   }
 
