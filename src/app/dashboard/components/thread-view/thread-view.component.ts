@@ -103,7 +103,7 @@ export class ThreadViewComponent implements AfterViewInit, OnInit, OnDestroy {
       return;
     }
 
-    console.log('Thread wird mit Nachricht geöffnet:', message);
+
 
     // Erst alle vorherigen Thread-Daten zurücksetzen
     this.resetThread();
@@ -141,7 +141,6 @@ export class ThreadViewComponent implements AfterViewInit, OnInit, OnDestroy {
 
     // Thread replies will be loaded from Firebase when this feature is implemented
     // For now, just show empty thread
-    console.log(`Thread replies for message ${messageId} will be loaded from Firebase`);
 
     // Gruppiere Antworten nach Datum
     this.groupRepliesByDate();
@@ -149,7 +148,6 @@ export class ThreadViewComponent implements AfterViewInit, OnInit, OnDestroy {
 
   // Methode zum Schließen des Threads und Zurücksetzen des Status
   resetThread() {
-    console.log('Resetting thread');
     this.originalMessage = null;
     this.replies = [];
     this.replyGroups = [];
@@ -224,7 +222,6 @@ export class ThreadViewComponent implements AfterViewInit, OnInit, OnDestroy {
   }
   
   insertMention() {
-    console.log('Insert mention clicked in thread view');
     
     // Initialisiere User-Daten
     if (this.filteredUsers.length === 0) {
@@ -249,28 +246,21 @@ export class ThreadViewComponent implements AfterViewInit, OnInit, OnDestroy {
     this.tagSearchText = '';
     this.showUserTagging = true;
     
-    console.log('Mention dialog opened, showing user tagging in thread view');
-    console.log('Users available:', this.filteredUsers);
   }
   
   handleInputKeyup(event: any) {
     const input = event.target;
     const value = input.value;
     const cursorPosition = input.selectionStart;
-    
-    console.log('Input keyup event in thread view:', { value, cursorPosition });
-    
     // Speichere Cursor-Position für später
     this.tagCursorPosition = cursorPosition;
     
     // Prüfe, ob User-Tagging angezeigt werden soll
     if (this.shouldShowUserTagging(value, cursorPosition)) {
-      console.log('Should show user tagging in thread view');
       // Hole Text nach @ für Filterung
       const atPosition = value.lastIndexOf('@', cursorPosition - 1);
       if (atPosition !== -1) {
         this.tagSearchText = value.substring(atPosition + 1, cursorPosition).toLowerCase();
-        console.log('Tag search text:', this.tagSearchText);
         this.filterUsers();
         this.showUserTagging = true;
       }
@@ -302,7 +292,6 @@ export class ThreadViewComponent implements AfterViewInit, OnInit, OnDestroy {
       return 0;
     });
     
-    console.log('Initialized users for thread view:', this.filteredUsers);
   }
   
   filterUsers() {
@@ -318,7 +307,6 @@ export class ThreadViewComponent implements AfterViewInit, OnInit, OnDestroy {
       );
     }
     
-    console.log('Filtered users for thread view:', this.filteredUsers);
   }
   
   selectUserTag(user: any) {
@@ -563,12 +551,10 @@ export class ThreadViewComponent implements AfterViewInit, OnInit, OnDestroy {
   // Methode zum Aktualisieren einer gelöschten Nachricht im Hauptchat
   updateDeletedMessageInMainChat(messageId: string) {
     // Messages are now managed by Firebase, deletion will be reflected automatically
-    console.log(`Message ${messageId} marked as deleted - Firebase handles synchronization`);
   }
   
   saveThreadToStorage() {
     if (this.originalMessage) {
-      console.log(`Thread data for message ${this.originalMessage.id} will be saved to Firebase automatically`);
     }
   }
   
