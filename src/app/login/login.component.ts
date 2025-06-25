@@ -54,14 +54,12 @@ export class LoginComponent {
     this.authService.loginWithGoogle().subscribe(user => {
       this.userName = user.displayName;
       // this.authService.setCurrentUser(user);
-      console.log('Eingeloggt als:', this.userName);
     });
   }
 
   logout() {
     this.authService.logoutGoogle().subscribe(() => {
       this.userName = null;
-      console.log('Abgemeldet');
     });
   }
 
@@ -69,7 +67,6 @@ export class LoginComponent {
     this.isLoading = true;
     this.authService.loginWithGoogle().subscribe({
       next: (user) => {
-        console.log('Google-Login erfolgreich:', user.displayName);
         this.isLoading = false;
       },
       error: (err) => {
