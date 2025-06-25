@@ -1,5 +1,12 @@
-<app-header></app-header>
-<div class="login-wrapper">
+<div class="intro-wrapper" *ngIf="showIntro">
+  <div class="bubble-logo-animation" [@moveLogo]="animationState">
+    <img src="assets/svg/DABubbleLogo.svg" alt="Logo" />
+    <span class="bubble-text" [@fadeText]="animationState">DABubble</span>
+  </div>
+</div>
+
+<app-header *ngIf="!showIntro"></app-header>
+<div class="login-wrapper login-form" *ngIf="!showIntro">
   <div class="login-card">
     <div>
       <div class="title-container">
@@ -61,7 +68,8 @@
             } @if (password.hasError('minlength') &&
             !password.hasError('required')) {
             <div class="error">
-              Minimum {{ password.errors?.['minlength'].requiredLength }} Zeichen
+              Minimum
+              {{ password.errors?.['minlength'].requiredLength }} Zeichen
             </div>
             }
           </div>
@@ -69,7 +77,10 @@
 
         <!-- Forgot Password -->
         <div class="forgot-password-container">
-          <div class="forgot-password-link" (click)="navigateToForgotPassword()">
+          <div
+            class="forgot-password-link"
+            (click)="navigateToForgotPassword()"
+          >
             <span>Passwort vergessen?</span>
           </div>
         </div>
@@ -78,7 +89,11 @@
         <div class="divider"><span>ODER</span></div>
 
         <!-- Google Login -->
-        <button type="button" class="btn google-btn" (click)="loginWithGoogle()">
+        <button
+          type="button"
+          class="btn google-btn"
+          (click)="loginWithGoogle()"
+        >
           <img src="assets/svg/Google.svg" alt="Google" />
           Anmelden mit Google
         </button>
@@ -109,5 +124,4 @@
   </div>
 </div>
 
-<app-footer></app-footer>
-<!-- (ngSubmit)="onSubmit()"  -->
+<app-footer *ngIf="!showIntro"></app-footer>

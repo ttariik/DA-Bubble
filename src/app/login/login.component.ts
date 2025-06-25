@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   ReactiveFormsModule,
@@ -12,6 +12,7 @@ import { AuthService } from '../services/auth.service';
 import { HeaderComponent } from '../shared';
 import { FooterComponent } from '../shared/footer/footer.component';
 import { FirestoreService } from '../services/firestore.service';
+import { trigger, state, style, animate, transition, keyframes } from '@angular/animations';
 
 @Component({
   selector: 'app-login',
@@ -25,14 +26,50 @@ import { FirestoreService } from '../services/firestore.service';
   ],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
+  animations: [
+  trigger('moveLogo', [
+    state('center', style({
+      transform: 'translate(-25%, -50%) scale(1)',
+      top: '50%',
+      left: '50%',
+      position: 'absolute'
+    })),
+    state('left', style({
+      transform: 'translate(-50%, -50%) scale(1)',
+    })),
+    state('corner', style({
+      transform: 'translate(-300%, -500%) scale(0.5)',
+    })),
+    transition('center => left', animate('1s ease-out')),
+    transition('left => corner', animate('1s ease-in')),
+  ]),
+  trigger('fadeText', [
+    state('center', style({
+       opacity: 0,
+       transform: 'translate(-50%, -10%) scale(1)'
+      })),
+    state('left', style({ 
+      opacity: 1,
+      transform: 'translate(0%, -10%) scale(1)',
+      // top: '50%',
+      // left: '50%',
+    
+     })),
+    transition('center => left', animate('1s ease-in')),
+  ])
+]
+
 })
-export class LoginComponent {
+
+export class LoginComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
   private firestoreService = inject(FirestoreService);
   isLoading = false;
   hidePassword = true;
   userName: string | null = null;
+  animationState = 'center';
+  showIntro = true
 
   emailFormControl = new FormControl('', [
     Validators.required,
@@ -49,6 +86,10 @@ export class LoginComponent {
     password: this.passwordFormControl,
     rememberMe: new FormControl(false),
   });
+
+  constructor(private cdr: ChangeDetectorRef) {
+
+  }
 
   login() {
     this.authService.loginWithGoogle().subscribe(user => {
@@ -79,29 +120,27 @@ export class LoginComponent {
   ngOnInit() {
     // Fügt die Klasse auth-page zum Body hinzu
     document.body.classList.add('auth-page');
+  setTimeout(() => {
+    this.animationState = 'left';
+    this.cdr.detectChanges(); // Animation kann sicher starten
+  }, 1000);
+
+  setTimeout(() => {
+    this.animationState = 'corner';
+    this.cdr.detectChanges();
+      }, 2500); // nach 1.5s zur Ecke
+
+
+    setTimeout(() => {
+     this.showIntro = false,
+     this.cdr.detectChanges();
+      }, 3500);
   }
 
   ngOnDestroy() {
     // Entfernt die Klasse auth-page vom Body
     document.body.classList.remove('auth-page');
   }
-
-  //   loginAsGuest() {
-  //   this.testLogin();
-  //   this.router.navigate(['/dashboard']);
-  // }
-
-  // navigateToForgotPassword() {
-  //   // Navigation zur "Passwort vergessen"-Seite
-  // }
-
-  // get email() {
-  //   return this.loginForm.get('email');
-  // }
-
-  // get password() {
-  //   return this.loginForm.get('password');
-  // }
 
   async onSubmit() {
     if (this.loginForm.valid) {

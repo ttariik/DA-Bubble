@@ -248,7 +248,7 @@
 
   <!-- Main Content -->
   <div class="dashboard-container">
-    <!-- @if (!isChatOpenOnMobile || !isMobileView) { -->
+    <!-- @if ( !isMobileView) { -->
     <div class="sidebar" [class.collapsed]="sidebar.sidebarCollapsed">
       <app-sidebar
         #sidebar
@@ -281,7 +281,7 @@
       </div>
     </div>
     <!-- } -->
-    <!-- @if (isChatOpenOnMobile || isMobileView) { -->
+    @if (!isChatOpenOnMobile || isMobileView) {
     <div class="chat-area" [class.expanded]="sidebar.sidebarCollapsed">
       <!-- Regular channel chat -->
       @if (!isDirectMessageActive) {
@@ -309,8 +309,7 @@
       ></app-chat-area>
       }
     </div>
-    <!-- } -->
-    @if (!showThreadView) { } @else {
+    } @if (!showThreadView) { } @else {
     <div class="thread-section">
       <div class="thread-header">
         <div class="thread-title">

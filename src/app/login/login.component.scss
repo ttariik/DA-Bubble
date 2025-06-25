@@ -133,6 +133,11 @@
   }
 }
 
+.main-content {
+  padding: 2rem;
+  animation: fadeIn 1s ease-in;
+}
+
 // Medienabfragen für mehr Responsivität
 @media (max-width: 480px) {
   .google-btn {
@@ -149,3 +154,69 @@
     font-size: 0.75rem;
   }
 }
+
+.login-wrapper, app-header, app-footer {
+  animation: fadeIn 1s ease-out;
+}
+
+
+.intro-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #444df2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  overflow: hidden;
+  animation: fadeOut 1s ease-out forwards;
+  animation-delay: 3.5s; // wartet, bis Logo animiert wurde
+}
+
+.bubble-logo-animation {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); // zentriert
+  display: flex;
+  align-items: center;
+  gap: 10px;
+ 
+
+  img {
+    width: 100px;
+  }
+
+  .bubble-text {
+    font-size: 2rem;
+    opacity: 0;
+    color: white;
+    font-weight: bolder;
+    font-size: 50px;
+
+  }
+}
+
+.main-content {
+  padding: 2rem;
+  animation: fadeIn 1s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  } to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
