@@ -12,12 +12,8 @@ import { RouterModule, Router } from '@angular/router';
 export class HeaderComponent {
   constructor(private router: Router) {}
   
-  navigateToSignup() {
-    console.log('Navigating to signup');
-  }
   
   reloadPage() {
-    console.log('Reloading page');
     window.location.reload();
   }
   
