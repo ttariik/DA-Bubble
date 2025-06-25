@@ -1436,5 +1436,59 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   }
+
+  /**
+   * Searches for a user by email address in the users collection
+   * @param email - The email address to search for
+   * @returns Promise<User | null> - Returns the user if found, null otherwise
+   */
+  async findUserByEmail(email: string): Promise<User | null> {
+    try {
+      const usersRef = collection(this.firestore, 'users');
+      const q = query(usersRef, where('email', '==', email));
+      const querySnapshot = await getDocs(q);
+      
+      if (!querySnapshot.empty) {
+        const userDoc = querySnapshot.docs[0];
+        const userData = userDoc.data();
+        return new User({ 
+          ...userData, 
+          userId: userDoc.id 
+        });
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error finding user by email:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Adds a user as a contact (for registered users found by email)
+   * @param userId - The ID of the user to add as contact
+   * @param userData - The user data to store as contact
+   * @returns Promise<void>
+   */
+  async addRegisteredUserAsContact(userId: string, userData: User): Promise<void> {
+    try {
+      const contact: Contact = {
+        id: userId,
+        name: `${userData.firstName || ''} ${userData.lastName || ''}`.trim(),
+        avatar: userData.avatar || 'assets/icons/avatars/default.svg',
+        online: userData.isActive || false,
+        unread: 0,
+        email: userData.email || '',
+        title: undefined, // Will be filled later if available
+        department: undefined, // Will be filled later if available
+        phone: undefined // Will be filled later if available
+      };
+      
+      await this.addContact(contact);
+    } catch (error) {
+      console.error('Error adding registered user as contact:', error);
+      throw error;
+    }
+  }
 }
 

@@ -455,6 +455,28 @@ export class SidebarComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
+  async handleRegisteredUserAdded(event: { userId: string, userData: any }) {
+    try {
+      // For registered users, we use their actual user ID
+      console.log('Adding registered user as contact:', event);
+      
+      // The contact is already added to Firestore by the modal
+      // We just need to refresh the lists and potentially create a direct message
+      
+      // Create or get direct message for immediate chat capability
+      const currentUserId = this.authService.currentUser?.uid;
+      if (currentUserId) {
+        await this.firestoreService.createDirectMessage(currentUserId, event.userId);
+      }
+      
+      // Refresh the contacts and direct messages  
+      this.cdr.detectChanges();
+      
+    } catch (error) {
+      console.error('Error handling registered user addition:', error);
+    }
+  }
+
   ngOnChanges(changes: SimpleChanges) {
     if (changes['directMessages'] && !changes['directMessages'].firstChange) {
       // Direct message data is now managed by Firebase, no local storage needed
