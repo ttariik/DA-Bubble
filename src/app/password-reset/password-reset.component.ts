@@ -64,7 +64,6 @@ export class PasswordResetComponent {
   ngOnInit() {
     this.route.queryParams.subscribe((params) => {
       this.oobCode = params['oobCode'];
-      console.log(this.oobCode);
     });
   }
 

@@ -139,13 +139,11 @@ export class FirestoreService {
 
   // Optimized user queries with caching and stronger debouncing
   getUserChannels(uid: string): Observable<any[]> {
-    console.log('🔍 getUserChannels called for user:', uid);
     const channelsRef = collection(this.firestore, 'channels');
     const q = query(channelsRef, where('members', 'array-contains', uid));
     
     return collectionData(q, { idField: 'id' }).pipe(
       debounceTime(300), // Erhöht von 100ms auf 300ms für weniger CPU-Last
-      tap(channels => console.log('📥 Raw user channels from Firebase:', channels.length, channels.map(c => c['channelName']))),
       distinctUntilChanged((prev, curr) => {
         // Optimierter Vergleich für bessere Performance
         if (prev.length !== curr.length) return false;
@@ -178,7 +176,6 @@ export class FirestoreService {
         });
       }),
       switchMap(async (dms: any[]) => {
-        console.log('📥 Raw DirectMessage documents from Firebase:', dms.length);
         
         const dmPromises = dms.map(async (dm: FirestoreDirectMessage & { id: string }) => {
           const otherUserId = dm['users'].find((id: string) => id !== userId);
@@ -242,12 +239,10 @@ export class FirestoreService {
         const resolvedDMs = await Promise.all(dmPromises);
         const filteredDMs = resolvedDMs.filter((dm): dm is DirectMessage => dm !== null);
         
-        console.log('🔄 Processed DirectMessages for UI:', filteredDMs.length, filteredDMs.map(dm => dm.name));
         
         return filteredDMs;
       }),
       // Remove shareReplay to ensure fresh subscriptions after deletions
-      tap(dms => console.log('📤 Emitting DirectMessages to subscribers:', dms.length))
     );
   }
 
@@ -427,7 +422,6 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
     const querySnapshot = await getDocs(q);
     
     if (!querySnapshot.empty) {
-      console.log('Channel with this name already exists');
       return querySnapshot.docs[0].id;
     }
 
@@ -449,13 +443,10 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
 
   // Optimized channel loading
   getAllChannels(): Observable<Channel[]> {
-    console.log('🔄 getAllChannels called');
     
     if (!this.allChannels$) {
-      console.log('🔄 Creating new channels observable');
       const channelsRef = collection(this.firestore, 'channels');
       this.allChannels$ = collectionData(channelsRef, { idField: 'id' }).pipe(
-        tap(rawChannels => console.log('📥 Raw channels from Firebase:', rawChannels.length, rawChannels)),
         distinctUntilChanged(),
         map(channels => {
           const mappedChannels = channels.map(channel => ({
@@ -465,13 +456,11 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
             members: channel['members'] || [],
             unread: 0
           }));
-          console.log('🔄 Mapped channels:', mappedChannels.length, mappedChannels);
           return mappedChannels;
         }),
         shareReplay(1)
       );
     } else {
-      console.log('🔄 Using cached channels observable');
     }
     return this.allChannels$;
   }
@@ -587,7 +576,6 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
    */
   async leaveChannel(channelId: string, userId: string): Promise<void> {
     try {
-      console.log('🚪 FirestoreService: Leaving and deleting channel:', { channelId, userId });
       
       // Schütze den Hauptkanal "Entwicklerteam" vor dem Verlassen/Löschen
       if (channelId === '1') {
@@ -611,17 +599,10 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
       const members = data['members'] || [];
       const channelName = data['channelName'] || 'Unbekannt';
       
-      console.log('🗑️ Deleting channel completely:', { 
-        channelId, 
-        channelName, 
-        memberCount: members.length,
-        leavingUser: userId 
-      });
       
       // Channel wird IMMER komplett gelöscht, egal wie viele Mitglieder noch da sind
       await this.deleteChannelCompletely(channelId);
       
-      console.log('✅ Channel and all messages successfully deleted from Firebase');
       
       // Cache invalidieren, damit die UI sich aktualisiert
       this.clearChannelCache();
@@ -641,7 +622,6 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
    */
   private async deleteChannelCompletely(channelId: string): Promise<void> {
     try {
-      console.log('🗑️ Deleting channel completely:', channelId);
       
       // Schütze den Hauptkanal "Entwicklerteam" vor dem Löschen
       if (channelId === '1') {
@@ -656,7 +636,6 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
       const channelRef = doc(this.firestore, 'channels', channelId);
       await deleteDoc(channelRef);
       
-      console.log('✅ Channel and all messages successfully deleted from Firebase');
       
     } catch (error) {
       console.error('❌ Error deleting channel completely:', error);
@@ -697,7 +676,6 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
       // Note: We don't automatically create direct messages when adding people to channels
       // Direct messages should only be created when users actually want to chat directly
       
-      console.log('Successfully added people to channel');
     } catch (error) {
       console.error('Error adding people to channel:', error);
       throw error;
@@ -866,10 +844,8 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
 
   // Get all contacts for the current user
   getAllContacts(): Observable<Contact[]> {
-    console.log('🔄 getAllContacts called');
     const contactsRef = collection(this.firestore, 'contacts');
     return collectionData(contactsRef, { idField: 'id' }).pipe(
-      tap(rawContacts => console.log('📥 Raw contacts from Firebase:', rawContacts.length, rawContacts)),
       map(contacts => {
         const mappedContacts = contacts.map(contact => ({
           id: contact['id'],
@@ -882,7 +858,6 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
           department: contact['department'],
           phone: contact['phone']
         }));
-        console.log('🔄 Mapped contacts:', mappedContacts.length, mappedContacts);
         return mappedContacts;
       })
     );
@@ -983,7 +958,6 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
       // Warte auf das Löschen aller Nachrichten
       await Promise.all(deletePromises);
       
-      console.log(`Alle Nachrichten aus Channel ${channelId} wurden gelöscht`);
     } catch (error) {
       console.error('Fehler beim Löschen der Nachrichten:', error);
       throw error;
@@ -1014,7 +988,6 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
 
   async deleteDirectMessage(userId: string, otherUserId: string): Promise<void> {
     try {
-      console.log('🗑️ Attempting to delete direct message between:', userId, 'and', otherUserId);
       
       let dmDocToDelete = null;
       
@@ -1033,7 +1006,6 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
 
       // Method 2: If not found and otherUserId starts with 'contact_', try direct document lookup
       if (!dmDocToDelete && otherUserId.startsWith('contact_')) {
-        console.log('🔍 Trying direct document lookup for contact:', otherUserId);
         const directDocRef = doc(this.firestore, 'directMessages', otherUserId);
         const directDoc = await getDoc(directDocRef);
         
@@ -1045,13 +1017,11 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
             exists: () => true,
             data: () => directDoc.data()
           };
-          console.log('✅ Found DM document by direct lookup with ID:', otherUserId);
         }
       }
 
       if (dmDocToDelete && dmDocToDelete.id) {
         const dmId = dmDocToDelete.id;
-        console.log('🗑️ Deleting DM document with ID:', dmId);
         
         // Delete the direct message document
         await deleteDoc(dmDocToDelete.ref);
@@ -1067,7 +1037,6 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
         const deleteMessagePromises = messagesSnapshot.docs.map(doc => deleteDoc(doc.ref));
         await Promise.all(deleteMessagePromises);
 
-        console.log('✅ Direct message and associated messages deleted successfully');
         
         // Clear cache to ensure fresh data on next request
         this.clearCache();
@@ -1075,7 +1044,6 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
         const errorMsg = !dmDocToDelete 
           ? 'Direktnachricht konnte nicht gefunden werden' 
           : 'Direktnachricht hat keine gültige ID';
-        console.log('❌ Direct message deletion failed:', errorMsg);
         throw new Error(errorMsg);
       }
     } catch (error) {
@@ -1092,12 +1060,7 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
    */
   async sendChannelMessage(channelId: string, message: any): Promise<void> {
     try {
-      console.log('🚀 FirestoreService: Sending message to channel:', {
-        channelId,
-        messageText: message.text,
-        userId: message.userId,
-        userName: message.userName
-      });
+
 
       // Validate channelId
       if (!channelId || channelId.trim() === '') {
@@ -1113,8 +1076,6 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
       const messagesRef = collection(this.firestore, 'messages');
       const docRef = await addDoc(messagesRef, messageWithChannelId);
       
-      console.log('✅ FirestoreService: Message sent successfully with ID:', docRef.id);
-      console.log('✅ FirestoreService: Message was sent to channel:', channelId);
       
     } catch (error) {
       console.error('❌ FirestoreService: Error sending channel message:', error);
@@ -1131,8 +1092,6 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
       const messagesRef = collection(this.firestore, 'messages');
       const querySnapshot = await getDocs(messagesRef);
       
-      console.log('🔍 DEBUG: All messages in database:');
-      console.log('Total messages found:', querySnapshot.size);
       
       const channelGroups: { [key: string]: any[] } = {};
       
@@ -1154,13 +1113,7 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
         });
       });
       
-      console.log('🔍 Messages grouped by channelId:');
-      Object.keys(channelGroups).forEach(channelId => {
-        console.log(`Channel "${channelId}": ${channelGroups[channelId].length} messages`);
-        channelGroups[channelId].forEach(msg => {
-          console.log(`  - ${msg.userName}: ${msg.text}`);
-        });
-      });
+
       
     } catch (error) {
       console.error('❌ Error debugging messages:', error);
@@ -1174,19 +1127,16 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
     this.messageCache.clear();
     this.allUsers$ = null;
     this.allChannels$ = null;
-    console.log('🧹 Firebase cache cleared');
   }
 
   clearChannelCache() {
     this.allChannels$ = null;
     this.channelCache.clear();
-    console.log('🧹 Channel cache cleared');
   }
 
   clearUserCache() {
     this.allUsers$ = null;
     this.userCache.clear();
-    console.log('🧹 User cache cleared');
   }
 
   async createDirectMessage(userId: string, otherUserId: string): Promise<string> {
@@ -1269,7 +1219,6 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
           unread: 0
         });
         
-        console.log(`Created new DirectMessage document with ID: ${dmId} and users:`, users);
       }
     } catch (error) {
       console.error('Error sending direct message:', error);
@@ -1375,13 +1324,11 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
 
   // Force refresh methods to bypass cache
   forceRefreshChannels(): Observable<Channel[]> {
-    console.log('🔄 Force refreshing channels from Firebase');
     this.clearChannelCache();
     return this.getAllChannels();
   }
 
   forceRefreshContacts(): Observable<Contact[]> {
-    console.log('🔄 Force refreshing contacts from Firebase');
     return this.getAllContacts();
   }
 
@@ -1454,7 +1401,6 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
       const messagesRef = collection(this.firestore, 'messages');
       await addDoc(messagesRef, messageData);
       
-      console.log('Message with file sent successfully');
     } catch (error) {
       console.error('Error sending message with file:', error);
       throw error;

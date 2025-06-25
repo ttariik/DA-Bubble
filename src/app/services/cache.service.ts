@@ -335,7 +335,6 @@ export class CacheService {
     });
 
     if (expiredKeys.length > 0) {
-      console.log(`Cache cleanup: removed ${expiredKeys.length} expired entries`);
     }
   }
 
