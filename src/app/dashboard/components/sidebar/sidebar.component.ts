@@ -208,10 +208,6 @@ export class SidebarComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
   
-  editWorkspace() {
-    console.log('Edit workspace clicked');
-  }
-  
   toggleSidebar() {
     this.sidebarCollapsed = !this.sidebarCollapsed;
   }
@@ -221,7 +217,6 @@ export class SidebarComponent implements OnInit, OnChanges, OnDestroy {
    * @param channelId - Die ID des zu entfernenden Channels
    */
   removeChannelFromUI(channelId: string) {
-    console.log('🗑️ Removing channel from UI:', channelId);
     
     // Entferne den Channel aus der lokalen Liste sofort für bessere UX
     this.channels = this.channels.filter(channel => channel.id !== channelId);
@@ -231,7 +226,6 @@ export class SidebarComponent implements OnInit, OnChanges, OnDestroy {
       this.forceRefreshUserChannels();
     }, 500); // Kurze Verzögerung, damit Firebase-Update sicher abgeschlossen ist
     
-    console.log('✅ Channel removed from UI, triggering refresh');
   }
   
   selectDirectMessage(directMessage: DirectMessage) {
@@ -260,12 +254,10 @@ export class SidebarComponent implements OnInit, OnChanges, OnDestroy {
   }
   
   ngOnInit() {
-    console.log('🔄 Sidebar ngOnInit called');
     
     // Initialize channels$ with Firestore channels
     this.channels$ = this.authService.user$.pipe(
       filter((user): user is User => !!user),
-      tap(user => console.log('👤 User authenticated:', user.uid)),
       switchMap((user) => {
         // Ensure user is added to the default "Entwicklerteam" channel
         this.ensureUserInDefaultChannel(user.uid);
@@ -273,7 +265,6 @@ export class SidebarComponent implements OnInit, OnChanges, OnDestroy {
         // Get user-specific channels (only channels the user is a member of)
         return this.firestoreService.getUserChannels(user.uid).pipe(
           map(firestoreChannels => {
-            console.log('📊 Processing user channels from Firebase:', firestoreChannels.length);
             // Convert Firestore channels to local channel format
             const channels = firestoreChannels.map(fc => ({
               id: fc.id || '',
@@ -299,8 +290,6 @@ export class SidebarComponent implements OnInit, OnChanges, OnDestroy {
                 channels.unshift(entwicklerteamChannel);
               }
             }
-            
-            console.log('✅ Final user channels list:', channels);
             return channels;
           })
         );
@@ -312,7 +301,6 @@ export class SidebarComponent implements OnInit, OnChanges, OnDestroy {
       takeUntil(this.destroy$),
       debounceTime(100) // Reduziert häufige Updates
     ).subscribe(channels => {
-      console.log('📥 Channels subscription update:', channels.length, 'channels');
       this.channels = channels;
       this.cdr.markForCheck(); // Manueller Change Detection Trigger
     });
@@ -321,13 +309,11 @@ export class SidebarComponent implements OnInit, OnChanges, OnDestroy {
     this.authService.user$.pipe(
       filter((user): user is User => !!user),
       switchMap(user => {
-        console.log('🔄 Loading direct messages for user:', user.uid);
         return this.firestoreService.getUserDirectMessages();
       }),
       takeUntil(this.destroy$),
       debounceTime(150) // Reduziert häufige Updates
     ).subscribe(messages => {
-      console.log('📥 Direct messages subscription update:', messages.length, 'messages');
       this.directMessages = messages;
       this.cdr.markForCheck(); // Manueller Change Detection Trigger
     });
@@ -391,7 +377,6 @@ export class SidebarComponent implements OnInit, OnChanges, OnDestroy {
   }
   
   handlePeopleAdded(userIds: string[]) {
-    console.log('People added to channel:', userIds);
     this.closeAddPeopleModal();
     
     // After adding people, refresh the channels list to include the new channel
@@ -465,7 +450,6 @@ export class SidebarComponent implements OnInit, OnChanges, OnDestroy {
       
       // Refresh the direct messages list
       // The list will be automatically updated through the existing subscription
-      console.log('Contact successfully added');
     } catch (error) {
       console.error('Error adding contact:', error);
     }
@@ -511,8 +495,6 @@ export class SidebarComponent implements OnInit, OnChanges, OnDestroy {
         this.selectedDirectMessageId = null;
         this.directMessageSelected.emit(undefined);
       }
-      
-      console.log('Contact deleted successfully');
     } catch (error) {
       // Just log the error to console, no alert needed
       console.error('Error deleting contact:', error);
@@ -553,10 +535,7 @@ export class SidebarComponent implements OnInit, OnChanges, OnDestroy {
         alert('Fehler: Kein Benutzer angemeldet');
         this.closeDeleteDMModal();
         return;
-      }
-
-      console.log('🗑️ Attempting to delete DM with ID:', this.dmToDelete.id);
-      
+      }      
       // Delete the direct message from Firestore
       await this.firestoreService.deleteDirectMessage(currentUserId, this.dmToDelete.id);
       
@@ -565,9 +544,6 @@ export class SidebarComponent implements OnInit, OnChanges, OnDestroy {
         this.selectedDirectMessageId = null;
         this.directMessageSelected.emit(undefined);
       }
-      
-      console.log('✅ Direct message deleted successfully');
-      
       // Note: We don't manually update the directMessages array here
       // because it will be automatically updated through the Firebase subscription in the dashboard
     } catch (error) {
@@ -582,7 +558,6 @@ export class SidebarComponent implements OnInit, OnChanges, OnDestroy {
 
   // Manual refresh methods for debugging
   refreshData() {
-    console.log('🔄 Manual data refresh triggered');
     
     // Clear all caches
     this.firestoreService.clearCache();
@@ -590,7 +565,6 @@ export class SidebarComponent implements OnInit, OnChanges, OnDestroy {
     // Force refresh channels
     this.channels$ = this.firestoreService.forceRefreshChannels();
     this.channels$.subscribe(channels => {
-      console.log('🔄 Manual refresh - channels updated:', channels.length);
       this.channels = channels;
     });
     
@@ -601,12 +575,9 @@ export class SidebarComponent implements OnInit, OnChanges, OnDestroy {
     const user = this.authService.currentUser;
     if (user) {
       this.firestoreService.getUserDirectMessages().subscribe(messages => {
-        console.log('🔄 Manual refresh - direct messages updated:', messages.length);
         this.directMessages = messages;
       });
     }
-    
-    console.log('✅ Manual refresh completed');
   }
 
   /**
@@ -616,18 +587,15 @@ export class SidebarComponent implements OnInit, OnChanges, OnDestroy {
   forceRefreshUserChannels() {
     const currentUser = this.authService.currentUser;
     if (!currentUser) {
-      console.log('⚠️ No current user for channel refresh');
       return;
     }
 
-    console.log('🔄 Force refreshing user channels for:', currentUser.uid);
     
     // Erstelle eine komplett neue Observable-Kette
     this.channels$ = this.firestoreService.getUserChannels(currentUser.uid).pipe(
       // Warte kurz, damit Firebase-Änderungen sicher propagiert sind
       debounceTime(300),
       map(firestoreChannels => {
-        console.log('📊 Fresh user channels from Firebase after leave:', firestoreChannels.length);
         
         // Convert Firestore channels to local channel format
         const channels = firestoreChannels.map(fc => ({
@@ -654,15 +622,12 @@ export class SidebarComponent implements OnInit, OnChanges, OnDestroy {
             channels.unshift(entwicklerteamChannel);
           }
         }
-        
-        console.log('✅ Refreshed user channels:', channels.map(c => `${c.id}: ${c.name}`));
         return channels;
       })
     );
     
     // Subscribe to the refreshed channel list
     this.channels$.subscribe(channels => {
-      console.log('📥 User channels updated after refresh:', channels.length, 'channels');
       this.channels = channels;
     });
   }
@@ -670,6 +635,5 @@ export class SidebarComponent implements OnInit, OnChanges, OnDestroy {
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
-    console.log('🧹 SidebarComponent destroyed - all subscriptions cleaned up');
   }
 } 
