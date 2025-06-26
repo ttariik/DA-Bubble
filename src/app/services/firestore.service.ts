@@ -835,7 +835,29 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
     try {
       const contactsRef = collection(this.firestore, 'contacts');
       const contactDoc = doc(contactsRef, contact.id);
-      await setDoc(contactDoc, contact);
+      
+      // Create a clean contact object without undefined values
+      const cleanContact: any = {
+        id: contact.id,
+        name: contact.name,
+        avatar: contact.avatar,
+        online: contact.online,
+        unread: contact.unread,
+        email: contact.email
+      };
+      
+      // Only add optional fields if they have values
+      if (contact.title !== undefined && contact.title !== null && contact.title.trim() !== '') {
+        cleanContact.title = contact.title;
+      }
+      if (contact.department !== undefined && contact.department !== null && contact.department.trim() !== '') {
+        cleanContact.department = contact.department;
+      }
+      if (contact.phone !== undefined && contact.phone !== null && contact.phone.trim() !== '') {
+        cleanContact.phone = contact.phone;
+      }
+      
+      await setDoc(contactDoc, cleanContact);
     } catch (error: any) {
       console.error('Error adding contact:', error);
       throw error;
@@ -1478,10 +1500,9 @@ async createChannelFirestore(channel: any, activUserId: string): Promise<string>
         avatar: userData.avatar || 'assets/icons/avatars/default.svg',
         online: userData.isActive || false,
         unread: 0,
-        email: userData.email || '',
-        title: undefined, // Will be filled later if available
-        department: undefined, // Will be filled later if available
-        phone: undefined // Will be filled later if available
+        email: userData.email || ''
+        // Optional fields (title, department, phone) are omitted since User class doesn't have them
+        // This avoids undefined values which Firestore doesn't accept
       };
       
       await this.addContact(contact);

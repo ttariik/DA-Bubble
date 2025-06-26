@@ -439,11 +439,19 @@ export class SidebarComponent implements OnInit, OnChanges, OnDestroy {
         avatar: newContact.avatar,
         online: true, // Default: online
         unread: 0,
-        email: newContact.email,
-        title: newContact.title,
-        department: newContact.department,
-        phone: newContact.phone
+        email: newContact.email
       };
+      
+      // Only add optional fields if they have actual values (not empty strings)
+      if (newContact.title && newContact.title.trim() !== '') {
+        contact.title = newContact.title;
+      }
+      if (newContact.department && newContact.department.trim() !== '') {
+        contact.department = newContact.department;
+      }
+      if (newContact.phone && newContact.phone.trim() !== '') {
+        contact.phone = newContact.phone;
+      }
       
       // Add the contact to Firestore
       await this.firestoreService.addContact(contact);
