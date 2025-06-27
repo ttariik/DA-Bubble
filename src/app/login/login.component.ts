@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component,inject, OnInit} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   ReactiveFormsModule,
@@ -27,33 +27,33 @@ import { trigger, state, style, animate, transition, keyframes } from '@angular/
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
   animations: [
-  trigger('moveLogo', [
-    state('center', style({
+trigger('moveLogo', [
+  state('center', style({
       transform: 'translate(-25%, -50%) scale(1)',
-      top: '50%',
-      left: '50%',
+    top: '50%',
+    left: '50%',
       position: 'absolute'
-    })),
-    state('left', style({
+  })),
+  state('left', style({
       transform: 'translate(-50%, -50%) scale(1)',
-    })),
-    state('corner', style({
-      transform: 'translate(-300%, -500%) scale(0.5)',
-    })),
-    transition('center => left', animate('1s ease-out')),
-    transition('left => corner', animate('1s ease-in')),
-  ]),
+  })),
+  state('corner', style({
+    position: 'absolute',
+    top: '10px', 
+    left: '-40px',
+    transform: 'scale(0.5)', 
+  })),
+  transition('center => left', animate('1s ease-out')),
+  transition('left => corner', animate('1s ease-in')),
+]),
+
   trigger('fadeText', [
     state('center', style({
        opacity: 0,
-       transform: 'translate(-50%, -10%) scale(1)'
       })),
     state('left', style({ 
       opacity: 1,
       transform: 'translate(0%, -10%) scale(1)',
-      // top: '50%',
-      // left: '50%',
-    
      })),
     transition('center => left', animate('1s ease-in')),
   ])

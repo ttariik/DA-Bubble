@@ -1,10 +1,15 @@
 <div class="header">
   <div class="logo-container">
-    <img src="assets/svg/DABubble.svg" alt="DABubble Logo" class="logo" (click)="reloadPage()">
+    <img
+      src="assets/svg/DABubble.svg"
+      alt="DABubble Logo"
+      class="logo"
+      (click)="reloadPage()"
+    />
   </div>
- 
+
   <div class="signup-container" *ngIf="isLoginPage()">
     <div class="signup-text">Neu bei DABubble?</div>
     <a routerLink="/signup" class="create-account">Konto erstellen</a>
   </div>
-</div> 
+</div>
